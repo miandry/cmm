@@ -90,11 +90,7 @@ export const useArticleStore = defineStore("article", () => {
       }
       cardItems.value.splice(index, 1);
       toast.success(() =>
-        h("div", [
-          h("span", item.title),
-          h("br"),
-          "a été retiré du panier !",
-        ])
+        h("div", [h("span", item.title), h("br"), "a été retiré du panier !"])
       );
     }
   }

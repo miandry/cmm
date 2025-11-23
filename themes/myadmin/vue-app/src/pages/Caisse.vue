@@ -80,6 +80,13 @@ export default {
   overflow-x: auto;
 }
 
+@media (min-width: 1380px) {
+  .mw-910 {
+    max-width: none;
+    overflow-x: auto;
+  }
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

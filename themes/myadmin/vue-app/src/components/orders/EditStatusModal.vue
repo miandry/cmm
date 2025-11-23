@@ -25,13 +25,6 @@
                         </div>
                     </div>
 
-                    <div class="mb-4 hidden">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Commentaire (optionnel)</label>
-                        <textarea id="status-comment" rows="3"
-                            class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm resize-none"
-                            placeholder="Ajouter un commentaire sur ce changement de statut..."></textarea>
-                    </div>
-
                     <div class="flex space-x-3">
                         <button @click="closeModal"
                             class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 !rounded-button font-medium whitespace-nowrap">
@@ -74,7 +67,7 @@ export default {
             nid: props.orderToEdit.nid,
             field_status: "",
         });
-
+                
         const closeModal = () => {
             emit('close-edit-status-modal');
         }

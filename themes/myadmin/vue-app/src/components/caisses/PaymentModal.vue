@@ -109,7 +109,7 @@ export default {
                 const data = {
                     entity_type: "node",
                     bundle: "commande",
-                    title: "order-" + Date.now(),
+                    title: "cmd-" + Date.now(),
                     field_client: orderToCreate.clientId,
                     clientName: orderToCreate.clientName,
                     field_articles: allArticles,

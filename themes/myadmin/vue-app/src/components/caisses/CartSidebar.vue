@@ -4,7 +4,7 @@
             <div class="p-3 border-b border-gray-200">
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="text-base font-semibold text-gray-900">Commande actuelle</h2>
-                    <button class="text-xs text-gray-500 hover:text-primary" @click="articleStore.clearCart(false)">Tout
+                    <button class="text-xs text-gray-500 hover:text-primary" @click="clearAll">Tout
                         effacer</button>
                 </div>
                 <div class="mb-3 p-2 bg-gray-50 rounded-lg">
@@ -30,10 +30,10 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between hidden" v-if="store.client && store.client.nid">
+                    <div class="flex items-center justify-between" v-if="store.client && store.client.nid">
                         <span class="text-xs text-gray-600">Assurance</span>
                         <label class="flex items-center space-x-2">
-                            <input type="checkbox"
+                            <input type="checkbox" v-model="insurance"
                                 class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
                             <span class="text-xs font-medium">Non</span>
                         </label>
@@ -218,6 +218,8 @@
 
 <script>
 import { toast } from 'vue-sonner';
+import { h } from "vue";
+import { RouterLink } from "vue-router";
 import { useArticleStore, useClientStore, useOrderStore } from '../../stores/index.js';
 import { ref, watch } from 'vue';
 
@@ -227,6 +229,7 @@ export default {
         const store = useClientStore();
         const articleStore = useArticleStore();
         const isCartOpen = ref(false);
+        const insurance = ref(false);
 
         watch(isCartOpen, (open) => {
             const bodyStyle = document.body.style;
@@ -236,6 +239,18 @@ export default {
                 bodyStyle.setProperty('overflow', 'auto', 'important');
             }
         });
+
+        watch(
+            () => store.client,
+            (client) => {
+                if (client && client.field_assurance == 1) {
+                    insurance.value = true;
+                } else {
+                    insurance.value = false;
+                }
+            },
+            { immediate: true }
+        );
 
         function incrementQuantity(item) {
             articleStore.incrementQuantity(item);
@@ -277,6 +292,11 @@ export default {
             return `${year}-${month}-${day}`;
         };
 
+        const clearAll = () => {
+            articleStore.clearCart(false);
+            store.client = null
+        }
+
         const orderStore = useOrderStore();
         const creatOrder = async function () {
             const order = saveCurrentOrder();
@@ -296,7 +316,7 @@ export default {
                     const data = {
                         entity_type: "node",
                         bundle: "commande",
-                        title: "order-" + Date.now(),
+                        title: "cmd-" + Date.now(),
                         field_client: orderToCreate.clientId,
                         clientName: orderToCreate.clientName,
                         field_articles: allArticles,
@@ -312,7 +332,16 @@ export default {
                     }
                     articleStore.clearCart(true);
                     orderStore.loading = false;
-                    toast.success('Commande ajouté avec succès !')
+                    toast.success("Commande ajoutée avec succès !", {
+                        description: h(
+                            RouterLink,
+                            {
+                                to: "/admin/commandes",
+                                class: "text-blue-600 underline font-semibold"
+                            },
+                            { default: () => "Voir la commande" }
+                        )
+                    });
                 } catch (err) {
                     toast.error("Une erreur inattendue est survenue.");
                 } finally {
@@ -331,7 +360,9 @@ export default {
             saveCurrentOrder,
             handleFinalizeSale,
             creatOrder,
-            isCartOpen
+            isCartOpen,
+            clearAll,
+            insurance
         }
     }
 }

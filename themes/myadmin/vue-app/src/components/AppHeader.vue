@@ -1,26 +1,19 @@
 <template>
   <header class="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between xxl-justify-around">
       <div class="flex items-center space-x-2 md:space-x-8">
         <h1 class="text-xl md:text-2xl font-['Pacifico'] text-primary">
-          Clinic Vonjy Aina
+          Clinique Vonjy Aina
         </h1>
         <nav class="hidden lg:flex space-x-1">
-           <router-link
-          v-for="menuItem in menuItems"
-          :key="menuItem.id"
-          :to="menuItem.path"
-          class="menu-item"
-          :class="getMenuItemClass(menuItem.path)"
-        >
+          <router-link v-for="menuItem in menuItems" :key="menuItem.id" :to="menuItem.path" class="menu-item"
+            :class="getMenuItemClass(menuItem.path)">
             {{ menuItem.name }}
-        </router-link>
+          </router-link>
         </nav>
       </div>
       <div class="hidden md:flex items-center space-x-2 md:space-x-4">
-        <div
-          class="flex items-center space-x-2 text-xs md:text-sm text-gray-600"
-        >
+        <div class="flex items-center space-x-2 text-xs md:text-sm text-gray-600">
           <div class="w-2 h-2 bg-secondary rounded-full"></div>
           <span class="hidden sm:inline">En ligne</span>
         </div>
@@ -33,16 +26,12 @@
     <!-- Logo and Brand -->
     <div class="brand">
       <h1 class="text-xl md:text-2xl font-['Pacifico'] text-primary">
-        Clinic Vonjy Aina
+        Clinique Vonjy Aina
       </h1>
     </div>
 
     <!-- Menu Toggle Button -->
-    <button
-      class="menu-toggle"
-      @click="emitToggleMenu"
-      aria-label="Toggle navigation menu"
-    >
+    <button class="menu-toggle" @click="emitToggleMenu" aria-label="Toggle navigation menu">
       <i class="fas fa-bars"></i>
     </button>
   </div>
@@ -54,7 +43,7 @@ export default {
 
   // Define events this component emits
   emits: ["toggle-menu"],
-    
+
   data() {
     return {
       // Menu configuration - easily customizable
@@ -67,10 +56,10 @@ export default {
     emitToggleMenu() {
       this.$emit("toggle-menu");
     },
-       // Determine CSS classes for menu item based on current route
+    // Determine CSS classes for menu item based on current route
     getMenuItemClass(itemPath) {
       const isActive = this.$route.path === itemPath
-      
+
       return {
         'px-4 xl:px-6 py-3 bg-primary text-white !rounded-button whitespace-nowrap font-medium text-sm xl:text-base cursor-pointer': isActive,
         'px-4 xl:px-6 py-3 text-gray-600 hover:text-primary hover:bg-gray-50 !rounded-button whitespace-nowrap font-medium text-sm xl:text-base cursor-pointer': !isActive
@@ -103,18 +92,21 @@ export default {
 
 .store-name {
   font-weight: 600;
-  color: #1f2937; /* gray-800 */
+  color: #1f2937;
+  /* gray-800 */
 }
 
 .menu-toggle {
   padding: 0.5rem;
   border-radius: 0.375rem;
-  color: #4b5563; /* gray-600 */
+  color: #4b5563;
+  /* gray-600 */
   transition: background-color 0.2s;
 }
 
 .menu-toggle:hover {
-  background-color: #f9fafb; /* gray-50 */
+  background-color: #f9fafb;
+  /* gray-50 */
 }
 
 .menu-toggle i {
@@ -127,6 +119,13 @@ export default {
     display: none;
   }
 }
+
+@media (min-width: 1680px) {
+  .xxl-justify-around {
+    justify-content: space-around;
+  }
+}
+
 @media (max-width: 1024px) {
   header {
     display: none;

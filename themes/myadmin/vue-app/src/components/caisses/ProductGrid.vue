@@ -27,14 +27,13 @@
     </div>
 
     <!-- Grille de produits -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-2 overflow-y-auto"
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 xxl-grid-cols-8 gap-2 overflow-y-auto"
       v-if="store.articles.rows.length">
       <product-card v-for="article in store.articles.rows" :key="article.nid" :article="article"
         @add-to-cart="handleAddToCart"
         class="bg-white rounded-lg p-2 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow product-card"></product-card>
     </div>
-    <div class="flex justify-center items-center mt-24"
-      v-else>
+    <div class="flex justify-center items-center mt-24" v-else>
       <h1 class="text-gray-500 text-lg">
         Aucun produits trouvé
       </h1>
@@ -195,3 +194,11 @@ export default {
   }
 }
 </script>
+
+<style>
+@media (min-width: 1680px) {
+  .xxl-grid-cols-8 {
+    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+  }
+}
+</style>

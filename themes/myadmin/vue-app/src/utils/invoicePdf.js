@@ -47,8 +47,12 @@ export async function generateInvoicePdf(order, statusMap, pdfMake) {
 
   // Convertir logo en base64
   const logoBase64 = await getBase64FromUrl(
-    "/sites/default/files/2025-11/logo-vonjyaina.png"
+    "/sites/default/files/2025-11/clinique-logo.png"
   );
+
+  // Calcul TVA
+  const tva = total * 0.2;
+  const totalTTC = total + tva;
 
   const docDefinition = {
     content: [
@@ -88,9 +92,16 @@ export async function generateInvoicePdf(order, statusMap, pdfMake) {
         columns: [
           [
             { text: client.title, margin: [0, 0, 0, 2], style: "clientName" },
-            { text: `Téléphone : ${client.field_phone || ""}`, margin: [0, 0, 0, 2] },
+            {
+              text: `Téléphone : ${client.field_phone || ""}`,
+              margin: [0, 0, 0, 2],
+            },
             client.field_assurance == 1
-              ? { text: "Client avec assurance", margin: [0, 0, 0, 2], color: "#4f46e5" }
+              ? {
+                  text: "Client avec assurance",
+                  margin: [0, 0, 0, 2],
+                  color: "#4f46e5",
+                }
               : "",
           ],
         ],
@@ -121,9 +132,23 @@ export async function generateInvoicePdf(order, statusMap, pdfMake) {
           widths: ["60%", "40%"],
           body: [
             [
-              { text: "TOTAL", bold: true, fontSize: 14 },
+              { text: "Total HT", bold: true },
               {
                 text: formatPrice(total),
+                alignment: "right",
+              },
+            ],
+            [
+              { text: "TVA (20%)", bold: true },
+              {
+                text: formatPrice(tva),
+                alignment: "right",
+              },
+            ],
+            [
+              { text: "Total TTC", bold: true, fontSize: 14 },
+              {
+                text: formatPrice(totalTTC),
                 bold: true,
                 alignment: "right",
                 color: "#2563eb",
@@ -132,6 +157,7 @@ export async function generateInvoicePdf(order, statusMap, pdfMake) {
             ],
           ],
         },
+        layout: "lightHorizontalLines",
       },
     ],
 
