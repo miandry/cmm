@@ -93,11 +93,16 @@
                                         <span class="font-medium">{{ Number(orderToShow.field_total_vente ||
                                             0).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}</span>
                                     </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">TVA (20%) :</span>
+                                        <span class="font-medium">{{ Number((orderToShow.field_total_vente ||
+                                            0)  * 0.2).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}</span>
+                                    </div>
                                     <div
                                         class="flex justify-between text-lg font-semibold pt-2 border-t border-gray-200">
                                         <span>Total :</span>
-                                        <span class="text-primary">{{ Number(orderToShow.field_total_vente ||
-                                            0).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}</span>
+                                        <span class="text-primary">{{ Number((orderToShow.field_total_vente ||
+                                            0) * 1.2).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}</span>
                                     </div>
                                 </div>
                             </div>

@@ -61,6 +61,8 @@
 import { toast } from 'vue-sonner';
 import { useArticleStore, useOrderStore } from '../../stores';
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { h } from "vue";
+import { RouterLink } from "vue-router";
 
 export default {
     name: "PaymentModal",
@@ -126,7 +128,16 @@ export default {
                 articleStore.clearCart(true);
                 emit('close-payment-modal');
                 orderStore.loading = false;
-                toast.success('Commande ajouté avec succès !')
+                toast.success("Commande ajoutée avec succès !", {
+                    description: h(
+                        RouterLink,
+                        {
+                            to: "/admin/commandes",
+                            class: "text-blue-600 underline font-semibold"
+                        },
+                        { default: () => "Voir la commande" }
+                    )
+                });
             } catch (err) {
                 console.error("Erreur dans saveOrder :", err);
                 toast.error("Une erreur inattendue est survenue.");

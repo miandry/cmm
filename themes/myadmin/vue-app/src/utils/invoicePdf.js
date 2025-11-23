@@ -51,8 +51,8 @@ export async function generateInvoicePdf(order, statusMap, pdfMake) {
   );
 
   // Calcul TVA
-  const tva = total * 0.2;
-  const totalTTC = total + tva;
+  const tva = Number(total) * 0.2;
+  const totalTTC = Number(total) + tva;
 
   const docDefinition = {
     content: [

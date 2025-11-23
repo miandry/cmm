@@ -10,7 +10,7 @@
                     </div>
                 </div>
                 <div>
-                    <h3 class="font-semibold text-gray-900">Commande #{{ order.title }}</h3>
+                    <h3 class="font-semibold text-gray-900">#{{ order.title }}</h3>
                     <p class="text-sm text-gray-500">{{ formatDate(order.field_date, order.created) }}</p>
                 </div>
             </div>
@@ -28,7 +28,7 @@
 
         <div class="grid md:grid-cols-2 gap-4 mb-4">
             <div>
-                <h4 class="font-medium text-gray-900 mb-2">Informations client</h4>
+                <h4 class="font-medium text-gray-900 mb-2 hidden">Informations client</h4>
                 <div class="flex items-center space-x-3">
                     <div
                         class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-medium uppercase">
