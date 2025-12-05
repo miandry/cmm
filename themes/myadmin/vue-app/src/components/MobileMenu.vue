@@ -9,7 +9,7 @@
 
     <!-- Mobile Menu Panel -->
     <div 
-      class="mobile-menu-panel"
+      class="mobile-menu-panel z-30"
       :class="{ 'open': isOpen }"
     >
       <!-- Menu Header -->
@@ -50,13 +50,16 @@
       <div class="menu-footer">
         <div class="status-indicator">
           <div class="online-dot" />
-          <span class="status-text">
-            En ligne
+          <span class="status-text capitalize">
+            {{ username }}
           </span>
         </div>
         
         <div class="store-info">
-          Magasin #001
+          <a href="/user/logout">
+            <i class="fas fa-sign-out-alt text-red-500 me-0 pe-0 text-sm"></i>
+            <span class="text-sm text-red-500 ms-2">Déconnexion</span>
+          </a>
         </div>
       </div>
     </div>
@@ -64,7 +67,6 @@
 </template>
 
 <script>
-      console.log(mydata);
 export default {
   name: 'MobileMenu',
   
@@ -82,7 +84,8 @@ export default {
   data() {
     return {
       // Menu configuration - easily customizable
-      menuItems: mydata.menu
+      menuItems: mydata.menu,
+      username: mydata.username
     }
   },
   

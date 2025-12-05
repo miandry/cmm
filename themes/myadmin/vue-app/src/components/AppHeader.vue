@@ -17,7 +17,20 @@
           <div class="w-2 h-2 bg-secondary rounded-full"></div>
           <span class="hidden sm:inline">En ligne</span>
         </div>
-        <div class="text-xs md:text-sm text-gray-600">Magasin #001</div>
+
+        <div id="user" class="relative">
+          <i class="fas fa-user text-gray-700 cursor-pointer text-base h-8 w-8 text-center leading-loose bg-gray-300 rounded-full"
+            @click="toggleUserMenu"></i>
+
+          <!-- DROP DOWN -->
+          <div v-if="showUserMenu"
+            class="absolute right-0 mt-2 w-40 bg-white shadow-lg border rounded-md py-2 z-50 animate-fade">
+            <a href="/user/logout" class="flex items-center w-full px-3 py-2 text-left hover:bg-gray-100 text-sm">
+              <i class="fas fa-sign-out-alt text-red-500 mr-2 text-xs"></i>
+              <span class="text-red-500">Déconnexion</span>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -47,8 +60,18 @@ export default {
   data() {
     return {
       // Menu configuration - easily customizable
-      menuItems: mydata.menu
+      menuItems: mydata.menu,
+      showUserMenu: false,
     }
+  },
+
+  mounted() {
+    // Fermer le dropdown si clic en dehors
+    document.addEventListener("click", this.closeMenuOnClickOutside);
+  },
+
+  beforeUnmount() {
+    document.removeEventListener("click", this.closeMenuOnClickOutside);
   },
 
   methods: {
@@ -64,7 +87,19 @@ export default {
         'px-4 xl:px-6 py-3 bg-primary text-white !rounded-button whitespace-nowrap font-medium text-sm xl:text-base cursor-pointer': isActive,
         'px-4 xl:px-6 py-3 text-gray-600 hover:text-primary hover:bg-gray-50 !rounded-button whitespace-nowrap font-medium text-sm xl:text-base cursor-pointer': !isActive
       }
-    }
+    },
+
+    toggleUserMenu(event) {
+      this.showUserMenu = !this.showUserMenu;
+      event.stopPropagation(); // empêche la fermeture immédiate
+    },
+
+    closeMenuOnClickOutside(event) {
+      // si clic en dehors
+      if (!event.target.closest("#user")) {
+        this.showUserMenu = false;
+      }
+    },
   },
 };
 </script>
