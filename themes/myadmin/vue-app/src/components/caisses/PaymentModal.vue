@@ -132,7 +132,7 @@ export default {
                     description: h(
                         RouterLink,
                         {
-                            to: "/admin/commandes",
+                            to: "/commandes",
                             class: "text-blue-600 underline font-semibold"
                         },
                         { default: () => "Voir la commande" }
