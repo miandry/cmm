@@ -38,6 +38,9 @@
                             <span class="text-xs font-medium">Non</span>
                         </label>
                     </div>
+                    <div class="cursor-pointer" v-if="insurance && articleStore.cardItems.length" @click="openEditPrice">
+                        <span class="text-xs text-primary">Modifier les prix</span>
+                    </div>
                 </div>
                 <div class="space-y-2 mb-3 max-h-68 overflow-y-auto" v-if="articleStore.cardItems.length">
                     <div class="flex items-center justify-between py-2 border-b border-gray-100 gap-2"
@@ -140,13 +143,16 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-between hidden" v-if="store.client && store.client.nid">
+                        <div class="flex items-center justify-between" v-if="store.client && store.client.nid">
                             <span class="text-xs text-gray-600">Assurance</span>
                             <label class="flex items-center space-x-2">
-                                <input type="checkbox"
+                                <input type="checkbox" v-model="insurance"
                                     class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
                                 <span class="text-xs font-medium">Non</span>
                             </label>
+                        </div>
+                        <div class="cursor-pointer" v-if="insurance && articleStore.cardItems.length" @click="openEditPrice">
+                            <span class="text-xs text-primary">Modifier les prix</span>
                         </div>
                     </div>
                     <div class="space-y-2 mb-3 max-h-68 overflow-y-auto" v-if="articleStore.cardItems.length">
@@ -213,6 +219,48 @@
                 </div>
             </div>
         </div>
+
+        <div class="fixed inset-0 bg-black bg-opacity-50 z-50" v-if="editPrice">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Modifier les prix</h3>
+                            <button id="close-payment-modal" class="text-gray-400 hover:text-gray-600"
+                                @click="closeEditPrice">
+                                <div class="w-6 h-6 flex items-center justify-center">
+                                    <i class="ri-close-line text-xl"></i>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="space-y-2 mb-3 max-h-68 overflow-y-auto" v-if="articleStore.cardItems.length">
+                            <div class="flex items-center justify-between py-2 border-b border-gray-100 gap-2"
+                                v-for="item in articleStore.cardItems" :key="item.nid">
+                                <div class="min-w-0 pr-2 w-4/6">
+                                    <h3 class="font-medium text-gray-900 text-xs truncate">{{ item.title }}</h3>
+                                    <p class="text-xs text-gray-500">{{ item.field_prix_unitaire }} Ar chacun</p>
+                                </div>
+                                <div class="text-right font-semibold text-xs w-2/6">
+                                    <input
+                                        class="w-full border border-gray-200 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ps-2 py-1"
+                                        type="number" min="0" v-model.number="item.field_prix_unitaire">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button @click="closeEditPrice"
+                                class="flex-1 px-2 py-1 text-gray-700 bg-gray-100 hover:bg-gray-200 !rounded-button font-medium whitespace-nowrap">
+                                Annuler
+                            </button>
+                            <button @click="confirmEditPrice"
+                                class="flex-1 px-2 py-1 bg-secondary text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap">
+                                Confirmer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -230,6 +278,7 @@ export default {
         const articleStore = useArticleStore();
         const isCartOpen = ref(false);
         const insurance = ref(false);
+        const editPrice = ref(false);
 
         watch(isCartOpen, (open) => {
             const bodyStyle = document.body.style;
@@ -251,6 +300,20 @@ export default {
             },
             { immediate: true }
         );
+
+        watch(insurance, (value) => {
+            if (!value) {
+                // assurance désactivée → remettre les prix initiaux
+                articleStore.cardItems.forEach(item => {
+                    if (item._original_price) {
+                        item.field_prix_unitaire = item._original_price;
+                    }
+                });
+
+                articleStore.saveOrder(store.client);
+                toast.info("Prix réinitialisés aux valeurs d'origine");
+            }
+        });
 
         function incrementQuantity(item) {
             articleStore.incrementQuantity(item);
@@ -295,6 +358,15 @@ export default {
         const clearAll = () => {
             articleStore.clearCart(false);
             store.client = null
+        }
+
+        const closeEditPrice = () => {
+            editPrice.value = false;
+            restoreOriginalPrices()
+        }
+
+        const openEditPrice = () => {
+            editPrice.value = true;
         }
 
         const orderStore = useOrderStore();
@@ -350,6 +422,23 @@ export default {
             }
         }
 
+        const confirmEditPrice = () => {
+            // recalcul automatique du total via le store
+            articleStore.saveOrder(store.client);
+
+            toast.success("Prix mis à jour !");
+            editPrice.value = false;
+        };
+
+        const restoreOriginalPrices = () => {
+            articleStore.cardItems.forEach(item => {
+                if (item._original_price) {
+                    item.field_prix_unitaire = item._original_price;
+                }
+            });
+            return articleStore.saveOrder(store.client);
+        };
+
 
         return {
             store,
@@ -362,7 +451,11 @@ export default {
             creatOrder,
             isCartOpen,
             clearAll,
-            insurance
+            insurance,
+            editPrice,
+            closeEditPrice,
+            openEditPrice,
+            confirmEditPrice,
         }
     }
 }

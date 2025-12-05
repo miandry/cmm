@@ -41,7 +41,7 @@ export const useArticleStore = defineStore("article", () => {
       // vérifier le stock avant d'augmenter
       if (article.field_quantite_stock > 0) {
         item.quantity++;
-        article.field_quantite_stock--; // décrémente le stock dans articles.rows
+        article.field_quantite_stock--;
       } else {
         toast.warning(() =>
           h("div", ["Rupture de stock !", h("br"), h("span", article.title)])
@@ -49,7 +49,15 @@ export const useArticleStore = defineStore("article", () => {
       }
     } else {
       if (article.field_quantite_stock > 0) {
-        cardItems.value.push({ ...article, quantity: 1 });
+        // sauvegarder le prix original si pas déjà enregistré
+        const originalPrice = article.field_prix_unitaire;
+
+        cardItems.value.push({
+          ...article,
+          quantity: 1,
+          _original_price: originalPrice, // on stocke le prix initial ici
+        });
+
         article.field_quantite_stock--;
       } else {
         toast.warning(() =>
