@@ -13,25 +13,30 @@
                     </div>
 
                     <div class="mb-4">
-                        <p class="text-sm text-gray-600 mb-3" id="order-info">Commande #{{ orderToEdit.title }}</p>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Nouveau statut</label>
-                        <div class="relative">
-                            <select v-model="form.field_status"
-                                class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm pr-8">
-                                <option value="payed">Payé</option>
-                                <option value="unpayed">Non payé</option>
-                                <option value="cancel">Annulée</option>
-                            </select>
+                        <p class="text-sm text-gray-600 mb-5" id="order-info">Commande #{{ orderToEdit.title }}</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button @click.prevent="changeOrderStatus('payed')"
+                                class="flex-1 text-sm px-2 py-1 bg-green-500 text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap">
+                                Payé
+                            </button>
+                            <button @click.prevent="changeOrderStatus('unpayed')"
+                                class="flex-1 text-sm px-2 py-1 bg-orange-500 text-white hover:bg-orange-600 !rounded-button font-medium whitespace-nowrap">
+                                Non payé
+                            </button>
+                            <button @click.prevent="changeOrderStatus('cancel')"
+                                class="flex-1 text-sm px-2 py-1 bg-red-500 text-white hover:bg-red-600 !rounded-button font-medium whitespace-nowrap">
+                                Annulée
+                            </button>
                         </div>
                     </div>
 
                     <div class="flex space-x-3">
                         <button @click="closeModal"
                             class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 !rounded-button font-medium whitespace-nowrap">
-                            Annuler
+                            Annuler la modification
                         </button>
-                        <button @click.prevent="changeOrderStatus"
-                            class="flex-1 px-4 py-2 bg-primary text-white hover:bg-blue-600 !rounded-button font-medium whitespace-nowrap">
+                        <button 
+                            class="flex-1 px-4 py-2 bg-primary text-white hover:bg-blue-600 !rounded-button font-medium whitespace-nowrap hidden">
                             Confirmer
                         </button>
                     </div>
@@ -67,12 +72,14 @@ export default {
             nid: props.orderToEdit.nid,
             field_status: "",
         });
-                
+
         const closeModal = () => {
             emit('close-edit-status-modal');
         }
 
-        const changeOrderStatus = async () => {
+        const changeOrderStatus = async (newStatus) => {
+            form.field_status = newStatus;
+            console.log(form);
             await orderStore.saveOrderData(form);
             if (orderStore.error) {
                 toast.error("Une erreur est survenue lors de la modification.")

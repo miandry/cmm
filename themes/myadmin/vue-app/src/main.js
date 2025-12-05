@@ -16,8 +16,10 @@ blockZoom();
 const routes = [
   { path: '/', component: Caisse },
   { path: '/caisse', component: Caisse },
+  { path: '/fr', component: Caisse },
+  { path: '/fr/frontdesk', component: Caisse },
   { path: '/clients', component: Clients },
-  { path: '/admin/commandes', component: Order },
+  { path: '/commandes', component: Order },
   { path: '/users', component: UserList },
   { path: '/about', component: About }
 ]
