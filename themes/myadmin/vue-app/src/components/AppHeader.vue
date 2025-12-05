@@ -15,7 +15,7 @@
       <div class="hidden md:flex items-center space-x-2 md:space-x-4">
         <div class="flex items-center space-x-2 text-xs md:text-sm text-gray-600">
           <div class="w-2 h-2 bg-secondary rounded-full"></div>
-          <span class="hidden sm:inline">En ligne</span>
+          <span class="hidden sm:inline capitalize">{{ username }}</span>
         </div>
 
         <div id="user" class="relative">
@@ -62,6 +62,7 @@ export default {
       // Menu configuration - easily customizable
       menuItems: mydata.menu,
       showUserMenu: false,
+      username: mydata.username,
     }
   },
 
