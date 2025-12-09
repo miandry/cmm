@@ -7,8 +7,9 @@
                     Médicaments
                 </button>
 
-                <button @click="setActiveTab('recommendations')" :class="['px-4 py-2 text-sm font-medium cursor-pointer border-b-2',
-                    activeTab === 'recommendations' ? 'text-primary border-primary' : 'text-gray-600 hover:text-primary']">
+                <button @click="setActiveTab('recommendations')"
+                    :class="['px-4 py-2 text-sm font-medium cursor-pointer border-b-2',
+                        activeTab === 'recommendations' ? 'text-primary border-primary' : 'text-gray-600 hover:text-primary']">
                     Recommandations
                 </button>
 
@@ -19,55 +20,10 @@
             </div>
         </div>
         <div v-show="activeTab === 'medications'" class="tab-content">
-            <div class="flex items-center justify-between mb-4">
-                <h4 class="text-base font-medium text-gray-900">Liste des médicaments</h4>
-                <button
-                    class="px-3 py-2 bg-primary text-white !rounded-button text-sm font-medium whitespace-nowrap flex items-center space-x-2 cursor-pointer">
-                    <div class="w-4 h-4 flex items-center justify-center">
-                        <i class="ri-add-line"></i>
-                    </div>
-                    <span>Ajouter médicament</span>
-                </button>
-            </div>
-            <div class="space-y-3 mb-4">
-                <div class="flex items-center justify-between p-3 border border-gray-200 !rounded-button">
-                    <div class="flex-1">
-                        <h4 class="font-medium text-gray-900">Paracetamol 500mg</h4>
-                        <p class="text-sm text-gray-600">3 fois par jour pendant 5 jours</p>
-                    </div>
-                    <button class="text-red-500 hover:text-red-700 cursor-pointer">
-                        <div class="w-5 h-5 flex items-center justify-center">
-                            <i class="ri-delete-bin-line"></i>
-                        </div>
-                    </button>
-                </div>
-                <div class="flex items-center justify-between p-3 border border-gray-200 !rounded-button">
-                    <div class="flex-1">
-                        <h4 class="font-medium text-gray-900">Ibuprofène 400mg</h4>
-                        <p class="text-sm text-gray-600">2 fois par jour si douleur</p>
-                    </div>
-                    <button class="text-red-500 hover:text-red-700 cursor-pointer">
-                        <div class="w-5 h-5 flex items-center justify-center">
-                            <i class="ri-delete-bin-line"></i>
-                        </div>
-                    </button>
-                </div>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-3 mb-4">
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">Total médicaments:</span>
-                    <span class="text-lg font-semibold text-primary">37 000
-                        Ar</span>
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Instructions pharmaceutiques</label>
-                <textarea rows="3"
-                    class="w-full px-3 py-2 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                    placeholder="Instructions particulières pour la prise des médicaments..."></textarea>
-            </div>
+            <!-- MedicamentsModals -->
+             <MedicamentsModals />
         </div>
-        <div  v-show="activeTab === 'recommendations'" class="tab-content">
+        <div v-show="activeTab === 'recommendations'" class="tab-content">
             <div class="flex items-center justify-between mb-4">
                 <h4 class="text-base font-medium text-gray-900">Examens complémentaires prescrits</h4>
                 <button
@@ -169,8 +125,13 @@
 
 <script>
 import { ref } from 'vue';
+import MedicamentsModals from './MedicamentsModals.vue';
 
 export default {
+    name: 'PrescriptionEtSuivi',
+    components: {
+        MedicamentsModals,
+    },
     setup() {
         const activeTab = ref('medications'); // tab actif par défaut
 
