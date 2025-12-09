@@ -10,6 +10,8 @@ import Clients from './pages/Clients.vue'
 import UserList from './pages/user/UserList.vue'
 import About from './pages/About.vue'
 import Order from './pages/Order.vue';
+import Consultations from './pages/Consultations.vue';
+import Facture from './pages/Facture.vue';
 
 blockZoom();
 
@@ -19,6 +21,8 @@ const routes = [
   { path: '/fr', component: Caisse },
   { path: '/fr/frontdesk', component: Caisse },
   { path: '/clients', component: Clients },
+  { path: '/consultations', component: Consultations },
+  { path: '/facture/:slug', component: Facture },
   { path: '/commandes', component: Order },
   { path: '/users', component: UserList },
   { path: '/about', component: About }

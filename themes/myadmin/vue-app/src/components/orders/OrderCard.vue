@@ -39,7 +39,7 @@
                         <p class="text-sm text-gray-500">{{ order.field_client.field_phone }}</p>
                         <div class="flex items-center mt-1">
                             <span class="sm:hidden text-xs text-gray-500 me-2">{{ order.field_articles.length }} {{
-                                order.field_articles.length > 1 ? 'produits' : 'produit'}}</span>
+                                order.field_articles.length > 1 ? 'produits' : 'produit' }}</span>
                             <div class="flex items-center mt-1" v-if="order.field_client.field_assurance == 1">
                                 <div class="w-2 h-2 bg-secondary rounded-full mr-1"></div>
                                 <span class="text-xs text-secondary font-medium">Assurance</span>
@@ -84,14 +84,13 @@
                 </div>
                 Changer statut
             </button>
-            <button @click="downloadPdf(order)"
-                class="px-3 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 !rounded-button text-sm font-medium whitespace-nowrap print-invoice-btn"
-                data-order-id="CMD-2024-001">
+            <router-link :to="`/facture/${order.title}`"
+                class="px-3 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 !rounded-button text-sm font-medium whitespace-nowrap print-invoice-btn">
                 <div class="w-4 h-4 flex items-center justify-center inline-block mr-1">
                     <i class="ri-printer-line"></i>
                 </div>
                 Imprimer facture
-            </button>
+            </router-link>
             <button @click="showDetailsModal"
                 class="px-3 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 !rounded-button text-sm font-medium whitespace-nowrap view-details-btn"
                 data-order-id="CMD-2024-001">

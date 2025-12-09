@@ -1,0 +1,49 @@
+<template>
+    <div class="p-3 border-b border-gray-200">
+        <div class="flex items-center justify-between mb-3">
+            <h2 class="text-base font-semibold text-gray-900">Patient actuel</h2>
+            <button class="text-xs text-primary hover:underline cursor-pointer">Changer</button>
+        </div>
+        <div class="mb-3 p-3 bg-gray-50 rounded-lg">
+            <div class="flex items-center space-x-3 mb-3">
+                <div
+                    class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center text-lg font-medium">
+                    MA
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-900">Marie Andriamampionona</p>
+                    <p class="text-xs text-gray-500">+261 34 87 654 32</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                    <span class="text-gray-600">Âge</span>
+                    <p class="font-medium">34 ans</p>
+                </div>
+                <div>
+                    <span class="text-gray-600">Groupe sanguin</span>
+                    <p class="font-medium">O+</p>
+                </div>
+                <div>
+                    <span class="text-gray-600">Assurance</span>
+                    <div class="flex items-center space-x-1">
+                        <div class="w-2 h-2 bg-secondary rounded-full"></div>
+                        <span class="font-medium text-secondary">Oui</span>
+                    </div>
+                </div>
+                <div>
+                    <span class="text-gray-600">Allergies</span>
+                    <p class="font-medium text-red-600">Pénicilline</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+export default {
+
+}
+</script>
+
+<style></style>

@@ -16,15 +16,15 @@
                         <p class="text-sm text-gray-600 mb-5" id="order-info">Commande #{{ orderToEdit.title }}</p>
                         <div class="flex flex-wrap gap-2">
                             <button @click.prevent="changeOrderStatus('payed')"
-                                class="flex-1 text-sm px-2 py-1 bg-green-500 text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap">
+                                class="flex-1 text-sm px-4 py-2 bg-green-500 text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap">
                                 Payé
                             </button>
                             <button @click.prevent="changeOrderStatus('unpayed')"
-                                class="flex-1 text-sm px-2 py-1 bg-orange-500 text-white hover:bg-orange-600 !rounded-button font-medium whitespace-nowrap">
+                                class="flex-1 text-sm px-4 py-2 bg-orange-500 text-white hover:bg-orange-600 !rounded-button font-medium whitespace-nowrap">
                                 Non payé
                             </button>
                             <button @click.prevent="changeOrderStatus('cancel')"
-                                class="flex-1 text-sm px-2 py-1 bg-red-500 text-white hover:bg-red-600 !rounded-button font-medium whitespace-nowrap">
+                                class="flex-1 text-sm px-4 py-2 bg-red-500 text-white hover:bg-red-600 !rounded-button font-medium whitespace-nowrap">
                                 Annulée
                             </button>
                         </div>
@@ -32,12 +32,8 @@
 
                     <div class="flex space-x-3">
                         <button @click="closeModal"
-                            class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 !rounded-button font-medium whitespace-nowrap">
+                            class="flex-1 text-gray-700 bg-gray-100 hidden hover:bg-gray-200 !rounded-button font-medium whitespace-nowrap">
                             Annuler la modification
-                        </button>
-                        <button 
-                            class="flex-1 px-4 py-2 bg-primary text-white hover:bg-blue-600 !rounded-button font-medium whitespace-nowrap hidden">
-                            Confirmer
                         </button>
                     </div>
                 </div>

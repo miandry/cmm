@@ -1,16 +1,11 @@
 <template>
-    <div>
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div v-if="orderToShow">
+        <div class="flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full">
                 <div class="p-6 pb-0 text-sm">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-xl font-semibold text-gray-900" id="modal-order-title">Détails de la commande
                             #{{ orderToShow.title }}</h3>
-                        <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
-                            <div class="w-6 h-6 flex items-center justify-center">
-                                <i class="ri-close-line text-xl"></i>
-                            </div>
-                        </button>
                     </div>
 
                     <div class="grid md:grid-cols-2 gap-6 mb-6">
@@ -96,35 +91,20 @@
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">TVA (20%) :</span>
                                         <span class="font-medium">{{ Number((orderToShow.field_total_vente ||
-                                            0)  * 0.2).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}</span>
+                                            0) * 0.2).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' })
+                                            }}</span>
                                     </div>
                                     <div
                                         class="flex justify-between text-lg font-semibold pt-2 border-t border-gray-200">
                                         <span>Total :</span>
                                         <span class="text-primary">{{ Number((orderToShow.field_total_vente ||
-                                            0) * 1.2).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}</span>
+                                            0) * 1.2).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' })
+                                            }}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="flex flex-wrap gap-3 px-6 pb-6">
-                    <button
-                        class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 !rounded-button font-medium whitespace-nowrap"
-                        @click="showStatusModal">
-                        <div class="w-4 h-4 flex items-center justify-center inline-block mr-1">
-                            <i class="ri-refresh-line"></i>
-                        </div>
-                        Changer statut
-                    </button>
-                    <router-link :to="`/facture/${orderToShow.title}`"
-                        class="px-4 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 !rounded-button font-medium whitespace-nowrap">
-                        <div class="w-4 h-4 flex items-center justify-center inline-block mr-1">
-                            <i class="ri-printer-line"></i>
-                        </div>
-                        Imprimer facture
-                    </router-link>
                 </div>
             </div>
         </div>
@@ -132,29 +112,55 @@
 </template>
 
 <script>
-import { formatDate } from '../../utils/formateDate';
+import { formatDate } from '../utils/formateDate';
 import { usePDF } from "vue3-pdfmake";
-import { generateInvoicePdf } from '../../utils/invoicePdf.js';
+import { generateInvoicePdf } from '../utils/invoicePdf.js';
+import { useRoute } from 'vue-router';
+import { useOrderStore } from '../stores/index.js';
+import { onMounted, ref } from 'vue';
 
 
 export default {
-    name: "ShowOrderModal",
-    props: {
-        orderToShow: {
-            type: Object,
-            required: true,
-        }
-    },
-    emit: ['close-details-modal', 'show-edit-status-modal'],
-    setup(props, { emit }) {
-        const closeModal = () => {
-            emit('close-details-modal');
+    name: "Facture",
+    setup() {
+        const route = useRoute()
+        const orderStore = useOrderStore()
+        const slug = route.params.slug
+        const orderToShow = ref(null);
+
+        const queryOptions = ref({
+            fields: [
+                'nid',
+                'title',
+                'field_articles',
+                'field_client',
+                'field_date',
+                'field_status',
+                'field_total_vente',
+                'created'
+            ],
+            sort: { val: 'nid', op: 'desc' },
+            filters: {
+                title: {
+                    val: slug,
+                    op: "="
+                },
+            },
+            values: {
+                field_client: ['title', 'nid', 'field_assurance', 'field_phone']
+            },
+            pager: 0,
+            offset: 10
+        })
+
+        const fetchOrders = async () => {
+            await orderStore.fetchOrders(queryOptions.value);            
         }
 
-        const showStatusModal = () => {
-            closeModal();
-            emit('show-edit-status-modal', props.orderToShow);
-        }
+        onMounted(async () => {
+            await fetchOrders();
+            orderToShow.value = orderStore.orders.rows[0]
+        })
 
         const statusMap = {
             unpayed: {
@@ -182,11 +188,10 @@ export default {
         };
 
         return {
-            closeModal,
-            showStatusModal,
             formatDate,
             statusMap,
-            downloadPdf
+            downloadPdf,
+            orderToShow
         }
     }
 }
