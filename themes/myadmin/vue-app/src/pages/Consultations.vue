@@ -1,5 +1,6 @@
 <template>
     <div class="flex flex-col lg:flex-row h-[calc(100vh-80px)]">
+        <PageLoader v-if="clientStore.loading" />
         <div class="flex-1 p-3 order-2 lg:order-1 flex flex-col">
             <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-4">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Consultation en cours</h3>
@@ -62,15 +63,25 @@ import ExamenClinique from '../components/Consultations/ExamenClinique.vue'
 import Patient from '../components/Consultations/Patient.vue'
 import PrescriptionEtSuivi from '../components/Consultations/PrescriptionEtSuivi.vue'
 import Historique from '../components/Consultations/Historique.vue'
+import { useClientStore } from '../stores/index.js';
+import PageLoader from '../components/PageLoader.vue'
 
 export default {
-  name: 'Consultations',
-  components: {
-    GeneralForm,
-    ExamenClinique,
-    PrescriptionEtSuivi,
-    Patient,
-    Historique
-  },
+    name: 'Consultations',
+    components: {
+        GeneralForm,
+        ExamenClinique,
+        PrescriptionEtSuivi,
+        Patient,
+        Historique,
+        PageLoader
+    },
+    setup() {
+        const clientStore = useClientStore();
+
+        return {
+            clientStore
+        };
+    }
 }
 </script>
