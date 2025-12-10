@@ -21,73 +21,11 @@
         </div>
         <div v-show="activeTab === 'medications'" class="tab-content">
             <!-- MedicamentsModals -->
-             <MedicamentsModals />
+            <MedicamentsModals />
         </div>
         <div v-show="activeTab === 'recommendations'" class="tab-content">
-            <div class="flex items-center justify-between mb-4">
-                <h4 class="text-base font-medium text-gray-900">Examens complémentaires prescrits</h4>
-                <button
-                    class="px-3 py-2 bg-primary text-white !rounded-button text-sm font-medium whitespace-nowrap flex items-center space-x-2 cursor-pointer">
-                    <div class="w-4 h-4 flex items-center justify-center">
-                        <i class="ri-add-line"></i>
-                    </div>
-                    <span>Prescrire examen</span>
-                </button>
-            </div>
-            <div class="space-y-3 mb-4">
-                <div class="flex items-center justify-between p-3 border border-gray-200 !rounded-button">
-                    <div class="flex-1">
-                        <h4 class="font-medium text-gray-900">Bilan sanguin complet</h4>
-                        <p class="text-sm text-gray-600">NFS, VS, CRP - À jeun</p>
-                    </div>
-                    <button class="text-red-500 hover:text-red-700 cursor-pointer">
-                        <div class="w-5 h-5 flex items-center justify-center">
-                            <i class="ri-delete-bin-line"></i>
-                        </div>
-                    </button>
-                </div>
-                <div class="flex items-center justify-between p-3 border border-gray-200 !rounded-button">
-                    <div class="flex-1">
-                        <h4 class="font-medium text-gray-900">Radiographie thoracique</h4>
-                        <p class="text-sm text-gray-600">Face et profil - Urgent</p>
-                    </div>
-                    <button class="text-red-500 hover:text-red-700 cursor-pointer">
-                        <div class="w-5 h-5 flex items-center justify-center">
-                            <i class="ri-delete-bin-line"></i>
-                        </div>
-                    </button>
-                </div>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-3 mb-4">
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">Total examens:</span>
-                    <span class="text-lg font-semibold text-primary">400 000 Ar</span>
-                </div>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Conseils
-                        hygiéno-diététiques</label>
-                    <textarea rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                        placeholder="Conseils sur l'alimentation, l'hygiène de vie, l'activité physique..."></textarea>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Précautions
-                            particulières</label>
-                        <textarea rows="3"
-                            class="w-full px-3 py-2 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                            placeholder="Précautions à prendre..."></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Signes d'alerte</label>
-                        <textarea rows="3"
-                            class="w-full px-3 py-2 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                            placeholder="Signes nécessitant une consultation urgente..."></textarea>
-                    </div>
-                </div>
-            </div>
+            <!-- Recommendations -->
+            <RecommandationsModals />
         </div>
         <div v-show="activeTab === 'followup'" class="tab-content">
             <div class="space-y-4">
@@ -96,25 +34,25 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Prochaine
                             consultation</label>
                         <div class="relative">
-                            <input type="date"
+                            <input type="date" v-model="suiviDate"
                                 class="w-full px-3 py-2 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Type de suivi</label>
-                        <select
+                        <select v-model="typeSuivi"
                             class="w-full px-3 py-2 pr-8 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
-                            <option value="">Sélectionner le type</option>
-                            <option value="controle">Contrôle de routine</option>
-                            <option value="resultats">Résultats d'examens</option>
-                            <option value="evolution">Suivi évolution</option>
-                            <option value="urgent">Consultation urgente si besoin</option>
+                            <option :value="''">Sélectionner le type</option>
+                            <option :value="'Controle_de_routine'">Contrôle de routine</option>
+                            <option :value="'Resultats_d_examens'">Résultats d'examens</option>
+                            <option :value="'Suivi_evolution'">Suivi évolution</option>
+                            <option :value="'Consultation_urgente_si_besoin'">Consultation urgente si besoin</option>
                         </select>
                     </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Objectifs du suivi</label>
-                    <textarea rows="3"
+                    <textarea rows="3" v-model="suiviObjectif"
                         class="w-full px-3 py-2 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                         placeholder="Définissez les objectifs et points à surveiller lors du prochain rendez-vous..."></textarea>
                 </div>
@@ -126,20 +64,30 @@
 <script>
 import { ref } from 'vue';
 import MedicamentsModals from './MedicamentsModals.vue';
+import RecommandationsModals from './RecommandationsModals.vue';
 
 export default {
     name: 'PrescriptionEtSuivi',
     components: {
         MedicamentsModals,
+        RecommandationsModals,
     },
     setup() {
         const activeTab = ref('medications'); // tab actif par défaut
-
+        const typeSuivi = ref('');
+        const suiviObjectif = ref('');
+        const suiviDate = ref('');
         const setActiveTab = (tab) => {
             activeTab.value = tab;
         };
 
-        return { activeTab, setActiveTab };
+        return {
+            activeTab,
+            setActiveTab,
+            typeSuivi,
+            suiviObjectif,
+            suiviDate
+        };
     },
 };
 </script>

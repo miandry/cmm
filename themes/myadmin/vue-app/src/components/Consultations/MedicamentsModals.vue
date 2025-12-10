@@ -12,17 +12,21 @@
         </div>
         <div class="space-y-3 mb-4" v-if="Object.keys(consultationsStore.savedMedication).length > 0">
             <div v-for="item in consultationsStore.savedMedication.items" :key="item.nid"
-                class="flex items-center justify-between p-3 border border-gray-200 !rounded-button">
+                class="flex items-center justify-between p-2 border border-gray-200 !rounded-button">
                 <div class="flex-1">
-                    <p class="font-medium text-gray-900">{{ item.title }}</p>
-                    <p class="text-sm text-gray-600">{{ item.field_description }}</p>
+                    <p class="text-xs font-medium text-gray-900">{{ item.title }}</p>
+                    <p class="text-xs text-gray-600">{{ item.field_description }}</p>
                 </div>
-                <button class="text-red-500 hover:text-red-700 cursor-pointer"
-                    @click="removeFromList(item.nid, item.field_prix)">
-                    <div class="w-5 h-5 flex items-center justify-center">
-                        <i class="ri-delete-bin-line"></i>
-                    </div>
-                </button>
+
+                <div class="flex items-center">
+                    <p class="text-xs text-green-600 font-medium">{{ Number(item.field_prix).toLocaleString() }} Ar</p>
+                    <button class="text-red-500 hover:text-red-700 cursor-pointer"
+                        @click="removeFromList(item.nid, item.field_prix)">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                            <i class="ri-delete-bin-line"></i>
+                        </div>
+                    </button>
+                </div>
             </div>
         </div>
         <div class="bg-gray-50 rounded-lg p-3 mb-4" v-if="Object.keys(consultationsStore.savedMedication).length > 0">
