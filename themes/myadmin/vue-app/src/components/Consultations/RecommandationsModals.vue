@@ -295,8 +295,17 @@ export default {
             }
         }
 
+        function resetAll() {
+            resetForm();
+            examenStore.savedExamen = {};
+            conseils.value = "";
+            precautions.value = "";
+            signes.value = "";
+        }
+
         defineExpose({
-            getRecommandationData
+            getRecommandationData,
+            resetAll
         })
 
 
@@ -320,6 +329,7 @@ export default {
             precautions,
             signes,
             getRecommandationData,
+            resetAll,
         }
 
     }

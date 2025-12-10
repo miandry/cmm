@@ -172,6 +172,8 @@ export default {
                 return
             }
             toast.success("Consultation enregistré!")
+            generalFormRef.value.resetForm();
+            prescriptionEtSuivi.value.resetAll();
         }
 
         return {

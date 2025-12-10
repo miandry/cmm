@@ -259,6 +259,12 @@ export default {
             articleSelectedTitle.value = "";
         }
 
+        function resetAll() {
+            resetData();
+            instructionGlobal.value = '';
+            consultationsStore.savedMedication = {};
+        }
+
         function getMedicationData() {
             return {
                 // items: articleStore.savedMedication.value,
@@ -268,7 +274,8 @@ export default {
         }
 
         defineExpose({
-            getMedicationData
+            getMedicationData,
+            resetAll
         })
         return {
             isOpen,
@@ -289,7 +296,8 @@ export default {
             consultationsStore,
             removeFromList,
             instructionGlobal,
-            getMedicationData
+            getMedicationData,
+            resetAll
         }
     }
 }

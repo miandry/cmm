@@ -97,8 +97,17 @@ export default {
             }
         }
 
+        function resetAll() {
+            medicationRef.value.resetAll();
+            recommandationRef.value.resetAll();
+            form.suiviDate = '';
+            form.typeSuivi = '';
+            form.suiviObjectif = '';
+        }
+
         defineExpose({
-            stockTabData
+            stockTabData,
+            resetAll,
         })
 
         return {
@@ -110,7 +119,8 @@ export default {
             suiviDate,
             medicationRef,
             stockTabData,
-            recommandationRef
+            recommandationRef,
+            resetAll
             
         };
     },

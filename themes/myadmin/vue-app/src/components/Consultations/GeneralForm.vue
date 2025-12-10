@@ -85,14 +85,23 @@ export default {
             return { ...form, hasError: !isValid };
         }
 
+        function resetForm() {
+            form.consultationMotif = '';
+            form.temperature = '';
+            form.tension = '';
+            form.poids = '';
+        }
+
         defineExpose({
-            getGeneralFormData
+            getGeneralFormData,
+            resetForm,
         })
 
         return {
             form,
             getGeneralFormData,
-            errors
+            errors,
+            resetForm
         }
     }
 }
