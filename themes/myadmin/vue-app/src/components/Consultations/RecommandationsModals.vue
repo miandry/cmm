@@ -174,7 +174,7 @@
 </template>
 
 <script>
-import { reactive, ref } from 'vue';
+import { reactive, ref, defineExpose } from 'vue';
 import { useExamenStore } from '../../stores/index.js';
 import { toast } from 'vue-sonner';
 
@@ -287,6 +287,19 @@ export default {
             toast.success('element enlevé !');
         };
 
+        function getRecommandationData() {
+            return {
+                conseil: conseils.value,
+                precautions: precautions.value,
+                signes: signes.value,
+            }
+        }
+
+        defineExpose({
+            getRecommandationData
+        })
+
+
         return {
             isModalOpen,
             examSearch,
@@ -306,6 +319,7 @@ export default {
             conseils,
             precautions,
             signes,
+            getRecommandationData,
         }
 
     }

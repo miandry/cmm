@@ -150,7 +150,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, defineExpose } from 'vue';
 import { useArticleStore } from '../../stores/index.js';
 import { toast } from 'vue-sonner';
 import { useConsultationStore } from '../../stores/index.js';
@@ -259,6 +259,17 @@ export default {
             articleSelectedTitle.value = "";
         }
 
+        function getMedicationData() {
+            return {
+                // items: articleStore.savedMedication.value,
+                // total: articleStore.total.value,
+                instructionGlobal: instructionGlobal.value
+            }
+        }
+
+        defineExpose({
+            getMedicationData
+        })
         return {
             isOpen,
             articleSelectedNidError,
@@ -277,7 +288,8 @@ export default {
             articleSelectedNid,
             consultationsStore,
             removeFromList,
-            instructionGlobal
+            instructionGlobal,
+            getMedicationData
         }
     }
 }

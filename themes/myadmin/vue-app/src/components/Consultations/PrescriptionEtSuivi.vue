@@ -21,11 +21,11 @@
         </div>
         <div v-show="activeTab === 'medications'" class="tab-content">
             <!-- MedicamentsModals -->
-            <MedicamentsModals />
+            <MedicamentsModals ref="medicationRef" />
         </div>
         <div v-show="activeTab === 'recommendations'" class="tab-content">
             <!-- Recommendations -->
-            <RecommandationsModals />
+            <RecommandationsModals  ref="recommandationRef"/>
         </div>
         <div v-show="activeTab === 'followup'" class="tab-content">
             <div class="space-y-4">
@@ -34,13 +34,13 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Prochaine
                             consultation</label>
                         <div class="relative">
-                            <input type="date" v-model="suiviDate"
+                            <input type="date" v-model="form.suiviDate"
                                 class="w-full px-3 py-2 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Type de suivi</label>
-                        <select v-model="typeSuivi"
+                        <select v-model="form.typeSuivi"
                             class="w-full px-3 py-2 pr-8 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                             <option :value="''">Sélectionner le type</option>
                             <option :value="'Controle_de_routine'">Contrôle de routine</option>
@@ -52,7 +52,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Objectifs du suivi</label>
-                    <textarea rows="3" v-model="suiviObjectif"
+                    <textarea rows="3" v-model="form.suiviObjectif"
                         class="w-full px-3 py-2 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                         placeholder="Définissez les objectifs et points à surveiller lors du prochain rendez-vous..."></textarea>
                 </div>
@@ -62,7 +62,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, defineExpose, reactive } from 'vue';
 import MedicamentsModals from './MedicamentsModals.vue';
 import RecommandationsModals from './RecommandationsModals.vue';
 
@@ -77,16 +77,41 @@ export default {
         const typeSuivi = ref('');
         const suiviObjectif = ref('');
         const suiviDate = ref('');
+        const medicationRef = ref(null)
+        const recommandationRef = ref(null);
+        const form = reactive ({
+            suiviDate: '',
+            typeSuivi: '',
+            suiviObjectif: '',
+        })
         const setActiveTab = (tab) => {
             activeTab.value = tab;
         };
 
+
+        function stockTabData() {
+            return {
+                medication: medicationRef.value.getMedicationData(),
+                recommandation: recommandationRef.value.getRecommandationData(),
+                suivi: { ...form }
+            }
+        }
+
+        defineExpose({
+            stockTabData
+        })
+
         return {
+            form,
             activeTab,
             setActiveTab,
             typeSuivi,
             suiviObjectif,
-            suiviDate
+            suiviDate,
+            medicationRef,
+            stockTabData,
+            recommandationRef
+            
         };
     },
 };

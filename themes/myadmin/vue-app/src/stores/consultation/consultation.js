@@ -43,11 +43,10 @@ export const useConsultationStore = defineStore("consultation", () => {
     }
   }
 
-  async function createConsultation(newClientData) {
+  async function createConsultation(newConsultationData) {
+    loading.value = true;
     try {
-      const response = await saveConsultation(newClientData);
-      const newClient = await fetchConsultation(response.data.item);
-      consultation.value = newClient;
+      const response = await saveConsultation(newConsultationData);
     } catch (err) {
       error.value = err;
     } finally {
