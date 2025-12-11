@@ -1,12 +1,12 @@
 <template>
   <div class="p-4 md:p-6">
     <PageLoader v-if="store.loading" />
-    <rapportClients @show="showModal" />
+    <rapportClients />
     <tableClients :clients="store.clients" @searchKeyWords="onSearch" @filterBy="onfilter" @paginate="onPagination"
       @show="showModal" />
     <!-- Client Modal -->
     <client-modal @close="closeModal" @show="showModal"
-      :class="[modalVisible ? 'flex' : 'hidden', 'fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center p-4']" />
+      :class="[modalVisible ? 'flex' : 'hidden', 'fixed inset-0 bg-black bg-opacity-50 z-50']" />
   </div>
 </template>
 <script>
@@ -46,11 +46,13 @@ export default {
     }
 
     const onSearch = async (value) => {
+      queryOptions.value.pager = 0;
       updateFilter('title', value, 'CONTAINS')
       fetchClients()
     }
 
     const onfilter = async (value) => {
+      queryOptions.value.pager = 0;
       if (value == "all") {
         value = null;
       }

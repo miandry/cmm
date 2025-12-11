@@ -1,147 +1,223 @@
 <template>
-  <div class="bg-white rounded-lg border border-gray-200">
-    <!-- Search and Filter Section -->
-    <div class="p-4 border-b border-gray-200">
-      <div class="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
-        <div class="relative flex-1">
-          <div
-            class="w-5 h-5 flex items-center justify-center absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <i class="ri-search-line text-sm"></i>
+  <div>
+    <div class="mb-2 rounded-lg p-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- Champ de recherche -->
+        <div class="flex-1 max-w-lg">
+          <div class="relative">
+            <div
+              class="w-5 h-5 flex items-center justify-center absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <i class="ri-search-line text-lg"></i>
+            </div>
+            <input type="text" placeholder="Rechercher par nom, téléphone ou numéro de dossier..." v-model="searchQuery"
+              @keyup.enter="searchByKeys" class="w-full pl-10 pr-4 py-3 border border-gray-300 !rounded-button text-sm 
+                 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
           </div>
-          <input type="text" placeholder="Rechercher par nom" v-model="searchQuery" @keyup.enter="searchByKeys"
-            class="w-full pl-10 pr-4 py-2 border border-gray-200 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
         </div>
-        <div class="flex space-x-2 overflow-x-auto">
-          <button :class="[
-            'px-4 py-2 !rounded-button whitespace-nowrap text-sm font-medium filter-btn',
-            filterQueryActive === 'all'
-              ? 'bg-primary text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          ]" @click="filter('all')">
-            Tous
-          </button>
-          <button :class="[
-            'px-4 py-2 !rounded-button whitespace-nowrap text-sm font-medium filter-btn hidden',
-            'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          ]">
-            Clients réguliers
-          </button>
-          <button :class="[
-            'px-4 py-2 !rounded-button whitespace-nowrap text-sm font-medium filter-btn',
-            filterQueryActive === 1
-              ? 'bg-primary text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          ]" @click="filter(1)">
-            Avec assurance
-          </button>
-          <button :class="[
-            'px-4 py-2 !rounded-button whitespace-nowrap text-sm font-medium filter-btn',
-            filterQueryActive === 0
-              ? 'bg-primary text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          ]" @click="filter(0)">
-            Sans assurance
+        <!-- Filters + Ajouter -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Filtres -->
+          <div class="flex space-x-2">
+            <!-- Tous -->
+            <button @click="filter('all')" :class="[
+              'px-3 py-2 text-sm font-medium !rounded-button whitespace-nowrap filter-btn border',
+              filterQueryActive === 'all'
+                ? 'text-primary bg-blue-50 border-primary'
+                : 'text-gray-600 hover:text-primary hover:bg-gray-50 border-gray-300'
+            ]">
+              Tous
+            </button>
+            <!-- Assurés -->
+            <button @click="filter(1)" :class="[
+              'px-3 py-2 text-sm font-medium !rounded-button whitespace-nowrap filter-btn border',
+              filterQueryActive === 1
+                ? 'text-primary bg-blue-50 border-primary'
+                : 'text-gray-600 hover:text-primary hover:bg-gray-50 border-gray-300'
+            ]">
+              Assurés
+            </button>
+            <!-- Non assurés -->
+            <button @click="filter(0)" :class="[
+              'px-3 py-2 text-sm font-medium !rounded-button whitespace-nowrap filter-btn border',
+              filterQueryActive === 0
+                ? 'text-primary bg-blue-50 border-primary'
+                : 'text-gray-600 hover:text-primary hover:bg-gray-50 border-gray-300'
+            ]">
+              Non assurés
+            </button>
+          </div>
+          <!-- Ajouter patient -->
+          <button @click="showModal" class="px-4 py-2 bg-primary text-white !rounded-button font-medium text-sm 
+               whitespace-nowrap flex items-center space-x-2">
+            <div class="w-4 h-4 flex items-center justify-center">
+              <i class="ri-add-line"></i>
+            </div>
+            <span>Ajouter Patient</span>
           </button>
         </div>
       </div>
     </div>
 
 
-    <!-- Desktop Table -->
-    <div class="md:block overflow-x-auto">
-      <table class="w-full">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <input type="checkbox" v-model="selectAll" @change="toggleSelectAll"
-                class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary" />
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Client
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Téléphone
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="client in clients.rows" :key="client.nid" class="hover:bg-gray-50">
 
-            <td class="px-4 py-4">
-              <input type="checkbox" v-model="selectedClients" :value="client.id"
-                class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary client-checkbox" />
-            </td>
-            <td class="px-4 py-4">
-              <div class="flex items-center space-x-3">
-                <div :class="[
-                  'w-10 h-10 text-white rounded-full flex items-center justify-center font-medium',
-                  `bg-orange-500`
-                ]">
-                  {{ "RA" }}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100">
+      <div class="p-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-gray-900">Liste des Patients</h2>
+          <div class="flex items-center space-x-2">
+            <div class="relative hidden">
+              <button
+                class="px-3 py-2 text-sm text-gray-600 hover:text-primary border border-gray-300 !rounded-button whitespace-nowrap flex items-center space-x-2">
+                <div class="w-4 h-4 flex items-center justify-center">
+                  <i class="ri-download-line"></i>
                 </div>
-                <div>
-                  <p class="text-sm font-medium text-gray-900">
-                    {{ client.title }}
-                  </p>
-                  <p class="text-xs text-gray-500">{{ client.type }}</p>
+                <span>Exporter</span>
+                <div class="w-4 h-4 flex items-center justify-center ml-1">
+                  <i class="ri-arrow-down-s-line text-xs"></i>
+                </div>
+              </button>
+              <div
+                class="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 hidden">
+                <div class="py-1">
+                  <button
+                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-file-text-line text-green-600"></i>
+                    </div>
+                    <span>Exporter CSV</span>
+                  </button>
+                  <button
+                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-file-excel-2-line text-green-700"></i>
+                    </div>
+                    <span>Exporter Excel (.xlsx)</span>
+                  </button>
+                  <button
+                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-file-pdf-line text-red-600"></i>
+                    </div>
+                    <span>Exporter PDF</span>
+                  </button>
                 </div>
               </div>
-            </td>
-            <td class="px-4 py-4 text-sm text-gray-900">{{ client.field_phone }}</td>
-            <td class="px-4 py-4">
-              <div class="flex space-x-2">
-                <button @click="editClient(client)"
-                  class="p-2 text-gray-400 hover:text-primary !rounded-button hover:bg-gray-50 edit-client">
-                  <div class="w-4 h-4 flex items-center justify-center">
-                    <i class="ri-edit-line"></i>
+            </div>
+            <button
+              class="px-3 py-2 text-sm text-gray-600 hover:text-primary border border-gray-300 !rounded-button whitespace-nowrap flex items-center space-x-2">
+              <div class="w-4 h-4 flex items-center justify-center">
+                <i class="ri-settings-3-line"></i>
+              </div>
+              <span>Actions</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left">
+                <input type="checkbox" class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Âge</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Téléphone</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Assurance</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">Dernière
+                Consultation</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="client in clients.rows" :key="client.nid" class="hover:bg-gray-50 cursor-pointer patient-row">
+              <td class="px-4 py-3">
+                <input type="checkbox"
+                  class="patient-checkbox w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex items-center space-x-3">
+                  <div
+                    class="w-10 h-10 bg-primary text-white uppercase rounded-full flex items-center justify-center text-sm font-medium">
+                    {{ client.title.slice(0, 2) }}
                   </div>
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Empty State -->
-      <div v-if="clients.rows.length === 0" class="text-center py-8">
-        <i class="ri-user-search-line text-4xl text-gray-300 mb-2"></i>
-        <p class="text-gray-500">Aucun client trouvé</p>
+                  <div>
+                    <p class="text-sm font-medium text-gray-900 capitalize">{{ client.title }}</p>
+                    <p class="text-xs text-gray-500 hidden">#0001</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-900">{{ client.field_age ? client.field_age + " ans" : '' }}</td>
+              <td class="px-4 py-3 text-sm text-gray-900">
+                {{ client.field_phone }}
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex items-center space-x-1" v-if="client.field_assurance && client.field_assurance == 1">
+                  <div class="w-2 h-2 bg-secondary rounded-full"></div>
+                  <span class="text-xs font-medium text-secondary ">Oui</span>
+                </div>
+                <div class="flex items-center space-x-1" v-if="client.field_assurance && client.field_assurance == 0">
+                  <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span class="text-xs font-medium text-red-500 ">Non</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-500 hidden">15 Nov 2024</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center space-x-2">
+                  <button class="text-primary hover:text-blue-600 view-patient">
+                    <div class="w-5 h-5 flex items-center justify-center">
+                      <i class="ri-eye-line"></i>
+                    </div>
+                  </button>
+                  <button class="text-gray-600 hover:text-primary edit-patient" @click="showModal(client)">
+                    <div class="w-5 h-5 flex items-center justify-center">
+                      <i class="ri-edit-line"></i>
+                    </div>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div>
-    <!-- Pagination and Bulk Actions -->
-    <div class="px-4 py-3 border-t border-gray-200 flex flex-col md:flex-row md:items-center justify-center"
-      v-if="clients.total > 10">
-      <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0">
-        <div class="flex flex-wrap justify-center gap-1 order-1 md:order-2">
+      <div class="px-4 py-3 border-t border-gray-200 flex items-center justify-end" v-if="clients.total > 10">
+        <div class="flex items-center space-x-2">
+
+          <!-- Précédent -->
           <button @click="previousPage" :class="[
-            'px-2 md:px-3 py-1 text-xs md:text-sm !rounded-button',
-            currentPage === 1
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed hidden'
-              : 'bg-gray-100 hover:bg-gray-200'
-          ]">
+            'px-3 py-2 text-sm text-gray-600 hover:text-primary border border-gray-300 !rounded-button whitespace-nowrap',
+            currentPage === 1 && 'opacity-50 cursor-not-allowed'
+          ]" :disabled="currentPage === 1">
             Précédent
           </button>
-          <button v-for="page in visiblePages" :key="page" @click="goToPage(page)" :class="[
-            'px-2 md:px-3 py-1 text-xs md:text-sm !rounded-button',
-            page === currentPage
-              ? 'bg-primary text-white'
-              : 'bg-gray-100 hover:bg-gray-200'
-          ]">
-            {{ page }}
-          </button>
+
+          <!-- Numéros de pages -->
+          <div class="flex space-x-1">
+            <button v-for="page in visiblePages" :key="page" @click="goToPage(page)" :class="[
+              'px-3 py-2 text-sm !rounded-button',
+              page === currentPage
+                ? 'bg-primary text-white'
+                : 'text-gray-600 hover:text-primary hover:bg-gray-50'
+            ]">
+              {{ page }}
+            </button>
+          </div>
+
+          <!-- Suivant -->
           <button @click="nextPage" :disabled="currentPage === totalPages" :class="[
-            'px-2 md:px-3 py-1 text-xs md:text-sm !rounded-button',
-            currentPage === totalPages
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed hidden'
-              : 'bg-gray-100 hover:bg-gray-200'
+            'px-3 py-2 text-sm text-gray-600 hover:text-primary border border-gray-300 !rounded-button whitespace-nowrap',
+            currentPage === totalPages && 'opacity-50 cursor-not-allowed'
           ]">
             Suivant
           </button>
+
         </div>
       </div>
+
     </div>
   </div>
 
@@ -213,14 +289,16 @@ export default {
 
     function searchByKeys() {
       emit('searchKeyWords', searchQuery.value)
+      currentPage.value = 1;
     }
 
     function filter(value) {
       filterQueryActive.value = value;
       emit('filterBy', value);
+      currentPage.value = 1;
     }
 
-    function editClient(client) {
+    const showModal = (client =  null) => {
       emit('show', client);
     }
 
@@ -235,7 +313,7 @@ export default {
       goToPage,
       nextPage,
       previousPage,
-      editClient
+      showModal
     }
   }
 }
