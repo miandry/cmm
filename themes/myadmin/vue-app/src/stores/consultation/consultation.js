@@ -76,15 +76,21 @@ export const useConsultationStore = defineStore("consultation", () => {
     return true;
   }
 
-  function removeFromList(nid, prix) {
+  function removeFromList(nid, prix, quantity) {
     // Retirer tous les items avec ce nid
-    medications.value = medications.value.filter(
-      (item) => item.nid !== nid
-    );
+    medications.value = medications.value.filter((item) => item.nid !== nid);
     savedMedication.value.items = savedMedication.value.items.filter(
       (item) => item.nid !== nid
     );
-    savedMedication.value.total -= parseFloat(prix);
+    savedMedication.value.total -= parseFloat(prix * quantity);
+  }
+
+  function resetMedication() {
+    savedMedication.value = {
+      items: [],
+      total: 0,
+    };
+    medications.value = [];
   }
 
   return {
@@ -99,5 +105,6 @@ export const useConsultationStore = defineStore("consultation", () => {
     savedMedication,
     medications,
     removeFromList,
+    resetMedication
   };
 });

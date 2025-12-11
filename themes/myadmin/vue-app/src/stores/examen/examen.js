@@ -59,11 +59,21 @@ export const useExamenStore = defineStore("examen", () => {
 
   function removeFromList(nid, prix) {
     // Retirer tous les items avec ce nid
-    paragraphExamens.value = paragraphExamens.value.filter((item) => item.nid != nid);
+    paragraphExamens.value = paragraphExamens.value.filter(
+      (item) => item.nid != nid
+    );
     savedExamen.value.items = savedExamen.value.items.filter(
       (item) => item.nid !== nid
     );
     savedExamen.value.total -= parseFloat(prix);
+  }
+
+  function resetExamen() {
+    savedExamen.value = {
+      items: [],
+      total: 0,
+    };
+    paragraphExamens.value = [];
   }
 
   return {
@@ -75,5 +85,6 @@ export const useExamenStore = defineStore("examen", () => {
     saveExamen,
     paragraphExamens,
     removeFromList,
+    resetExamen,
   };
 });

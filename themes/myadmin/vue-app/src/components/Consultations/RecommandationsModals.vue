@@ -298,6 +298,7 @@ export default {
         function resetAll() {
             resetForm();
             examenStore.savedExamen = {};
+            examenStore.resetExamen();
             conseils.value = "";
             precautions.value = "";
             signes.value = "";

@@ -19,9 +19,12 @@
                 </div>
 
                 <div class="flex items-center">
-                    <p class="text-xs text-green-600 font-medium">{{ Number(item.field_prix).toLocaleString() }} Ar</p>
+                    <p class="text-xs text-green-600 font-medium">
+                        {{ Number(item.field_prix).toLocaleString() }} Ar
+                        <span class="text-gray-500"> x {{ item.quantity }}</span>
+                    </p>
                     <button class="text-red-500 hover:text-red-700 cursor-pointer"
-                        @click="removeFromList(item.nid, item.field_prix)">
+                        @click="removeFromList(item.nid, item.field_prix, item.quantity)">
                         <div class="w-5 h-5 flex items-center justify-center">
                             <i class="ri-delete-bin-line"></i>
                         </div>
@@ -277,8 +280,8 @@ export default {
 
         };
 
-        const removeFromList = async (nid, prix) => {
-            consultationsStore.removeFromList(nid, prix);
+        const removeFromList = async (nid, prix,qtty) => {
+            consultationsStore.removeFromList(nid, prix, qtty);
             toast.success('Article enlevé !');
         };
 
@@ -291,12 +294,14 @@ export default {
             isArticleSelected.value = false;
             articleSelectedPrice.value = "";
             articleSelectedTitle.value = "";
+            quantityToOrder.value = "1"
         }
 
         function resetAll() {
             resetData();
             instructionGlobal.value = '';
             consultationsStore.savedMedication = {};
+            consultationsStore.resetMedication();
         }
 
         function getMedicationData() {

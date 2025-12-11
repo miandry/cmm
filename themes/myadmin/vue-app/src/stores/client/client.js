@@ -63,6 +63,10 @@ export const useClientStore = defineStore("client", () => {
     }
   }
 
+  function resetClient() {
+    client.value = []; 
+  }
+
   return {
     clients,
     allClients,
@@ -73,5 +77,6 @@ export const useClientStore = defineStore("client", () => {
     fetchAllClients,
     fetchClient,
     createClient,
+    resetClient
   };
 });

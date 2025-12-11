@@ -90,7 +90,6 @@ export default {
         const router = useRouter();
 
         const handleConsultationSubmit = async (withOrder) => {
-
             // data variable
             const generalFormData = generalFormRef.value.getGeneralFormData();
             const prescriptionEtSuiviData = prescriptionEtSuivi.value.stockTabData()
@@ -191,7 +190,7 @@ export default {
 
             // sauvegarde commande si c'est finaliser
             if (withOrder) {
-                if (allMedications) {    
+                if (allMedications) {
                     const allArticles = allMedications.map(item => ({
                         entity_type: "paragraph",
                         bundle: "commande",
@@ -214,7 +213,7 @@ export default {
                         field_status: "unpayed"
                     };
                     await orderStore.saveOrderData(data);
-    
+
                     if (orderStore.error) {
                         toast.error("Une erreur est survenue lors de l'enregistrement.")
                         return
@@ -225,6 +224,7 @@ export default {
             toast.success("Consultation enregistré!")
             generalFormRef.value.resetForm();
             prescriptionEtSuivi.value.resetAll();
+            patienStore.resetClient();
             router.push({ name: 'patients' });
         }
 
