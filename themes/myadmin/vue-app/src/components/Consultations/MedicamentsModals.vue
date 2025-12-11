@@ -81,8 +81,8 @@
                                                     <p class="text-xs text-gray-500 hidden">Antalgique • Antidouleur et
                                                         antipyrétique</p>
                                                 </div>
-                                                <span class="text-xs font-semibold text-primary"> {{
-                                                    Number(article.field_prix_unitaire).toLocaleString() }} Ar</span>
+                                                <span class="text-xs font-semibold text-primary">Qtté: {{
+                                                    article.field_quantite_stock > 0 ? parseInt(article.field_quantite_stock) : 0 }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -166,6 +166,7 @@ export default {
         const articleSelectedTitle = ref('');
         const articleSelectedPrice = ref('');
         const articleSelectedNid = ref('');
+        const articleSelectedQtty = ref('');
         const instructions = ref('');
         const articleSelectedNidError = ref(false)
         const articleSelectedPriceError = ref(false)
@@ -181,6 +182,7 @@ export default {
                 'nid',
                 'title',
                 'field_prix_unitaire',
+                'field_quantite_stock',
             ],
             sort: { val: 'nid', op: 'desc' },
             filters: {},
@@ -205,6 +207,7 @@ export default {
         const selectArticle = (article) => {
             articleSelectedTitle.value = article.title;
             articleSelectedPrice.value = article.field_prix_unitaire
+            articleSelectedQtty.value = article.field_quantite_stock
             articleSelectedNid.value = article.nid
             searchKeywords.value = article.title;
             isArticleSelected.value = true;
@@ -254,6 +257,7 @@ export default {
             articleSelectedPrice.value = "";
             instructions.value = "";
             searchKeywords.value = "";
+            articleSelectedQtty.value = "";
             isArticleSelected.value = false;
             articleSelectedPrice.value = "";
             articleSelectedTitle.value = "";
@@ -290,6 +294,7 @@ export default {
             isArticleSelected,
             articleSelectedTitle,
             articleSelectedPrice,
+            articleSelectedQtty,
             instructions,
             saveMedication,
             articleSelectedNid,

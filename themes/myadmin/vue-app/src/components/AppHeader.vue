@@ -82,7 +82,15 @@ export default {
     },
     // Determine CSS classes for menu item based on current route
     getMenuItemClass(itemPath) {
-      const isActive = this.$route.path === itemPath
+      const current = this.$route.path
+
+      // Trouver l’item concerné
+      const item = this.menuItems.find(x => x.path === itemPath)
+
+      // Si l’item a un tableau de chemins
+      const isActive = item.paths
+        ? item.paths.includes(current)
+        : current === itemPath
 
       return {
         'px-4 xl:px-6 py-3 bg-primary text-white !rounded-button whitespace-nowrap font-medium text-sm xl:text-base cursor-pointer': isActive,

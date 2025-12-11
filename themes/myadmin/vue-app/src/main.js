@@ -20,7 +20,7 @@ const routes = [
   { path: '/caisse', component: Caisse },
   { path: '/fr', component: Caisse },
   { path: '/fr/frontdesk', component: Caisse },
-  { path: '/clients', component: Clients },
+  { path: '/patients', component: Clients },
   { path: '/consultations', component: Consultations },
   { path: '/facture/:slug', component: Facture },
   { path: '/commandes', component: Order },
