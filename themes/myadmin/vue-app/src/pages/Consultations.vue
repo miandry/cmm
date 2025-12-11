@@ -33,7 +33,7 @@
                         </div>
                         <span>Imprimer ordonnance</span>
                     </button>
-                    <button @click="handleConsultationSubmit"
+                    <button @click="handleConsultationSubmit(false)"
                         class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 !rounded-button font-medium whitespace-nowrap flex items-center justify-center space-x-2 text-sm cursor-pointer">
                         <div class="w-4 h-4 flex items-center justify-center">
                             <i class="ri-save-line"></i>
@@ -47,7 +47,7 @@
                         </div>
                         <span>Planifier suivi</span>
                     </button>
-                    <button
+                    <button @click="handleConsultationSubmit(true)"
                         class="w-full py-2 bg-secondary hover:bg-green-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap cursor-pointer">
                         Finaliser consultation
                     </button>
@@ -63,10 +63,11 @@ import ExamenClinique from '../components/Consultations/ExamenClinique.vue'
 import Patient from '../components/Consultations/Patient.vue'
 import PrescriptionEtSuivi from '../components/Consultations/PrescriptionEtSuivi.vue'
 import Historique from '../components/Consultations/Historique.vue'
-import { useClientStore, useConsultationStore, useExamenStore } from '../stores/index.js';
+import { useClientStore, useConsultationStore, useExamenStore, useOrderStore } from '../stores/index.js';
 import PageLoader from '../components/PageLoader.vue'
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
+import { useRouter } from 'vue-router'
 
 export default {
     name: 'Consultations',
@@ -86,8 +87,10 @@ export default {
         const generalFormRef = ref(null);
         const examenCliniqueRef = ref(null);
         const patienStore = useClientStore();
+        const router = useRouter();
 
-        const handleConsultationSubmit = async () => {
+        const handleConsultationSubmit = async (withOrder) => {
+
             // data variable
             const generalFormData = generalFormRef.value.getGeneralFormData();
             const prescriptionEtSuiviData = prescriptionEtSuivi.value.stockTabData()
@@ -95,6 +98,8 @@ export default {
             const medicamentsData = prescriptionEtSuiviData.medication;
             const recommandationData = prescriptionEtSuiviData.recommandation;
             const suiviData = prescriptionEtSuiviData.suivi;
+
+            const orderStore = useOrderStore();
 
             /** validation global */
 
@@ -104,6 +109,8 @@ export default {
             }  //done
 
             if (generalFormData.hasError) return;
+
+            consultationsStore.loading = true;
 
             /** fin validation global */
             let allMedications = null;
@@ -115,6 +122,7 @@ export default {
                     field_articles: item.nid,
                     field_description: item.field_description,
                     field_prix: item.field_prix,
+                    quantity: item.quantity,
                 }));
             }
             if (examenStore.savedExamen?.items?.length > 0) {
@@ -167,13 +175,57 @@ export default {
             }
 
             await consultationsStore.createConsultation(consulatationGlobalData);
+
             if (consultationsStore.error) {
                 toast.error("Une erreur est survenue lors de l'enregistrement.")
                 return
             }
+
+            const formatDateUS = () => {
+                const now = new Date();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const year = now.getFullYear();
+                return `${year}-${month}-${day}`;
+            };
+
+            // sauvegarde commande si c'est finaliser
+            if (withOrder) {
+                if (allMedications) {    
+                    const allArticles = allMedications.map(item => ({
+                        entity_type: "paragraph",
+                        bundle: "commande",
+                        field_article: item.field_articles,
+                        field_quantite: item.quantity,
+                        field_prix_d_achat: item.field_prix,
+                        field_prix_unitaire: item.field_prix,
+                    }));
+
+                    const data = {
+                        entity_type: "node",
+                        bundle: "commande",
+                        title: "cmd-" + Date.now(),
+                        field_client: patienStore.client.nid,
+                        clientName: patienStore.client.title,
+                        field_articles: allArticles,
+                        field_total_vente: consultationsStore.savedMedication.total,
+                        field_date: formatDateUS(),
+                        status: 1,
+                        field_status: "unpayed"
+                    };
+                    await orderStore.saveOrderData(data);
+    
+                    if (orderStore.error) {
+                        toast.error("Une erreur est survenue lors de l'enregistrement.")
+                        return
+                    }
+                }
+            }
+
             toast.success("Consultation enregistré!")
             generalFormRef.value.resetForm();
             prescriptionEtSuivi.value.resetAll();
+            router.push({ name: 'patients' });
         }
 
         return {
@@ -182,7 +234,7 @@ export default {
             prescriptionEtSuivi,
             generalFormRef,
             examenCliniqueRef,
-            consultationsStore
+            consultationsStore,
         };
     }
 }

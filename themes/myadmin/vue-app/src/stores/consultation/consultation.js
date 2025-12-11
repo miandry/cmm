@@ -44,7 +44,6 @@ export const useConsultationStore = defineStore("consultation", () => {
   }
 
   async function createConsultation(newConsultationData) {
-    loading.value = true;
     try {
       const response = await saveConsultation(newConsultationData);
     } catch (err) {
@@ -66,7 +65,7 @@ export const useConsultationStore = defineStore("consultation", () => {
     medications.value.push(data);
 
     const total = medications.value.reduce((sum, item) => {
-      return sum + (parseFloat(item.field_prix) || 0);
+      return sum + (parseFloat(item.field_prix * item.quantity) || 0);
     }, 0);
 
     savedMedication.value = {

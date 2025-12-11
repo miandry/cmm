@@ -6,7 +6,7 @@
                 <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Sélectionner un client</h3>
+                            <h3 class="text-lg font-semibold text-gray-900">Sélectionner un patient</h3>
                             <button @click="$emit('update:showPatientModal', false)"
                                 class="text-gray-400 hover:text-gray-600">
                                 <div class="w-6 h-6 flex items-center justify-center">
@@ -49,7 +49,7 @@
                                     <div class="w-4 h-4 flex items-center justify-center">
                                         <i class="ri-add-line"></i>
                                     </div>
-                                    <span>Ajouter un nouveau client</span>
+                                    <span>Ajouter un nouveau patient</span>
                                 </button>
                             </div>
                         </div>

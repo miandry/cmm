@@ -82,7 +82,8 @@
                                                         antipyrétique</p>
                                                 </div>
                                                 <span class="text-xs font-semibold text-primary">Qtté: {{
-                                                    article.field_quantite_stock > 0 ? parseInt(article.field_quantite_stock) : 0 }}</span>
+                                                    article.field_quantite_stock > 0 ?
+                                                        parseInt(article.field_quantite_stock) : 0 }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -103,7 +104,8 @@
                                         <h4 class="text-xs font-medium text-blue-900">
                                             {{ articleSelectedTitle }}
                                         </h4>
-                                        <p class="text-xs text-blue-700 hidden"></p>
+                                        <p class="text-xs text-blue-600">Qtté dispo: <span
+                                                class="font-medium text-blue-900">{{ articleSelectedQtty }}</span></p>
                                     </div>
                                     <div class="text-right">
                                         <p class="text-xs font-semibold text-blue-900">
@@ -113,13 +115,26 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="">
+                            <div class="flex gap-2">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Prix (Ar)</label>
                                     <input type="number" v-model="articleSelectedPrice"
                                         class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                                         placeholder="Ex: 15000">
                                     <p v-if="articleSelectedPriceError" class="text-red-500 text-xs">Ce champ est requis
+                                    </p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Quantité
+                                        <span v-if="isArticleSelected"
+                                            class="text-xs font-normal text-green-500">
+                                            (Dispo: {{ articleSelectedQtty}})</span>
+                                    </label>
+                                    <input type="number" v-model="quantityToOrder" min="1"
+                                        class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                                        placeholder="Ex: 15000">
+                                    <p v-if="quantityToOrderError" class="text-red-500 text-xs">Quantité invalide!
                                     </p>
                                 </div>
                             </div>
@@ -162,6 +177,7 @@ export default {
         const showArticleList = ref(false);
         const searchKeywords = ref('');
         const articleStore = useArticleStore();
+        const quantityToOrder = ref(1);
         const isArticleSelected = ref(false);
         const articleSelectedTitle = ref('');
         const articleSelectedPrice = ref('');
@@ -170,6 +186,7 @@ export default {
         const instructions = ref('');
         const articleSelectedNidError = ref(false)
         const articleSelectedPriceError = ref(false)
+        const quantityToOrderError = ref(false)
         const instructionsError = ref(false)
         const isValid = ref(false);
         const consultationsStore = useConsultationStore();
@@ -205,6 +222,10 @@ export default {
         }
 
         const selectArticle = (article) => {
+            if (article.field_quantite_stock <= 0) {
+                toast.error('Article en rupture de stock !');
+                return;
+            }
             articleSelectedTitle.value = article.title;
             articleSelectedPrice.value = article.field_prix_unitaire
             articleSelectedQtty.value = article.field_quantite_stock
@@ -226,8 +247,17 @@ export default {
                 }
             };
 
+            if (parseInt(articleSelectedQtty.value) < parseInt(quantityToOrder.value)) {
+                quantityToOrderError.value = true;
+                isValid.value = false;
+            } else {
+                quantityToOrderError.value = false;
+                isValid.value = true;
+            }
             validateField(articleSelectedNid, articleSelectedNidError);
             validateField(articleSelectedPrice, articleSelectedPriceError);
+        
+
             validateField(instructions, instructionsError);
 
             if (!isValid.value) return;
@@ -237,8 +267,8 @@ export default {
                 field_prix: articleSelectedPrice.value,
                 field_description: instructions.value,
                 title: articleSelectedTitle.value,
+                quantity: parseInt(quantityToOrder.value),
             };
-
             const res = await consultationsStore.saveMedication(data);
             if (res) {
                 resetData();
@@ -271,8 +301,6 @@ export default {
 
         function getMedicationData() {
             return {
-                // items: articleStore.savedMedication.value,
-                // total: articleStore.total.value,
                 instructionGlobal: instructionGlobal.value
             }
         }
@@ -290,6 +318,8 @@ export default {
             searchArticle,
             selectArticle,
             articleStore,
+            quantityToOrder,
+            quantityToOrderError,
             searchKeywords,
             isArticleSelected,
             articleSelectedTitle,
