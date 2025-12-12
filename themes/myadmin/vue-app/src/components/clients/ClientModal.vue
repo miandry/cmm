@@ -4,7 +4,7 @@
       <div class="p-6">
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-xl font-semibold text-gray-900">{{ modalTitle }}</h3>
-          <button @click="closeModal(false)" class="text-gray-400 hover:text-gray-600">
+          <button @click="closeModal()" class="text-gray-400 hover:text-gray-600">
             <div class="w-6 h-6 flex items-center justify-center">
               <i class="ri-close-line text-xl"></i>
             </div>
@@ -86,9 +86,10 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">Contact d'urgence</label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <input type="text" v-model="nameUrgence"
+                <input type="text" v-model="nameUrgence" :class="{ 'border-red-500': errors.name_urgence }"
                   class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                   placeholder="Nom du contact">
+                <p v-if="errors.phone_urgence" class="text-xs text-red-500">{{ errors.name_urgence }}</p>
               </div>
               <div>
                 <input type="tel" v-model="phoneUrgence" :class="{ 'border-red-500': errors.phone_urgence }"
@@ -103,8 +104,8 @@
           <!-- Assurance -->
           <div class="flex items-center space-x-2">
             <label class="text-sm text-gray-700">
-              <input type="checkbox" :checked="form.field_assurance === 1"
-                @change="form.field_assurance = $event.target.checked ? 1 : 0"
+              <input type="checkbox" :checked="form.field_assurance == '1'"
+                @change="form.field_assurance = $event.target.checked ? '1' : '0'"
                 class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
               Ce patient a une assurance
             </label>
@@ -118,7 +119,7 @@
           </div>
 
           <div class="flex space-x-3 mt-6">
-            <button @click.prevent="closeModal(false)"
+            <button @click.prevent="closeModal()"
               class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 !rounded-button font-medium whitespace-nowrap">
               Annuler
             </button>
@@ -134,25 +135,25 @@
 </template>
 
 <script>
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useClientStore } from '../../stores/index.js';
 import { toast } from 'vue-sonner';
 
 export default {
   name: 'ClientModal',
   props: {
-    client: {
+    patientToEdit: {
       type: Object,
       default: null
     }
   },
   emits: ['close'],
-  setup(_, { emit }) {
-
+  setup(props, { emit }) {
     const nameUrgence = ref('');
     const phoneUrgence = ref('');
     const modalMode = ref("add");
     const clientStore = useClientStore();
+    const modalTitle = ref("Ajouter un patient");
     // Form state
     const form = reactive({
       entity_type: "node",
@@ -179,11 +180,7 @@ export default {
       email: "",
       adresse: "",
       phone_urgence: "",
-    });
-
-    // Title
-    const modalTitle = computed(() => {
-      return modalMode.value === "add" ? "Ajouter un Client" : "Modifier le Client";
+      name_urgence: "",
     });
 
     // -----------------------------
@@ -236,6 +233,11 @@ export default {
         valid = false;
       }
 
+      if (!nameUrgence.value) {
+        errors.name_urgence = "Le nom est requis.";
+        valid = false;
+      }
+
       return valid;
     };
 
@@ -254,18 +256,17 @@ export default {
       await clientStore.createClient(form);
 
       if (clientStore.error) {
-        toast.error("Une erreur est survenue lors de l'ajout du patient.")
+        toast.error("Une erreur est survenue lors de l'enregistrement.")
         return
       }
-
-      closeModal(true);
+      if (form.nid == "") {
+        closeModal();
+        toast.success('Patient ajouté avec succès !')
+      } else {
+        closeModal(JSON.parse(JSON.stringify(form)));
+        toast.success('Modification enregistré !')
+      }
       clientStore.loading = false;
-      toast.success('Patient ajouté avec succès !')
-    };
-
-    const editClient = (client) => {
-      modalMode.value = "edit";
-      Object.assign(form, client);
     };
 
     function resetForm() {
@@ -277,7 +278,7 @@ export default {
         title: "",
         field_adresse: "",
         field_allergies: "",
-        field_assurance: 0,
+        field_assurance: "0",
         field_contact_d_urgence: "",
         field_email: "",
         field_notes_medicales: "",
@@ -285,20 +286,45 @@ export default {
         field_sexe: "masculin",
         field_age: "",
       });
+      nameUrgence.value = '';
+      phoneUrgence.value = '';
+      Object.keys(errors).forEach(key => errors[key] = '');
     }
 
-    const closeModal = (data) => {
+    const closeModal = (patientData = null) => {
       resetForm();
+      const data = {
+        patientData: patientData
+      }
+
       emit('close', data);
     };
+
+    // Détecte si on édite ou ajoute
+    const initializeForm = () => {
+      if (props.patientToEdit && Object.keys(props.patientToEdit).length) {
+        modalTitle.value = "Modifier le Patient";
+        Object.assign(form, props.patientToEdit);
+
+        // Extraire contact urgence
+        if (props.patientToEdit.field_contact_d_urgence) {
+          const parts = props.patientToEdit.field_contact_d_urgence.split(' - ');
+          nameUrgence.value = parts[0] || '';
+          phoneUrgence.value = parts[1] || '';
+        }
+      } else {
+        modalTitle.value = "Ajouter un patient";
+        resetForm();
+      }
+    };
+
+    watch(() => props.patientToEdit, initializeForm, { immediate: true });
 
     return {
       form,
       errors,
       modalTitle,
-      modalMode,
       handleSubmit,
-      editClient,
       closeModal,
       validateForm,
       nameUrgence,

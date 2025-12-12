@@ -3,10 +3,10 @@
     <PageLoader v-if="store.loading" />
     <rapportClients />
     <tableClients :clients="store.clients" @searchKeyWords="onSearch" @filterBy="onfilter" @paginate="onPagination"
-      @show="showModal" ref="tableClientRef" :key="tableKey" />
+      @show="showModal" ref="tableClientRef" :key="tableKey" @editPatient="editPatient" />
     <!-- Client Modal -->
-    <client-modal @close="closeModal" @show="showModal"
-      :class="[modalVisible ? 'flex' : 'hidden', 'fixed inset-0 bg-black bg-opacity-50 z-50']" />
+    <client-modal @close="closeModal" @show="showModal" :patientToEdit="patientToEdit"
+      class="fixed inset-0 bg-black bg-opacity-50 z-50" v-if="modalVisible" />
   </div>
 </template>
 <script>
@@ -26,6 +26,7 @@ export default {
     const store = useClientStore();
     const tableClientRef = ref(null);
     const tableKey = ref(0);
+    const patientToEdit = ref({});
     // Paramètres dynamiques de la requête
     const queryOptions = ref({
       fields: [
@@ -36,6 +37,11 @@ export default {
         'field_adresse',
         'field_age',
         'created',
+        'field_allergies',
+        'field_contact_d_urgence',
+        'field_email',
+        'field_notes_medicales',
+        'field_sexe'
       ],
       sort: { val: 'nid', op: 'desc' },
       filters: {},
@@ -77,13 +83,17 @@ export default {
 
     // Modal functions
     const showModal = (client = null) => {
+      if (client) {
+        patientToEdit.value = { ...client };
+      } else {
+        patientToEdit.value = {};
+      }
       modalVisible.value = true;
     };
 
     const closeModal = async (data) => {
       modalVisible.value = false;
-
-      if (data) {
+      if (!data.patientData) {
         queryOptions.value.pager = 0;
         queryOptions.value.filters = {};
         await fetchClients();
@@ -95,6 +105,18 @@ export default {
 
         // rerender complet du composant tableClients
         tableKey.value++;
+      } else {
+        // mettre a jour le patient modifier dans le store pour l'affichege
+        store.clients
+        const updated = data.patientData;
+
+        // Trouver l’index dans store.clients
+        const index = store.clients.rows.findIndex(c => c.nid == updated.nid);
+
+        if (index != -1) {
+          // Remplacer la ligne
+          store.clients.rows[index] = updated;
+        }
       }
     };
 
@@ -109,7 +131,8 @@ export default {
       modalVisible,
       showModal,
       closeModal,
-      tableKey
+      tableKey,
+      patientToEdit
     }
   }
 

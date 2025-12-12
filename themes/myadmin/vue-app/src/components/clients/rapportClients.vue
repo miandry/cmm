@@ -60,7 +60,7 @@ export default {
       fields: [
         'nid',
         'field_assurance',
-        'createdx '
+        'created'
       ],
       pager: 0,
       offset: 2000

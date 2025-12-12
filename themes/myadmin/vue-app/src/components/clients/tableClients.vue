@@ -47,7 +47,7 @@
             </button>
           </div>
           <!-- Ajouter patient -->
-          <button @click="showModal" class="px-4 py-2 bg-primary text-white !rounded-button font-medium text-sm 
+          <button @click="showModal(null)" class="px-4 py-2 bg-primary text-white !rounded-button font-medium text-sm 
                whitespace-nowrap flex items-center space-x-2">
             <div class="w-4 h-4 flex items-center justify-center">
               <i class="ri-add-line"></i>
