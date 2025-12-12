@@ -1,4 +1,4 @@
-export function formatDate(dateStr, createdTimestamp = null) {
+export function formatDate(dateStr, createdTimestamp = null, type = "long") {
   let date;
 
   // 1. Si la date standard existe → on l'utilise
@@ -17,7 +17,7 @@ export function formatDate(dateStr, createdTimestamp = null) {
   // Formattage FR longue date
   const formatted = date.toLocaleDateString("fr-FR", {
     day: "2-digit",
-    month: "long",
+    month: type,
     year: "numeric",
   });
 

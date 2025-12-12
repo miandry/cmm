@@ -1,13 +1,13 @@
 <template>
     <div>
         <div class="p-3 border-b border-gray-200">
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-between">
                 <h2 class="text-base font-semibold text-gray-900">Patient actuel</h2>
                 <button @click="openPatientModal" class="text-xs text-primary hover:underline cursor-pointer">
                     {{ store.client && store.client.nid ? 'Changer' : 'Ajouter' }}
                 </button>
             </div>
-            <div class="mb-3 p-3 bg-gray-50 rounded-lg" v-if="store.client && store.client.nid">
+            <div class="p-3 bg-gray-50 rounded-lg" v-if="store.client && store.client.nid">
                 <div class="flex items-center space-x-3 mb-3">
                     <div
                         class="w-12 h-12 bg-primary text-white rounded-full uppercase flex items-center justify-center text-lg font-medium">
