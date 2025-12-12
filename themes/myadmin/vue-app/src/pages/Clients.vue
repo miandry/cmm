@@ -3,14 +3,14 @@
     <PageLoader v-if="store.loading" />
     <rapportClients />
     <tableClients :clients="store.clients" @searchKeyWords="onSearch" @filterBy="onfilter" @paginate="onPagination"
-      @show="showModal" />
+      @show="showModal" ref="tableClientRef" :key="tableKey" />
     <!-- Client Modal -->
     <client-modal @close="closeModal" @show="showModal"
       :class="[modalVisible ? 'flex' : 'hidden', 'fixed inset-0 bg-black bg-opacity-50 z-50']" />
   </div>
 </template>
 <script>
-import { onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
 import { useClientStore } from '../stores/index.js';
 import tableClients from '../components/clients/tableClients.vue';
 import rapportClients from '../components/clients/rapportClients.vue';
@@ -24,6 +24,8 @@ export default {
   setup() {
     const modalVisible = ref(false);
     const store = useClientStore();
+    const tableClientRef = ref(null);
+    const tableKey = ref(0);
     // Paramètres dynamiques de la requête
     const queryOptions = ref({
       fields: [
@@ -78,8 +80,22 @@ export default {
       modalVisible.value = true;
     };
 
-    const closeModal = () => {
+    const closeModal = async (data) => {
       modalVisible.value = false;
+
+      if (data) {
+        queryOptions.value.pager = 0;
+        queryOptions.value.filters = {};
+        await fetchClients();
+
+        // Reset UI interne du tableau
+        if (tableClientRef.value?.resetFilterUi) {
+          tableClientRef.value.resetFilterUi();
+        }
+
+        // rerender complet du composant tableClients
+        tableKey.value++;
+      }
     };
 
     onMounted(() => fetchClients());
@@ -92,7 +108,8 @@ export default {
       onPagination,
       modalVisible,
       showModal,
-      closeModal
+      closeModal,
+      tableKey
     }
   }
 

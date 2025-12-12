@@ -51,11 +51,14 @@ export const useClientStore = defineStore("client", () => {
     }
   }
 
-  async function createClient(newClientData) {
+  async function createClient(newClientData, page = 'client') {
     try {
+      let newClient;
       const response = await saveClient(newClientData);
-      const newClient = await fetchClient(response.data.item);
-      client.value = newClient;
+      if (page != 'client') {
+        newClient = await fetchClient(response.data.item);
+        client.value = newClient;
+      }
     } catch (err) {
       error.value = err;
     } finally {

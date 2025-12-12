@@ -224,7 +224,7 @@
 </template>
 
 <script>
-import { computed, ref } from 'vue';
+import { computed, ref, defineExpose } from 'vue';
 
 export default {
   name: 'tableClients',
@@ -298,9 +298,18 @@ export default {
       currentPage.value = 1;
     }
 
-    const showModal = (client =  null) => {
+    function resetFilterUi() {
+      searchQuery.value = "";
+      filterQueryActive.value = "all";
+    }
+
+    const showModal = (client = null) => {
       emit('show', client);
     }
+
+    defineExpose({
+      resetFilterUi
+    })
 
     return {
       searchByKeys,
@@ -313,7 +322,8 @@ export default {
       goToPage,
       nextPage,
       previousPage,
-      showModal
+      showModal,
+      resetFilterUi,
     }
   }
 }
