@@ -97,7 +97,8 @@ export default {
             const medicamentsData = prescriptionEtSuiviData.medication;
             const recommandationData = prescriptionEtSuiviData.recommandation;
             const suiviData = prescriptionEtSuiviData.suivi;
-
+            let totalMedicament = 0;
+            let totalExamen = 0;
             const orderStore = useOrderStore();
 
             /** validation global */
@@ -162,15 +163,17 @@ export default {
             }
 
             // Ajouter seulement si NON vide
-            if (allMedications) {
+            if (allMedications && allMedications.length > 0) {
                 consulatationGlobalData.field_medicaments = allMedications;
                 consulatationGlobalData.field_prix_total_medicaments = consultationsStore.savedMedication.total;
+                totalMedicament = parseFloat(consultationsStore.savedMedication.total);
             }
 
             // Ajouter seulement si NON vide
-            if (allExamens) {
+            if (allExamens && allExamens.length > 0) {
                 consulatationGlobalData.field_examens = allExamens;
                 consulatationGlobalData.field_prix_total_examens = examenStore.savedExamen.total;
+                totalExamen = parseFloat(examenStore.savedExamen.total);
             }
 
             await consultationsStore.createConsultation(consulatationGlobalData);
@@ -189,8 +192,24 @@ export default {
             };
 
             // sauvegarde commande si c'est finaliser
-            if (withOrder) {
-                if (allMedications) {
+            const hasExamens = allExamens?.length > 0;
+            const hasMedications = allMedications?.length > 0;
+            if (withOrder && (hasExamens || hasMedications)) {
+                // field_examens_order
+                const data = {
+                    entity_type: "node",
+                    bundle: "commande",
+                    title: "cmd-" + Date.now(),
+                    field_client: patienStore.client.nid,
+                    clientName: patienStore.client.title,
+                    field_total_vente: totalExamen + totalMedicament,
+                    field_articles: [],
+                    field_examens_order: [],
+                    field_date: formatDateUS(),
+                    status: 1,
+                    field_status: "unpayed"
+                };
+                if (allMedications && allMedications.length > 0) {
                     const allArticles = allMedications.map(item => ({
                         entity_type: "paragraph",
                         bundle: "commande",
@@ -199,25 +218,18 @@ export default {
                         field_prix_d_achat: item.field_prix,
                         field_prix_unitaire: item.field_prix,
                     }));
+                    data.field_articles = allArticles;
+                }
 
-                    const data = {
-                        entity_type: "node",
-                        bundle: "commande",
-                        title: "cmd-" + Date.now(),
-                        field_client: patienStore.client.nid,
-                        clientName: patienStore.client.title,
-                        field_articles: allArticles,
-                        field_total_vente: consultationsStore.savedMedication.total,
-                        field_date: formatDateUS(),
-                        status: 1,
-                        field_status: "unpayed"
-                    };
-                    await orderStore.saveOrderData(data);
+                if (allExamens && allExamens.length > 0) {
+                    data.field_examens_order = allExamens;
+                }
 
-                    if (orderStore.error) {
-                        toast.error("Une erreur est survenue lors de l'enregistrement.")
-                        return
-                    }
+                await orderStore.saveOrderData(data);
+
+                if (orderStore.error) {
+                    toast.error("Une erreur est survenue lors de l'enregistrement.")
+                    return
                 }
             }
 

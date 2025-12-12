@@ -38,8 +38,15 @@
                         <p class="font-medium text-gray-900 capitalize">{{ order.field_client.title }}</p>
                         <p class="text-sm text-gray-500">{{ order.field_client.field_phone }}</p>
                         <div class="flex items-center mt-1">
-                            <span class="sm:hidden text-xs text-gray-500 me-2">{{ order.field_articles.length }} {{
-                                order.field_articles.length > 1 ? 'produits' : 'produit' }}</span>
+
+                            <span class="sm:hidden text-xs text-gray-500 me-2" v-if="order.field_articles?.length">{{
+                                order.field_articles.length }} {{
+                                    order.field_articles.length > 1 ? 'produits' : 'produit' }}</span>
+                            <span class="sm:hidden text-xs text-gray-500 me-2"
+                                v-if="!order.field_articles?.length && order.field_examens_order?.length">{{
+                                    order.field_examens_order.length }} {{
+                                    order.field_examens_order.length > 1 ? 'Examens' : 'Examen' }}</span>
+
                             <div class="flex items-center mt-1" v-if="order.field_client.field_assurance == 1">
                                 <div class="w-2 h-2 bg-secondary rounded-full mr-1"></div>
                                 <span class="text-xs text-secondary font-medium">Assurance</span>
@@ -48,7 +55,7 @@
                     </div>
                 </div>
             </div>
-            <div class="hidden sm:block">
+            <div class="hidden sm:block" v-if="order.field_articles?.length">
                 <h4 class="font-medium text-gray-900 mb-2">Produits commandés</h4>
                 <div class="space-y-1 text-sm text-gray-600">
                     <div v-for="article in order.field_articles.slice(0, 3)" :key="article.nid"
@@ -73,6 +80,34 @@
                     </div>
                 </div>
             </div>
+
+            <div class="hidden sm:block" v-if="!order.field_articles?.length && order.field_examens_order?.length">
+                <h4 class="font-medium text-gray-900 mb-2">Examens</h4>
+                <div class="space-y-1 text-sm text-gray-600">
+                    <div v-for="examen in order.field_examens_order.slice(0, 3)" :key="examen.nid"
+                        class="flex justify-between">
+                        <p class="flex">
+                            <span class="block truncate overflow-hidden whitespace-nowrap max-w-[300px]">
+                                {{ examen.field_examen.title }}
+                            </span>
+                        </p>
+                        <span>
+                            {{ (examen.field_prix).toLocaleString('fr-MG', {
+                                style: 'currency',
+                                currency: 'MGA'
+                            }) }}
+                        </span>
+                    </div>
+
+                    <div v-if="order.field_examens_order.length > 3" class="text-xs text-gray-500">
+                        + {{ order.field_examens_order.length - 3 }} autre {{ order.field_examens_order.length - 3 > 1 ?
+                            's' : ''
+                        }} article {{ order.field_examens_order.length - 3 > 1 ? 's' : '' }}
+                    </div>
+                </div>
+            </div>
+
+
         </div>
 
         <div class="flex flex-wrap gap-2">

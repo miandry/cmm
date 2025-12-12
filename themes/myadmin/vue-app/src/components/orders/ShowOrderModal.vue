@@ -61,8 +61,8 @@
                         </div>
                     </div>
 
-                    <div class="mb-6">
-                        <h4 class="font-semibold text-gray-900 mb-3">Produits commandés</h4>
+                    <div class="mb-6" v-if="orderToShow.field_articles?.length">
+                        <h4 class="font-semibold text-primary mb-3">Produits commandés</h4>
                         <div class="bg-gray-50 rounded-lg p-4">
                             <div class="space-y-3" id="modal-products-list">
                                 <div v-for="article in orderToShow.field_articles" :key="article.nid"
@@ -85,26 +85,46 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="mt-4 pt-4 border-t border-gray-200">
-                                <div class="space-y-2 text-sm">
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600">Sous-total :</span>
-                                        <span class="font-medium">{{ Number(orderToShow.field_total_vente ||
-                                            0).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-6" v-if="orderToShow.field_examens_order?.length">
+                        <h4 class="font-semibold text-primary mb-3">Examens</h4>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="space-y-3">
+                                <div v-for="examen in orderToShow.field_examens_order" :key="examen.nid"
+                                    class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                                    <div class="flex-1">
+                                        <p class="font-medium text-gray-900">{{ examen.field_examen.title }}</p>
                                     </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600">TVA (20%) :</span>
-                                        <span class="font-medium">{{ Number((orderToShow.field_total_vente ||
-                                            0)  * 0.2).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}</span>
-                                    </div>
-                                    <div
-                                        class="flex justify-between text-lg font-semibold pt-2 border-t border-gray-200">
-                                        <span>Total :</span>
-                                        <span class="text-primary">{{ Number((orderToShow.field_total_vente ||
-                                            0) * 1.2).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}</span>
+                                    <div class="text-right">
+                                        <p class="text-sm text-primary font-semibold"> {{
+                                            Number(examen.field_prix).toLocaleString('fr-MG', {
+                                                style: 'currency',
+                                                currency: 'MGA'
+                                            }) }}</p>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-200 mb-4 mx-4">
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Sous-total :</span>
+                                <span class="font-medium">{{ Number(orderToShow.field_total_vente ||
+                                    0).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">TVA (20%) :</span>
+                                <span class="font-medium">{{ Number((orderToShow.field_total_vente ||
+                                    0) * 0.2).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' })
+                                }}</span>
+                            </div>
+                            <div class="flex justify-between text-lg font-semibold pt-2 border-t border-gray-200">
+                                <span>Total :</span>
+                                <span class="text-primary">{{ Number((orderToShow.field_total_vente ||
+                                    0) * 1.2).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' })
+                                }}</span>
                             </div>
                         </div>
                     </div>
