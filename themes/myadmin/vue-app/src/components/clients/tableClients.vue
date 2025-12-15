@@ -168,7 +168,7 @@
               <td class="px-4 py-3 text-sm text-gray-500 hidden">15 Nov 2024</td>
               <td class="px-4 py-3">
                 <div class="flex items-center space-x-2">
-                  <button class="text-primary hover:text-blue-600 view-patient">
+                  <button @click="showDetails(client)" class="text-primary hover:text-blue-600 view-patient">
                     <div class="w-5 h-5 flex items-center justify-center">
                       <i class="ri-eye-line"></i>
                     </div>
@@ -219,16 +219,24 @@
       </div>
 
     </div>
+    <Details class="fixed right-0 top-0 h-full w-96 bg-white shadow-xl
+         transition-transform duration-300 z-40 border-l border-gray-200"
+      :class="isDetailsOpen ? 'translate-x-0' : 'translate-x-full'"
+      @closePannel="closePannel" :clientToShow="clientToShow" 
+      @sendClient="sendClient" ref="detailsRef"/>
   </div>
 
 </template>
 
 <script>
 import { computed, ref, defineExpose } from 'vue';
+import Details from './Details.vue';
 
 export default {
   name: 'tableClients',
-
+  components: {
+    Details
+  },
   // Définition des props
   props: {
     clients: {
@@ -243,7 +251,8 @@ export default {
     const filterQueryActive = ref("all");
     const perPage = 10;
     const currentPage = ref(1);
-
+    const isDetailsOpen = ref(false)
+    const clientToShow = ref({})
     const totalPages = computed(() => Math.ceil(props.clients.total / perPage));
 
     // Pages visibles (3 pages max)
@@ -307,6 +316,19 @@ export default {
       emit('show', client);
     }
 
+    const showDetails = (client) => {
+      clientToShow.value = client;
+      isDetailsOpen.value = true;
+    }
+
+    function closePannel() {
+      isDetailsOpen.value = false;
+    }
+
+    function sendClient(client) {
+      showModal(client);
+    }
+
     defineExpose({
       resetFilterUi
     })
@@ -324,6 +346,11 @@ export default {
       previousPage,
       showModal,
       resetFilterUi,
+      showDetails,
+      isDetailsOpen,
+      closePannel,
+      clientToShow,
+      sendClient,
     }
   }
 }

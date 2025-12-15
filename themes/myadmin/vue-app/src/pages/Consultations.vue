@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col lg:flex-row h-[calc(100vh-80px)]">
-        <PageLoader v-if="clientStore.loading || consultationsStore.loading" />
+        <PageLoader v-if="patienStore.loading || consultationsStore.loading" />
         <div class="flex-1 p-3 order-2 lg:order-1 flex flex-col">
             <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-4">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Consultation en cours</h3>
@@ -65,9 +65,10 @@ import PrescriptionEtSuivi from '../components/Consultations/PrescriptionEtSuivi
 import Historique from '../components/Consultations/Historique.vue'
 import { useClientStore, useConsultationStore, useExamenStore, useOrderStore } from '../stores/index.js';
 import PageLoader from '../components/PageLoader.vue'
-import { ref } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { toast } from 'vue-sonner'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { watch } from 'vue'
 
 export default {
     name: 'Consultations',
@@ -80,7 +81,7 @@ export default {
         PageLoader
     },
     setup() {
-        const clientStore = useClientStore();
+        // const clientStore = useClientStore();
         const prescriptionEtSuivi = ref(null);
         const consultationsStore = useConsultationStore();
         const examenStore = useExamenStore();
@@ -88,6 +89,8 @@ export default {
         const examenCliniqueRef = ref(null);
         const patienStore = useClientStore();
         const router = useRouter();
+        const route = useRoute();
+        const isEditMode = computed(() => !!route.params.id);
 
         const handleConsultationSubmit = async (withOrder) => {
             // data variable
@@ -115,6 +118,7 @@ export default {
             /** fin validation global */
             let allMedications = null;
             let allExamens = null;
+
             if (consultationsStore.savedMedication?.items?.length > 0) {
                 allMedications = consultationsStore.savedMedication.items.map(item => ({
                     entity_type: "paragraph",
@@ -175,6 +179,14 @@ export default {
                 consulatationGlobalData.field_prix_total_examens = examenStore.savedExamen.total;
                 totalExamen = parseFloat(examenStore.savedExamen.total);
             }
+            let msg = "";
+            if (isEditMode.value) {
+                consulatationGlobalData.nid = consultationsStore.consultation.nid;
+                msg = "Modification enregistré!"
+            } else {
+                delete consulatationGlobalData.nid;
+                msg = "Consultation enregistré!"
+            }
 
             await consultationsStore.createConsultation(consulatationGlobalData);
 
@@ -233,15 +245,53 @@ export default {
                 }
             }
 
-            toast.success("Consultation enregistré!")
+            toast.success(msg)
             generalFormRef.value.resetForm();
             prescriptionEtSuivi.value.resetAll();
             patienStore.resetClient();
             router.push({ name: 'patients' });
         }
 
+        const loadConsultationForEdit = async (consultationId) => {
+            consultationsStore.loading = true;
+            await consultationsStore.fetchConsultation(consultationId);
+            // Charger le patient
+            await patienStore.fetchClient(consultationsStore.consultation.field_client.nid);
+
+            // Remplir le formulaire général
+            await nextTick();
+            generalFormRef.value?.setFormData(consultationsStore.consultation);
+
+            // Remplir prescription / suivi
+            prescriptionEtSuivi.value?.setData(consultationsStore.consultation);
+
+            consultationsStore.loading = false;
+        };
+
+        watch(
+            () => route.params.id,
+            async (newId) => {
+                if (newId) {
+                    await loadConsultationForEdit(newId);
+                } else {
+                    generalFormRef.value.resetForm();
+                    prescriptionEtSuivi.value.resetAll();
+                    patienStore.resetClient();
+                }
+            },
+            { immediate: true }
+        );
+
+        // patient preselectionner et edit
+        onMounted(async () => {
+            const clientId = route.query.client;
+            if (clientId) {
+                await patienStore.fetchClient(clientId);
+            }
+        });
+
         return {
-            clientStore,
+            patienStore,
             handleConsultationSubmit,
             prescriptionEtSuivi,
             generalFormRef,

@@ -130,9 +130,8 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         Quantité
-                                        <span v-if="isArticleSelected"
-                                            class="text-xs font-normal text-green-500">
-                                            (Dispo: {{ articleSelectedQtty}})</span>
+                                        <span v-if="isArticleSelected" class="text-xs font-normal text-green-500">
+                                            (Dispo: {{ articleSelectedQtty }})</span>
                                     </label>
                                     <input type="number" v-model="quantityToOrder" min="1"
                                         class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
@@ -259,7 +258,7 @@ export default {
             }
             validateField(articleSelectedNid, articleSelectedNidError);
             validateField(articleSelectedPrice, articleSelectedPriceError);
-        
+
 
             validateField(instructions, instructionsError);
 
@@ -280,7 +279,7 @@ export default {
 
         };
 
-        const removeFromList = async (nid, prix,qtty) => {
+        const removeFromList = async (nid, prix, qtty) => {
             consultationsStore.removeFromList(nid, prix, qtty);
             toast.success('Article enlevé !');
         };
@@ -310,9 +309,31 @@ export default {
             }
         }
 
+        function setData(medications = [], globalInstruction = '') {
+            // Réinitialiser l'état actuel
+            resetData();
+            consultationsStore.resetMedication();
+            // Ajouter chaque médicament dans le store
+            if (medications.length > 0) {
+                medications.forEach(item => {
+                    consultationsStore.saveMedication({
+                        nid: item.field_articles || item.nid,
+                        title: item.field_articles.title,
+                        field_prix: item.field_prix,
+                        quantity: item.quantity || 1,
+                        field_description: item.field_description || ''
+                    });
+                });
+            }
+
+            // Pré-remplir l'instruction globale
+            instructionGlobal.value = globalInstruction;
+        }
+
         defineExpose({
             getMedicationData,
-            resetAll
+            resetAll,
+            setData
         })
         return {
             isOpen,
@@ -337,7 +358,8 @@ export default {
             removeFromList,
             instructionGlobal,
             getMedicationData,
-            resetAll
+            resetAll,
+            setData
         }
     }
 }

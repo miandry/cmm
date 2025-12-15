@@ -92,16 +92,35 @@ export default {
             form.poids = '';
         }
 
+        // edit mode
+
+        function setFormData(consultation) {
+            if (!consultation) return;
+
+            form.consultationMotif = consultation.field_motif ?? '';
+            form.temperature = consultation.field_temperature ?? '';
+            form.tension = consultation.field_tension_arterielle ?? '';
+            form.poids = consultation.field_poids ?? '';
+
+            // reset erreurs (important en mode edit)
+            errors.consultationMotif = false;
+            errors.temperature = false;
+            errors.tension = false;
+            errors.poids = false;
+        }
+
         defineExpose({
             getGeneralFormData,
             resetForm,
+            setFormData
         })
 
         return {
             form,
             getGeneralFormData,
             errors,
-            resetForm
+            resetForm,
+            setFormData
         }
     }
 }

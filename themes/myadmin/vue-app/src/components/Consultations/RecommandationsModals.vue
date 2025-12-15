@@ -304,9 +304,29 @@ export default {
             signes.value = "";
         }
 
+        function setData(examens = [], otherFields = {}) {
+            resetAll(); // vide tout et le store
+            conseils.value = otherFields.conseil || '';
+            precautions.value = otherFields.precaution || '';
+            signes.value = otherFields.signe || '';
+
+            if (!examens || examens.length === 0) return;
+
+            examens.forEach(ex => {
+                examenStore.saveExamen({
+                    nid: ex.field_examen.nid,
+                    title: ex.field_examen.title,
+                    field_description: ex.field_description,
+                    field_justification: ex.field_justification,
+                    field_prix: ex.field_prix
+                });
+            });
+        }
+
         defineExpose({
             getRecommandationData,
-            resetAll
+            resetAll,
+            setData,
         })
 
 
@@ -331,6 +351,7 @@ export default {
             signes,
             getRecommandationData,
             resetAll,
+            setData,
         }
 
     }

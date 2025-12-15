@@ -3,10 +3,11 @@
         <h3 class="text-sm font-semibold text-gray-900 mb-3">Historique médical</h3>
         <div class="space-y-1 max-h-48 overflow-y-auto" v-if="consultationsStore.consultations.rows.length">
             <div v-for="cons in consultationsStore.consultations.rows" :key="cons.nid"
+                @click="editConsultation(cons.nid)"
                 class="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer">
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-xs flex-1 two-lines font-medium text-gray-900">{{ cons.field_motif }}</span>
-                    <span class="text-xs text-gray-500">  {{ formatDate(null, cons.created, 'short') }}</span>
+                    <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short') }}</span>
                 </div>
                 <p class="text-xs text-gray-600">
                     <span>{{ cons.field_temperature }}°C </span>
@@ -16,7 +17,7 @@
         </div>
         <div v-else>
             <div class="text-center text-gray-300 py-4">
-                Aucun consulatations 
+                Aucun consulatations
             </div>
         </div>
     </div>
@@ -26,6 +27,7 @@
 import { watch, ref } from 'vue';
 import { useClientStore, useConsultationStore } from '../../stores/index.js';
 import { formatDate } from '../../utils/formateDate.js';
+import { useRouter } from 'vue-router';
 
 export default {
     name: "Historique",
@@ -33,6 +35,7 @@ export default {
         const patienStore = useClientStore();
         const consultationsStore = useConsultationStore();
         const consultationNid = ref('');
+        const router = useRouter()
         // Paramètres dynamiques de la requête
         const queryOptions = ref({
             fields: [
@@ -68,16 +71,27 @@ export default {
             (newNid) => {
                 if (newNid) {
                     consultationNid.value = newNid;
-                    updateFilter('field_client', newNid, "=" );
+                    updateFilter('field_client', newNid, "=");
                     fetchConsultations(queryOptions.value);
                 }
             },
             { immediate: true } // Lance immédiatement si client.nid existe déjà
         );
 
+        // edit consulatation
+        const editConsultation = (consultationId) => {
+            router.push({
+                name: 'consultation.edit',
+                params: {
+                    id: consultationId
+                }
+            });
+        };
+
         return {
             consultationsStore,
             formatDate,
+            editConsultation
         }
     },
 }

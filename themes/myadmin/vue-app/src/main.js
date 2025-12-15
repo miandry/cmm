@@ -22,6 +22,7 @@ const routes = [
   { path: "/fr/frontdesk", name: "frontdesk", component: Caisse },
   { path: "/patients", name: "patients", component: Clients },
   { path: "/consultations", name: "consultations", component: Consultations },
+  { path: '/consultations/:id/edit', name: 'consultation.edit', component: Consultations},
   { path: "/facture/:slug", name: "facture", component: Facture },
   { path: "/commandes", name: "commandes", component: Order },
   { path: "/users", name: "users", component: UserList },

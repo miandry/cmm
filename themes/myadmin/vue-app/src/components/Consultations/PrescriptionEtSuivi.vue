@@ -25,7 +25,7 @@
         </div>
         <div v-show="activeTab === 'recommendations'" class="tab-content">
             <!-- Recommendations -->
-            <RecommandationsModals  ref="recommandationRef"/>
+            <RecommandationsModals ref="recommandationRef" />
         </div>
         <div v-show="activeTab === 'followup'" class="tab-content">
             <div class="space-y-4">
@@ -65,6 +65,7 @@
 import { ref, defineExpose, reactive } from 'vue';
 import MedicamentsModals from './MedicamentsModals.vue';
 import RecommandationsModals from './RecommandationsModals.vue';
+import { useConsultationStore } from '../../stores/index.js';
 
 export default {
     name: 'PrescriptionEtSuivi',
@@ -79,7 +80,8 @@ export default {
         const suiviDate = ref('');
         const medicationRef = ref(null)
         const recommandationRef = ref(null);
-        const form = reactive ({
+        const consultationsStore = useConsultationStore();
+        const form = reactive({
             suiviDate: '',
             typeSuivi: '',
             suiviObjectif: '',
@@ -105,9 +107,41 @@ export default {
             form.suiviObjectif = '';
         }
 
+        function setData(consultation) {
+            if (!consultation) return;
+            consultationsStore.resetMedication()
+            // Médicaments
+            const instructionField = consultation.field_instructions
+            if (medicationRef.value) {
+                medicationRef.value.setData(
+                    consultation.field_medicaments || [],
+                    instructionField || ''
+                );
+            }
+
+            const otherField = {
+                conseil: consultation.field_conseils || '',
+                precaution: consultation.field_precautions || '',
+                signe: consultation.field_signes_d_alerte || '',
+            }
+            // Recommandations
+            if (recommandationRef.value) {
+                recommandationRef.value.setData(
+                    consultation.field_examens || [],
+                    otherField,
+                );
+            }
+
+            // Suivi
+            form.suiviDate = consultation.field_prochaine_consultation || '';
+            form.typeSuivi = consultation.field_type_de_suivi || '';
+            form.suiviObjectif = consultation.field_objectifs_du_suivi || '';
+        }
+
         defineExpose({
             stockTabData,
             resetAll,
+            setData,
         })
 
         return {
@@ -120,8 +154,9 @@ export default {
             medicationRef,
             stockTabData,
             recommandationRef,
-            resetAll
-            
+            resetAll,
+            setData
+
         };
     },
 };
