@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { getClients, saveClient } from "../../services/cliens";
+import { getClients, saveClient, deleteClient } from "../../services/cliens";
 import { buildQueryParams } from "../../utils/queryBuilder.js";
 
 export const useClientStore = defineStore("client", () => {
@@ -51,11 +51,11 @@ export const useClientStore = defineStore("client", () => {
     }
   }
 
-  async function createClient(newClientData, page = 'client') {
+  async function createClient(newClientData, page = "client") {
     try {
       let newClient;
       const response = await saveClient(newClientData);
-      if (page != 'client') {
+      if (page != "client") {
         newClient = await fetchClient(response.data.item);
         client.value = newClient;
       }
@@ -66,8 +66,48 @@ export const useClientStore = defineStore("client", () => {
     }
   }
 
+  async function destroyClient(id) {
+    loading.value = true;
+    error.value = null;
+    try {
+      const res = await deleteClient(id);
+      if (res.data.status) {
+        clients.value.rows = clients.value.rows.filter((c) => c.nid != id);
+      }
+      clients.value.total -= ids.length;
+    } catch (err) {
+      error.value = err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function destroyClients(ids = []) {
+    if (!Array.isArray(ids) || ids.length === 0) return;
+
+    loading.value = true;
+    error.value = null;
+
+    try {
+      // appels API en parallèle
+      await Promise.all(ids.map((id) => deleteClient(id)));
+
+      // mise à jour du store (optimiste)
+      clients.value.rows = clients.value.rows.filter(
+        (c) => !ids.includes(c.nid)
+      );
+
+      // optionnel : mise à jour du total
+      clients.value.total -= ids.length;
+    } catch (err) {
+      error.value = err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   function resetClient() {
-    client.value = []; 
+    client.value = [];
   }
 
   return {
@@ -80,6 +120,8 @@ export const useClientStore = defineStore("client", () => {
     fetchAllClients,
     fetchClient,
     createClient,
-    resetClient
+    resetClient,
+    destroyClient,
+    destroyClients
   };
 });

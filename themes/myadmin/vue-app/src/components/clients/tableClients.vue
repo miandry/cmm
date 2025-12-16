@@ -103,12 +103,12 @@
                 </div>
               </div>
             </div>
-            <button
-              class="px-3 py-2 text-sm text-gray-600 hover:text-primary border border-gray-300 !rounded-button whitespace-nowrap flex items-center space-x-2">
+            <button v-if="hasSelection" @click="openDeleteModal"
+              class="px-3 py-2 text-sm text-red-600 hover:text-red-400 border border-red-300 !rounded-button whitespace-nowrap flex items-center space-x-2">
               <div class="w-4 h-4 flex items-center justify-center">
-                <i class="ri-settings-3-line"></i>
+                <i class="ri-delete-bin-line"></i>
               </div>
-              <span>Actions</span>
+              <span>Supprimer</span>
             </button>
           </div>
         </div>
@@ -118,7 +118,8 @@
           <thead class="bg-gray-50">
             <tr>
               <th class="px-4 py-3 text-left">
-                <input type="checkbox" class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                <input type="checkbox" class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                  :checked="isAllSelected" @change="toggleSelectAll">
               </th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient
               </th>
@@ -136,7 +137,7 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="client in clients.rows" :key="client.nid" class="hover:bg-gray-50 cursor-pointer patient-row">
               <td class="px-4 py-3">
-                <input type="checkbox"
+                <input type="checkbox" :checked="selectedIds.includes(client.nid)" @change="toggleSelectOne(client.nid)"
                   class="patient-checkbox w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
               </td>
               <td class="px-4 py-3">
@@ -221,15 +222,36 @@
     </div>
     <Details class="fixed right-0 top-0 h-full w-96 bg-white shadow-xl
          transition-transform duration-300 z-40 border-l border-gray-200"
-      :class="isDetailsOpen ? 'translate-x-0' : 'translate-x-full'"
-      @closePannel="closePannel" :clientToShow="clientToShow" 
-      @sendClient="sendClient" ref="detailsRef"/>
+      :class="isDetailsOpen ? 'translate-x-0' : 'translate-x-full'" @closePannel="closePannel"
+      :clientToShow="clientToShow" @sendClient="sendClient" ref="detailsRef" />
+
+    <!-- modal -->
+    <div v-if="isDeleteModalOpen" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+          Confirmation
+        </h3>
+        <p class="text-sm  text-center text-gray-600 mb-6">
+          Voulez-vous vraiment supprimer ?
+          Cette action est irréversible.
+        </p>
+
+        <div class="flex justify-end space-x-2">
+          <button @click="isDeleteModalOpen = false" class="px-4 py-2 text-sm border border-gray-300 !rounded-button">
+            Annuler
+          </button>
+          <button @click="confirmDelete" class="px-4 py-2 text-sm bg-red-600 text-white !rounded-button">
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
 </template>
 
 <script>
-import { computed, ref, defineExpose } from 'vue';
+import { computed, ref, defineExpose, watch } from 'vue';
 import Details from './Details.vue';
 
 export default {
@@ -242,10 +264,13 @@ export default {
     clients: {
       type: Array,
       required: true
+    },
+    closeDetailsPannel: {
+      type: Boolean
     }
   },
 
-  emits: ['searchKeyWords', 'filterBy', 'paginate'],
+  emits: ['searchKeyWords', 'filterBy', 'paginate', 'detailsClosed', 'deleteSelected'],
   setup(props, { emit }) {
     const searchQuery = ref("");
     const filterQueryActive = ref("all");
@@ -254,6 +279,45 @@ export default {
     const isDetailsOpen = ref(false)
     const clientToShow = ref({})
     const totalPages = computed(() => Math.ceil(props.clients.total / perPage));
+
+    const selectedIds = ref([]);
+    const isDeleteModalOpen = ref(false);
+
+    // au moins un élément sélectionné
+    const hasSelection = computed(() => selectedIds.value.length > 0);
+
+    // select all (checked / indeterminate)
+    const isAllSelected = computed(() => {
+      return props.clients.rows.length > 0 &&
+        selectedIds.value.length === props.clients.rows.length;
+    });
+
+    const toggleSelectAll = (e) => {
+      if (e.target.checked) {
+        selectedIds.value = props.clients.rows.map(c => c.nid);
+      } else {
+        selectedIds.value = [];
+      }
+    };
+
+    const toggleSelectOne = (nid) => {
+      if (selectedIds.value.includes(nid)) {
+        selectedIds.value = selectedIds.value.filter(id => id !== nid);
+      } else {
+        selectedIds.value.push(nid);
+      }
+    };
+
+    const openDeleteModal = () => {
+      isDeleteModalOpen.value = true;
+    };
+
+    const confirmDelete = () => {
+      emit('deleteSelected', selectedIds.value);
+      selectedIds.value = [];
+      isDeleteModalOpen.value = false;
+    };
+
 
     // Pages visibles (3 pages max)
     const visiblePages = computed(() => {
@@ -329,8 +393,15 @@ export default {
       showModal(client);
     }
 
+    watch(() => props.closeDetailsPannel, (v) => {
+      if (v) {
+        isDetailsOpen.value = false;
+        emit('detailsClosed');
+      }
+    });
+
     defineExpose({
-      resetFilterUi
+      resetFilterUi,
     })
 
     return {
@@ -351,6 +422,14 @@ export default {
       closePannel,
       clientToShow,
       sendClient,
+      selectedIds,
+      hasSelection,
+      isAllSelected,
+      toggleSelectAll,
+      toggleSelectOne,
+      isDeleteModalOpen,
+      openDeleteModal,
+      confirmDelete,
     }
   }
 }

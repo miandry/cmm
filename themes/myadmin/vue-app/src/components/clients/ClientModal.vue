@@ -296,7 +296,7 @@ export default {
       const data = {
         patientData: patientData
       }
-
+      
       emit('close', data);
     };
 

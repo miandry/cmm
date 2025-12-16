@@ -83,18 +83,24 @@ export default {
     // Determine CSS classes for menu item based on current route
     getMenuItemClass(itemPath) {
       const current = this.$route.path
-
-      // Trouver l’item concerné
       const item = this.menuItems.find(x => x.path === itemPath)
 
-      // Si l’item a un tableau de chemins
-      const isActive = item.paths
-        ? item.paths.includes(current)
-        : current === itemPath
+      let isActive = false
+
+      if (item?.paths) {
+        // cas spécial pour "/"
+        if (item.path === "/") {
+          isActive = item.paths.includes(current)
+        } else {
+          isActive = item.paths.some(p => current.startsWith(p))
+        }
+      } else {
+        isActive = current === itemPath
+      }
 
       return {
-        'px-4 xl:px-6 py-3 bg-primary text-white !rounded-button whitespace-nowrap font-medium text-sm xl:text-base cursor-pointer': isActive,
-        'px-4 xl:px-6 py-3 text-gray-600 hover:text-primary hover:bg-gray-50 !rounded-button whitespace-nowrap font-medium text-sm xl:text-base cursor-pointer': !isActive
+        'px-4 xl:px-6 py-3 bg-primary text-white !rounded-button': isActive,
+        'px-4 xl:px-6 py-3 text-gray-600 hover:text-primary hover:bg-gray-50 !rounded-button': !isActive
       }
     },
 

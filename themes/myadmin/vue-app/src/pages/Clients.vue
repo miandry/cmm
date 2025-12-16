@@ -3,7 +3,8 @@
     <PageLoader v-if="store.loading" />
     <rapportClients />
     <tableClients :clients="store.clients" @searchKeyWords="onSearch" @filterBy="onfilter" @paginate="onPagination"
-      @show="showModal" ref="tableClientRef" :key="tableKey" @editPatient="editPatient" />
+      @show="showModal" :closeDetailsPannel="closeDetailsPannel" @detailsClosed="closeDetailsPannel = false"
+      ref="tableClientRef" :key="tableKey" @editPatient="editPatient" @deleteSelected="deleteSelected"/>
     <!-- Client Modal -->
     <client-modal @close="closeModal" @show="showModal" :patientToEdit="patientToEdit"
       class="fixed inset-0 bg-black bg-opacity-50 z-50" v-if="modalVisible" />
@@ -16,6 +17,7 @@ import tableClients from '../components/clients/tableClients.vue';
 import rapportClients from '../components/clients/rapportClients.vue';
 import PageLoader from '../components/PageLoader.vue';
 import ClientModal from '../components/clients/ClientModal.vue';
+import { toast } from 'vue-sonner';
 
 
 export default {
@@ -23,6 +25,7 @@ export default {
   components: { tableClients, PageLoader, rapportClients, ClientModal },
   setup() {
     const modalVisible = ref(false);
+    const closeDetailsPannel = ref(false);
     const store = useClientStore();
     const tableClientRef = ref(null);
     const tableKey = ref(0);
@@ -109,7 +112,6 @@ export default {
         // mettre a jour le patient modifier dans le store pour l'affichege
         store.clients
         const updated = data.patientData;
-
         // Trouver l’index dans store.clients
         const index = store.clients.rows.findIndex(c => c.nid == updated.nid);
 
@@ -117,8 +119,19 @@ export default {
           // Remplacer la ligne
           store.clients.rows[index] = updated;
         }
+        closeDetailsPannel.value = true;
       }
     };
+
+    const deleteSelected = async (ids) => {
+        await store.destroyClients(ids);
+        if (store.error) {
+          toast.error('Des erreurs sont survenue lors de la suppression')
+          return;
+        }
+
+        toast.success('Suppression réussi!')
+    }
 
     onMounted(() => fetchClients());
 
@@ -132,7 +145,9 @@ export default {
       showModal,
       closeModal,
       tableKey,
-      patientToEdit
+      patientToEdit,
+      closeDetailsPannel,
+      deleteSelected
     }
   }
 
