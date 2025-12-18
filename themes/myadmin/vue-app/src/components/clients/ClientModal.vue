@@ -253,7 +253,7 @@ export default {
 
       clientStore.loading = true;
 
-      await clientStore.createClient(form);
+      await clientStore.createClient(form, "client");
 
       if (clientStore.error) {
         toast.error("Une erreur est survenue lors de l'enregistrement.")
