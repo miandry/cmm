@@ -42,7 +42,6 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Type de suivi</label>
                         <select v-model="form.typeSuivi"
                             class="w-full px-3 py-2 pr-8 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
-                            <option :value="''">Sélectionner le type</option>
                             <option :value="'Controle_de_routine'">Contrôle de routine</option>
                             <option :value="'Resultats_d_examens'">Résultats d'examens</option>
                             <option :value="'Suivi_evolution'">Suivi évolution</option>
@@ -83,7 +82,7 @@ export default {
         const consultationsStore = useConsultationStore();
         const form = reactive({
             suiviDate: '',
-            typeSuivi: '',
+            typeSuivi: 'Controle_de_routine',
             suiviObjectif: '',
         })
         const setActiveTab = (tab) => {

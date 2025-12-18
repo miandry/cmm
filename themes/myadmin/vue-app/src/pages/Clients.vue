@@ -4,7 +4,7 @@
     <rapportClients />
     <tableClients :clients="store.clients" @searchKeyWords="onSearch" @filterBy="onfilter" @paginate="onPagination"
       @show="showModal" :closeDetailsPannel="closeDetailsPannel" @detailsClosed="closeDetailsPannel = false"
-      ref="tableClientRef" :key="tableKey" @editPatient="editPatient" @deleteSelected="deleteSelected"/>
+      ref="tableClientRef" :key="tableKey" @editPatient="editPatient" @deleteSelected="deleteSelected" />
     <!-- Client Modal -->
     <client-modal @close="closeModal" @show="showModal" :patientToEdit="patientToEdit"
       class="fixed inset-0 bg-black bg-opacity-50 z-50" v-if="modalVisible" />
@@ -30,6 +30,7 @@ export default {
     const tableClientRef = ref(null);
     const tableKey = ref(0);
     const patientToEdit = ref({});
+    
     // Paramètres dynamiques de la requête
     const queryOptions = ref({
       fields: [
@@ -44,10 +45,15 @@ export default {
         'field_contact_d_urgence',
         'field_email',
         'field_notes_medicales',
-        'field_sexe'
+        'field_sexe',
+        'field_consultation',
+        'field_last_consultation_status'
       ],
       sort: { val: 'nid', op: 'desc' },
       filters: {},
+      values: {
+        field_consultation: ['title', 'nid', 'field_consultation_status']
+      },
       pager: 0,
       offset: 10
     })
@@ -67,7 +73,13 @@ export default {
       if (value == "all") {
         value = null;
       }
-      updateFilter('field_assurance', value)
+      if (value === "draft") {
+        updateFilter('field_last_consultation_status', value)
+        updateFilter('field_assurance', null)
+      } else {
+        updateFilter('field_assurance', value)
+        updateFilter('field_last_consultation_status', null)
+      }
       fetchClients()
     }
 
@@ -124,13 +136,13 @@ export default {
     };
 
     const deleteSelected = async (ids) => {
-        await store.destroyClients(ids);
-        if (store.error) {
-          toast.error('Des erreurs sont survenue lors de la suppression')
-          return;
-        }
+      await store.destroyClients(ids);
+      if (store.error) {
+        toast.error('Des erreurs sont survenue lors de la suppression')
+        return;
+      }
 
-        toast.success('Suppression réussi!')
+      toast.success('Suppression réussi!')
     }
 
     onMounted(() => fetchClients());

@@ -1,6 +1,7 @@
 <template>
     <!-- Patient Modal -->
     <div>
+        <PageLoader v-if="loader" />
         <div class="fixed inset-0 bg-black bg-opacity-50 z-50" v-if="showPatientModal">
             <div class="flex items-center justify-center min-h-screen p-4">
                 <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
@@ -76,13 +77,15 @@ import { onMounted, ref, watch } from 'vue';
 import { useClientStore } from '../../stores/index.js';
 import { toast } from 'vue-sonner';
 import AddPatientModal from './AddPatientModal.vue';
+import PageLoader from '../PageLoader.vue';
 
 
 
 export default {
     name: "PatientModal",
     components: {
-        AddPatientModal
+        AddPatientModal,
+        PageLoader
     },
     props: {
         showPatientModal: {
@@ -97,6 +100,7 @@ export default {
         const clientNameSearch = ref(null);
         const showPatientModal = ref(false);
         const isAddOpen = ref(false);
+        const loader = ref(false);
         // Paramètres dynamiques de la requête
         const queryOptions = ref({
             fields: [
@@ -114,18 +118,32 @@ export default {
         })
 
         const fetchClients = async () => {
-            await store.fetchClients(queryOptions.value);
+            try {
+                loader.value = true
+                await store.fetchClients(queryOptions.value);
+            } catch (error) {
+                toast.error("Une erreur est survenue.")
+            } finally {
+                loader.value = false;
+            }
         }
 
         const confirmSelectedClient = async () => {
-            await store.fetchClient(selectedClientNid.value);
+            try {
+                loader.value = true;
+                await store.fetchClient(selectedClientNid.value);
 
-            if (store.error) {
+                if (store.error) {
+                    toast.error("Une erreur est survenue lors de la sélection du client.")
+                    return
+                }
+                toast.success('Client sélectionné avec succès !')
+                emit('update:showPatientModal', false)
+            } catch (error) {
                 toast.error("Une erreur est survenue lors de la sélection du client.")
-                return
+            } finally {
+                loader.value = false;
             }
-            toast.success('Client sélectionné avec succès !')
-            emit('update:showPatientModal', false)
         }
 
         const onSearch = async () => {
@@ -177,7 +195,8 @@ export default {
             hideAddModal,
             showAddModal,
             isAddOpen,
-            hideParentModal
+            hideParentModal,
+            loader
 
         }
     }

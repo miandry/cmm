@@ -1,5 +1,6 @@
 <template>
     <div class="fixed inset-0 bg-black bg-opacity-50 z-60" v-if="isAddOpen">
+        <PageLoader v-if="loader" />
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
                 <div class="p-6">
@@ -78,12 +79,16 @@
 </template>
 
 <script>
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
 import { useClientStore } from "../../stores/index.js";
 import { toast } from "vue-sonner";
+import PageLoader from "../PageLoader.vue";
 
 export default {
     name: "AddPatientModal",
+    components: {
+        PageLoader,
+    },
     props: {
         isAddOpen: {
             type: Boolean,
@@ -92,7 +97,7 @@ export default {
     emits: ['hideAddModal', 'hideParentModal'],
     setup(props, { emit }) {
         const store = useClientStore();
-
+        const loader = ref(false);
         const errors = reactive({
             title: "",
             field_age: "",
@@ -118,34 +123,40 @@ export default {
             field_adresse: "",
             field_allergies: "",
             field_sexe: "masculin",
-            field_age: ""
+            field_age: "",
         });
 
         const submitClientForm = async () => {
-            if (!validateForm()) return;
-            store.loading = true;
-            await store.createClient(form);
-
-            if (store.error) {
+            try {
+                loader.value = true;
+                if (!validateForm()) return;
+                store.loading = true;
+                await store.createClient(form, 'consultations');
+    
+                if (store.error) {
+                    toast.error("Une erreur est survenue lors de l'ajout client.")
+                    return
+                }
+    
+                // reset form
+                form.title = "";
+                form.field_phone = "";
+                form.field_age = "";
+                form.field_allergies = "";
+                form.field_assurance = 0;
+                form.field_sexe = "masculin";
+                // fermer modal si c'est ok
+                emit('hideAddModal');
+                emit('hideParentModal');  
+                toast.success('Client sélectionné avec succès !')              
+            } catch (error) {
                 toast.error("Une erreur est survenue lors de l'ajout client.")
-                return
+            } finally {
+                loader.value = false;
             }
-
-            // reset form
-            form.title = "";
-            form.field_phone = "";
-            form.field_age = "";
-            form.field_allergies = "";
-            form.field_assurance = 0;
-            form.field_sexe = "masculin";
-            // fermer modal si c'est ok
-            emit('hideAddModal');
-            emit('hideParentModal');
-            toast.success('Client sélectionné avec succès !')
-            store.loading = false;
         };
 
-        return { form, submitClientForm, store, errors };
+        return { form, submitClientForm, store, errors, loader };
     },
 }
 </script>

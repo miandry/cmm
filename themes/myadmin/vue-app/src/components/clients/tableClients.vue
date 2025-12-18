@@ -45,6 +45,15 @@
             ]">
               Non assurés
             </button>
+            <!-- Non assurés -->
+            <button @click="filter('draft')" :class="[
+              'px-3 py-2 text-sm font-medium !rounded-button whitespace-nowrap filter-btn border',
+              filterQueryActive === 'draft'
+                ? 'text-primary bg-blue-50 border-primary'
+                : 'text-gray-600 hover:text-primary hover:bg-gray-50 border-gray-300'
+            ]">
+              Consultation non finie
+            </button>
           </div>
           <!-- Ajouter patient -->
           <button @click="showModal(null)" class="px-4 py-2 bg-primary text-white !rounded-button font-medium text-sm 
@@ -148,7 +157,11 @@
                   </div>
                   <div>
                     <p class="text-sm font-medium text-gray-900 capitalize">{{ client.title }}</p>
-                    <p class="text-xs text-gray-500 hidden">#0001</p>
+                    <p class="text-xs text-gray-500"
+                      v-if="client.field_consultation && client.field_consultation.field_consultation_status == 'draft' && client.field_last_consultation_status && client.field_last_consultation_status == 0">
+                      <span class="text-orange-600 cursor-pointer"
+                        @click="editConsultation(client.field_consultation.nid)">Finaliser consultation</span>
+                    </p>
                   </div>
                 </div>
               </td>
@@ -253,6 +266,7 @@
 <script>
 import { computed, ref, defineExpose, watch } from 'vue';
 import Details from './Details.vue';
+import { useRouter } from 'vue-router';
 
 export default {
   name: 'tableClients',
@@ -279,7 +293,7 @@ export default {
     const isDetailsOpen = ref(false)
     const clientToShow = ref({})
     const totalPages = computed(() => Math.ceil(props.clients.total / perPage));
-
+    const router = useRouter()
     const selectedIds = ref([]);
     const isDeleteModalOpen = ref(false);
 
@@ -400,6 +414,16 @@ export default {
       }
     });
 
+    // edit consulatation
+    const editConsultation = (consultationId) => {
+      router.push({
+        name: 'consultation.edit',
+        params: {
+          id: consultationId
+        }
+      });
+    };
+
     defineExpose({
       resetFilterUi,
     })
@@ -430,6 +454,7 @@ export default {
       isDeleteModalOpen,
       openDeleteModal,
       confirmDelete,
+      editConsultation,
     }
   }
 }

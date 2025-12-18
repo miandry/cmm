@@ -46,6 +46,7 @@ export const useConsultationStore = defineStore("consultation", () => {
   async function createConsultation(newConsultationData) {
     try {
       const response = await saveConsultation(newConsultationData);
+      return response;
     } catch (err) {
       error.value = err;
     } finally {
@@ -93,6 +94,10 @@ export const useConsultationStore = defineStore("consultation", () => {
     medications.value = [];
   }
 
+  function consultationsReset() {
+    consultations.value = { rows: [], total: 0 };
+  }
+
   return {
     consultations,
     consultation,
@@ -105,6 +110,7 @@ export const useConsultationStore = defineStore("consultation", () => {
     savedMedication,
     medications,
     removeFromList,
-    resetMedication
+    resetMedication,
+    consultationsReset,
   };
 });

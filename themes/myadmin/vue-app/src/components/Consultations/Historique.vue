@@ -3,8 +3,7 @@
         <h3 class="text-sm font-semibold text-gray-900 mb-3">Historique médical</h3>
         <div class="space-y-1 max-h-48 overflow-y-auto" v-if="consultationsStore.consultations.rows.length">
             <div v-for="cons in consultationsStore.consultations.rows" :key="cons.nid"
-                @click="editConsultation(cons.nid)"
-                class="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer">
+                @click="editConsultation(cons.nid)" class="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer">
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-xs flex-1 two-lines font-medium text-gray-900">{{ cons.field_motif }}</span>
                     <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short') }}</span>
@@ -24,7 +23,7 @@
 </template>
 
 <script>
-import { watch, ref } from 'vue';
+import { watch, ref, onMounted } from 'vue';
 import { useClientStore, useConsultationStore } from '../../stores/index.js';
 import { formatDate } from '../../utils/formateDate.js';
 import { useRouter } from 'vue-router';
@@ -69,10 +68,12 @@ export default {
         watch(
             () => patienStore.client?.nid,
             (newNid) => {
-                if (newNid) {
+                if (newNid == undefined) {
+                    consultationsStore.consultationsReset();
+                } else {
                     consultationNid.value = newNid;
                     updateFilter('field_client', newNid, "=");
-                    fetchConsultations(queryOptions.value);
+                    fetchConsultations();
                 }
             },
             { immediate: true } // Lance immédiatement si client.nid existe déjà

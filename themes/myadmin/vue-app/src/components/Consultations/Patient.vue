@@ -3,7 +3,8 @@
         <div class="p-3 border-b border-gray-200">
             <div class="flex items-center justify-between">
                 <h2 class="text-base font-semibold text-gray-900">Patient actuel</h2>
-                <button @click="openPatientModal" class="text-xs text-primary hover:underline cursor-pointer">
+                <button @click="openPatientModal" class="text-xs text-primary hover:underline cursor-pointer"
+                    v-if="canChange">
                     {{ store.client && store.client.nid ? 'Changer' : 'Ajouter' }}
                 </button>
             </div>
@@ -26,7 +27,8 @@
                     </div>
                     <div>
                         <span class="text-gray-600">Sexe</span>
-                        <p class="font-medium" v-if="store.client.field_sexe">{{ store.client.field_sexe == "masculin" ? "Masculin" : "Féminin" }}</p>
+                        <p class="font-medium" v-if="store.client.field_sexe">{{ store.client.field_sexe == "masculin" ?
+                            "Masculin" : "Féminin" }}</p>
                         <p class="font-medium" v-else>Pas renseigner</p>
                     </div>
                     <div>
@@ -42,7 +44,8 @@
                     </div>
                     <div>
                         <span class="text-gray-600">Allergies</span>
-                        <p class="font-medium text-red-600" v-if="store.client.field_allergies">{{ store.client.field_allergies }}</p>
+                        <p class="font-medium text-red-600" v-if="store.client.field_allergies">{{
+                            store.client.field_allergies }}</p>
                         <p class="font-medium text-red-600" v-else>Aucun</p>
                     </div>
                 </div>
@@ -60,7 +63,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import PatientModal from './PatientModal.vue';
 import { useClientStore } from '../../stores/index.js';
 
@@ -69,16 +72,30 @@ export default {
     components: {
         PatientModal,
     },
-    setup() {
+    props: {
+        canChange: {
+            type: Boolean,
+        },
+    },
+    setup(props) {
         const store = useClientStore();
         const showPatientModal = ref(false);
+        const canChange = ref(props.canChange)
         const openPatientModal = () => {
             showPatientModal.value = true
         }
+        watch(
+            () => props.canChange,
+            (newVal) => {
+                canChange.value = newVal
+            },
+            { immediate: true }
+        )
         return {
             showPatientModal,
             openPatientModal,
-            store
+            store,
+            canChange
         }
     }
 }
