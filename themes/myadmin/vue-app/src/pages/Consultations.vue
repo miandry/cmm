@@ -108,6 +108,11 @@ export default {
                     // sinon on continue normalement
                 }
                 let consultationStatus = withOrder ? "completed" : "draft"
+
+                if (isEditMode.value) {
+                    consultationStatus = withOrder ? "completed" : consultationsStore.consultation?.field_consultation_status
+                }
+
                 let lastConsultationStatus = withOrder ? "1" : "0"
                 // data variable
                 const generalFormData = generalFormRef.value.getGeneralFormData();
@@ -244,7 +249,7 @@ export default {
                         field_examens_order: [],
                         field_date: formatDateUS(),
                         status: 1,
-                        field_status: "unpayed"
+                        field_status: "payed"
                     };
                     if (allMedications && allMedications.length > 0) {
                         const allArticles = allMedications.map(item => ({
@@ -290,11 +295,11 @@ export default {
                 await consultationsStore.fetchConsultation(consultationId);
                 // Charger le patient
                 await patienStore.fetchClient(consultationsStore.consultation.field_client.nid);
-    
+
                 // Remplir le formulaire général
                 await nextTick();
                 generalFormRef.value?.setFormData(consultationsStore.consultation);
-    
+
                 // Remplir prescription / suivi
                 prescriptionEtSuivi.value?.setData(consultationsStore.consultation);
             } catch (error) {
