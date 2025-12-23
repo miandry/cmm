@@ -26,7 +26,7 @@
             <Historique />
             <div class="flex-1 p-3 flex flex-col justify-end">
                 <div class="space-y-2">
-                    <button
+                    <button @click="handleConsultationSubmit(false, 'ordonnance')"
                         class="w-full py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 !rounded-button font-medium whitespace-nowrap flex items-center justify-center space-x-2 text-sm cursor-pointer">
                         <div class="w-4 h-4 flex items-center justify-center">
                             <i class="ri-printer-line"></i>
@@ -91,7 +91,7 @@ export default {
         const isEditMode = computed(() => !!route.params.id);
         const loader = ref(false);
 
-        const handleConsultationSubmit = async (withOrder) => {
+        const handleConsultationSubmit = async (withOrder, ordonnance = null) => {
 
             try {
                 loader.value = true
@@ -145,7 +145,7 @@ export default {
                         field_articles: item.nid,
                         field_description: item.field_description,
                         field_prix: item.field_prix,
-                        quantity: item.quantity,
+                        field_quantite: item.quantity,
                     }));
                 }
                 if (examenStore.savedExamen?.items?.length > 0) {
@@ -279,7 +279,17 @@ export default {
                 generalFormRef.value.resetForm();
                 prescriptionEtSuivi.value.resetAll();
                 patienStore.resetClient();
-                router.push({ name: 'patients' });
+
+                if (ordonnance) {
+                    router.push({
+                        name: 'ordonnance',
+                        query: {
+                            key: response.data.item
+                        }
+                    })
+                } else {
+                    router.push({ name: 'patients' });
+                }
 
             } catch (error) {
                 toast.error("Une erreur est survenue lors de l'enregistrement.")

@@ -320,7 +320,7 @@ export default {
                         nid: item.field_articles || item.nid,
                         title: item.field_articles.title,
                         field_prix: item.field_prix,
-                        quantity: item.quantity || 1,
+                        quantity: item.field_quantite || 1,
                         field_description: item.field_description || ''
                     });
                 });

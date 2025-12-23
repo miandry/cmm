@@ -12,6 +12,7 @@ import About from "./pages/About.vue";
 import Order from "./pages/Order.vue";
 import Consultations from "./pages/Consultations.vue";
 import Facture from "./pages/Facture.vue";
+import Ordonnance from "./pages/Ordonnance.vue";
 
 blockZoom();
 
@@ -24,6 +25,7 @@ const routes = [
   { path: "/consultations", name: "consultations", component: Consultations },
   { path: '/consultations/:id/edit', name: 'consultation.edit', component: Consultations},
   { path: "/facture/:slug", name: "facture", component: Facture, meta: { hideHeader: true}},
+  { path: "/ordonnance", name: "ordonnance", component: Ordonnance, meta: { hideHeader: true}},
   { path: "/commandes", name: "commandes", component: Order },
   { path: "/users", name: "users", component: UserList },
   { path: "/about", name: "about", component: About },
