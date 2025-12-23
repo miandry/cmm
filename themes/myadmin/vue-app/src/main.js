@@ -23,7 +23,7 @@ const routes = [
   { path: "/patients", name: "patients", component: Clients },
   { path: "/consultations", name: "consultations", component: Consultations },
   { path: '/consultations/:id/edit', name: 'consultation.edit', component: Consultations},
-  { path: "/facture/:slug", name: "facture", component: Facture },
+  { path: "/facture/:slug", name: "facture", component: Facture, meta: { hideHeader: true}},
   { path: "/commandes", name: "commandes", component: Order },
   { path: "/users", name: "users", component: UserList },
   { path: "/about", name: "about", component: About },

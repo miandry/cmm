@@ -1,20 +1,17 @@
 <template>
-   <!-- <Loader /> -->
-    <!-- Toast notification -->
-    <Toaster position="top-right" richColors />
-    <!-- Header Component -->
-    <AppHeader @toggle-menu="toggleMobileMenu" />
-    
-    <!-- Main Content Area -->
-    <main class="main-content">
-      <router-view />
-    </main>
+  <!-- <Loader /> -->
+  <!-- Toast notification -->
+  <Toaster position="top-right" richColors />
+  <!-- Header Component -->
+  <AppHeader @toggle-menu="toggleMobileMenu" v-if="!$route.meta.hideHeader" />
 
-    <!-- Mobile Menu Component -->
-    <MobileMenu 
-      :is-open="isMobileMenuOpen" 
-      @close="closeMobileMenu" 
-    />
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <router-view />
+  </main>
+
+  <!-- Mobile Menu Component -->
+  <MobileMenu :is-open="isMobileMenuOpen" @close="closeMobileMenu" />
 </template>
 
 <script>
@@ -30,26 +27,26 @@ export default {
     MobileMenu,
     Toaster
   },
-  
+
   data() {
     return {
       isMobileMenuOpen: false
     }
   },
-  
+
   methods: {
     // Toggle mobile menu open/close
     toggleMobileMenu() {
       this.isMobileMenuOpen = !this.isMobileMenuOpen
       this.updateBodyScroll()
     },
-    
+
     // Close mobile menu
     closeMobileMenu() {
       this.isMobileMenuOpen = false
       this.updateBodyScroll()
     },
-    
+
     // Prevent body scrolling when menu is open
     updateBodyScroll() {
       if (this.isMobileMenuOpen) {
@@ -59,7 +56,7 @@ export default {
       }
     }
   },
-  
+
   // Close menu when route changes
   watch: {
     $route() {

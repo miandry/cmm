@@ -144,7 +144,8 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="client in clients.rows" :key="client.nid" class="hover:bg-gray-50 cursor-pointer patient-row">
+            <tr v-for="client in clients.rows" :key="client.nid" class="hover:bg-gray-50 cursor-pointer patient-row"
+              @click="createOrEditConsultation(client)">
               <td class="px-4 py-3">
                 <input type="checkbox" :checked="selectedIds.includes(client.nid)" @change="toggleSelectOne(client.nid)"
                   class="patient-checkbox w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
@@ -159,8 +160,7 @@
                     <p class="text-sm font-medium text-gray-900 capitalize">{{ client.title }}</p>
                     <p class="text-xs text-gray-500"
                       v-if="client.field_consultation && client.field_consultation.field_consultation_status == 'draft' && client.field_last_consultation_status && client.field_last_consultation_status == 0">
-                      <span class="text-orange-600 cursor-pointer"
-                        @click="editConsultation(client.field_consultation.nid)">Finaliser consultation</span>
+                      <span class="text-orange-600 cursor-pointer">Finaliser consultation</span>
                     </p>
                   </div>
                 </div>
@@ -169,7 +169,7 @@
               <td class="px-4 py-3 text-sm text-gray-900">
                 {{ client.field_phone }}
               </td>
-              <td class="px-4 py-3">
+              <td class="px-4 py-3" @click.stop>
                 <div class="flex items-center space-x-1" v-if="client.field_assurance && client.field_assurance == 1">
                   <div class="w-2 h-2 bg-secondary rounded-full"></div>
                   <span class="text-xs font-medium text-secondary ">Oui</span>
@@ -180,14 +180,14 @@
                 </div>
               </td>
               <td class="px-4 py-3 text-sm text-gray-500 hidden">15 Nov 2024</td>
-              <td class="px-4 py-3">
+              <td class="px-4 py-3" @click.stop>
                 <div class="flex items-center space-x-2">
-                  <button @click="showDetails(client)" class="text-primary hover:text-blue-600 view-patient">
+                  <button @click.stop="showDetails(client)" class="text-primary hover:text-blue-600 view-patient">
                     <div class="w-5 h-5 flex items-center justify-center">
                       <i class="ri-eye-line"></i>
                     </div>
                   </button>
-                  <button class="text-gray-600 hover:text-primary edit-patient" @click="showModal(client)">
+                  <button class="text-gray-600 hover:text-primary edit-patient" @click.stop="showModal(client)">
                     <div class="w-5 h-5 flex items-center justify-center">
                       <i class="ri-edit-line"></i>
                     </div>
@@ -414,6 +414,15 @@ export default {
       }
     });
 
+    function createConsultation(clientId) {
+      router.push({
+        name: 'consultations',
+        query: {
+          client: clientId
+        }
+      });
+    }
+
     // edit consulatation
     const editConsultation = (consultationId) => {
       router.push({
@@ -423,6 +432,17 @@ export default {
         }
       });
     };
+
+    function createOrEditConsultation(client) {
+      if (client.field_consultation
+        && client.field_consultation.field_consultation_status == 'draft'
+        && client.field_last_consultation_status
+        && client.field_last_consultation_status == 0) {
+        editConsultation(client.field_consultation.nid)
+      } else {
+        createConsultation(client.nid);
+      }
+    }
 
     defineExpose({
       resetFilterUi,
@@ -455,6 +475,8 @@ export default {
       openDeleteModal,
       confirmDelete,
       editConsultation,
+      createConsultation,
+      createOrEditConsultation
     }
   }
 }

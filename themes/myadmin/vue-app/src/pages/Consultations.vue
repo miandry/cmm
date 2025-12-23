@@ -339,6 +339,8 @@ export default {
         onMounted(async () => {
             const clientId = route.query.client;
             if (clientId) {
+                prescriptionEtSuivi.value.resetAll();
+                consultationsStore.consultationsReset();
                 await patienStore.fetchClient(clientId);
             }
 
