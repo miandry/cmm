@@ -31,11 +31,12 @@
                     <div class="mb-4">
                         <div class="grid grid-cols-3 gap-2" id="modal-numpad">
                             <button v-for="n in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0']" :key="n"
-                                @click="handleNumpadClick(n)"
+                                @pointerdown.prevent="handleNumpadClick(n)"
                                 class="h-12 bg-gray-100 hover:bg-gray-200 !rounded-button font-semibold text-lg">
                                 {{ n }}
                             </button>
-                            <button @click="handleNumpadClick('delete')"
+                            <button @pointerdown.prevent="startDelete" @pointerup="stopDelete"
+                                @pointerleave="stopDelete" @pointercancel="stopDelete"
                                 class="h-12 bg-red-100 hover:bg-red-200 text-red-600 !rounded-button font-semibold text-lg flex items-center justify-center">
                                 <i class="ri-delete-back-2-line"></i>
                             </button>
@@ -146,6 +147,29 @@ export default {
             }
         }
 
+        /* ======================
+           DELETE MAINTIEN APPUYÉ
+        ====================== */
+        let deleteInterval = null;
+
+        const startDelete = () => {
+            // suppression immédiate
+            amountReceived.value = amountReceived.value.slice(0, -1);
+
+            // suppression continue
+            deleteInterval = setInterval(() => {
+                amountReceived.value = amountReceived.value.slice(0, -1);
+            }, 80);
+        };
+
+        const stopDelete = () => {
+            if (deleteInterval) {
+                clearInterval(deleteInterval);
+                deleteInterval = null;
+            }
+        };
+
+
         // === Gestion du clavier ===
         const handleKeydown = (e) => {
             if (/^[0-9.]$/.test(e.key)) {
@@ -186,11 +210,18 @@ export default {
             amountReceived,
             changeDue,
             handleNumpadClick,
-            formattedAmountReceived
+            formattedAmountReceived,
+            startDelete,
+            stopDelete
         }
     }
 
 }
 </script>
 
-<style></style>
+<style>
+#modal-numpad button {
+    touch-action: manipulation;
+    user-select: none;
+}
+</style>
