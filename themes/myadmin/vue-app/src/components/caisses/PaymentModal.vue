@@ -159,7 +159,7 @@ export default {
             // suppression continue
             deleteInterval = setInterval(() => {
                 amountReceived.value = amountReceived.value.slice(0, -1);
-            }, 80);
+            }, 360);
         };
 
         const stopDelete = () => {
