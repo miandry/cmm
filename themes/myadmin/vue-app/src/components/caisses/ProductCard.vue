@@ -63,16 +63,9 @@ export default {
         return defaultImage
       }
 
-      // Compression via Cloudflare Images
-      // w=400 : largeur de 400px (taille de votre conteneur)
-      // h=400 : hauteur de 400px
-      // output=webp : conversion en format WebP (plus léger)
-      // q=80 : qualité à 80% (bon équilibre qualité/poids)
-      // fit=cover : recadrage pour remplir le conteneur
       return `https://images.weserv.nl/?url=${encodeURIComponent(originalUrl)}&w=400&h=400&output=webp&q=80&fit=cover`
     }
 
-    // Tout ce qu'on retourne ici sera accessible dans le template
     return {
       addToCart,
       getOptimizedImage
