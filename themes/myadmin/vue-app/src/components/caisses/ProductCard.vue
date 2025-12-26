@@ -56,7 +56,7 @@ export default {
     // Fonction pour obtenir l'image optimisée
     function getOptimizedImage() {
       const originalUrl = props.article.field_image?.image?.url
-      const defaultImage = '/sites/default/files/2025-11/defaultProductImage_0.png'
+      const defaultImage = '/sites/default/files/2025-12/defaultProductImagePng.png'
 
       // Si pas d'image, retourner l'image par défaut
       if (!originalUrl) {
