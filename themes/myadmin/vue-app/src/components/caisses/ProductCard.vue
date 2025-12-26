@@ -1,8 +1,8 @@
 <template>
   <div class="article-card" @click="addToCart">
     <div class="aspect-square mb-1 rounded-md overflow-hidden">
-      <img :src="article.field_image?.image?.url || '/sites/default/files/2025-11/defaultProductImage_0.png'"
-        alt="Article" class="w-full h-full object-cover object-top">
+      <img :src="getOptimizedImage()" :alt="article.title" class="w-full h-full object-cover object-top" loading="lazy"
+        width="400" height="400">
     </div>
     <h3 class="font-bold text-gray-900 mb-1 text-xs line-clamp-2" style="height: 35px;">{{ article.title }}</h3>
     <div class="mb-1">
@@ -52,9 +52,30 @@ export default {
     function addToCart() {
       emit('add-to-cart', props.article)
     }
+
+    // Fonction pour obtenir l'image optimisée
+    function getOptimizedImage() {
+      const originalUrl = props.article.field_image?.image?.url
+      const defaultImage = '/sites/default/files/2025-11/defaultProductImage_0.png'
+
+      // Si pas d'image, retourner l'image par défaut
+      if (!originalUrl) {
+        return defaultImage
+      }
+
+      // Compression via Cloudflare Images
+      // w=400 : largeur de 400px (taille de votre conteneur)
+      // h=400 : hauteur de 400px
+      // output=webp : conversion en format WebP (plus léger)
+      // q=80 : qualité à 80% (bon équilibre qualité/poids)
+      // fit=cover : recadrage pour remplir le conteneur
+      return `https://images.weserv.nl/?url=${encodeURIComponent(originalUrl)}&w=400&h=400&output=webp&q=80&fit=cover`
+    }
+
     // Tout ce qu'on retourne ici sera accessible dans le template
     return {
-      addToCart
+      addToCart,
+      getOptimizedImage
     }
   }
 }
