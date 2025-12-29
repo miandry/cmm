@@ -11,13 +11,20 @@
                         <i class="ri-search-line text-sm"></i>
                     </div>
 
-                    <input type="text" v-model="searchKeywordClient" @keyup="searchByKeyword" @focus="showList = true"
+                    <input type="text" v-model="searchKeywordClient" @input="searchByKeyword" @focus="showList = true"
                         @blur="handleBlur" placeholder="Rechercher une commande."
                         class="w-full pl-10 pr-4 py-3 border border-gray-200 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
                 <div v-if="showList" @mousedown.prevent
                     class="max-h-48 overflow-y-auto border border-gray-300 !rounded-button bg-white absolute right-0 left-0">
-                    <div v-if="clientStore.clients.rows.length" class="divide-y divide-gray-100">
+
+                    <!-- Loader -->
+                    <div v-if="loading" class="flex flex-col items-center justify-center py-6">
+                        <div class="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin">
+                        </div>
+                        <p class="text-center text-xs text-gray-600 mt-2">Chargement...</p>
+                    </div>
+                    <div v-else-if="clientStore.clients.rows.length" class="divide-y divide-gray-100">
                         <div v-for="(client, index) in clientStore.clients.rows" :key="index" :class="[
                             'flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 cursor-pointer customer-item border-t-0',
                             selectedIndex === index ? 'bg-blue-50 border-primary border-l-4' : ''
@@ -39,8 +46,7 @@
             </div>
             <div class="w-full md:w-1/2">
                 <div class="relative">
-                    <input type="date" placeholder="Rechercher avec une date"
-                        @change="filterByDate" v-model="dateValue"
+                    <input type="date" placeholder="Rechercher avec une date" @change="filterByDate" v-model="dateValue"
                         class="w-full pl-4 pr-4 py-3 border border-gray-200 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
             </div>
@@ -64,7 +70,7 @@
 <script>
 import { ref } from 'vue';
 import { useClientStore } from '../../stores';
-
+import { debounce } from 'lodash';
 export default {
     name: 'OrderFilter',
     emits: ['on-search', 'on-filter', 'on-date-filter'],
@@ -77,7 +83,7 @@ export default {
         const searchKeywordClient = ref('');
         const dateValue = ref('');
         const showList = ref(false);
-        
+        const loading = ref(false)
         const queryOptions = ref({
             fields: [
                 'nid',
@@ -101,11 +107,16 @@ export default {
             await clientStore.fetchClients(queryOptions.value);
         }
 
-        const searchByKeyword = async () => {
+        const searchByKeyword = () => {
+            loading.value = true;
+            debouncedFetch();
+        }
+
+        const debouncedFetch = debounce(async () => {
             updateFilter('title', searchKeywordClient.value, 'CONTAINS')
             await fetchClients();
-            showList.value = true;
-        };
+            loading.value = false;
+        }, 600);
 
         const selectClient = async (nid, name) => {
             searchKeywordClient.value = name;
@@ -147,7 +158,8 @@ export default {
             showList,
             selectClient,
             filterByDate,
-            dateValue
+            dateValue,
+            loading
         };
     }
 };

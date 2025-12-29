@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col sm:flex-row h-[calc(100vh-80px)]">
-    <PageLoader v-if="clientStore.loading || articleStore.loading || orderStore.loading" />
+    <PageLoader v-if="articleStore.loading || orderStore.loading" />
     <!-- Product Grid Section -->
     <div class="flex-1 p-3 order-2 sm:order-1 flex flex-col mw-910">
       <ProductGrid />
@@ -14,7 +14,7 @@
 
     <!-- Modals -->
 
-    <ClientModal v-if="showCustomerModal" @close="showCustomerModal = false"
+    <ClientModal v-show="showCustomerModal" @close="showCustomerModal = false"
       @open-add-customer-modal="openAddCustomerModal" />
 
     <AddClientModal v-if="showAddCustomerModal" @close-add-customer-modal="closeAddCustomerModal"

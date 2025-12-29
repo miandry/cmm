@@ -9,7 +9,7 @@
               class="w-5 h-5 flex items-center justify-center absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
               <i class="ri-search-line text-lg"></i>
             </div>
-            <input type="text" placeholder="Rechercher par nom, téléphone ou numéro de dossier..." v-model="searchQuery"
+            <input type="text" placeholder="Rechercher" v-model="searchQuery"
               @keyup.enter="searchByKeys" class="w-full pl-10 pr-4 py-3 border border-gray-300 !rounded-button text-sm 
                  focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
           </div>
@@ -146,8 +146,8 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="client in clients.rows" :key="client.nid" class="hover:bg-gray-50 cursor-pointer patient-row"
               @click="createOrEditConsultation(client)">
-              <td class="px-4 py-3">
-                <input type="checkbox" :checked="selectedIds.includes(client.nid)" @change="toggleSelectOne(client.nid)"
+              <td class="px-4 py-3"  @click.stop>
+                <input type="checkbox" :checked="selectedIds.includes(client.nid)" @change.stop="toggleSelectOne(client.nid)"
                   class="patient-checkbox w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
               </td>
               <td class="px-4 py-3">

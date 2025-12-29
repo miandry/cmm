@@ -108,7 +108,10 @@ export default {
 
     const closeModal = async (data) => {
       modalVisible.value = false;
-      if (!data.patientData) {
+      if (data.type == 'cancel') { // cancel hide modal
+        return;
+      }
+      if (!data.patientData) { // add client
         queryOptions.value.pager = 0;
         queryOptions.value.filters = {};
         await fetchClients();
@@ -120,7 +123,7 @@ export default {
 
         // rerender complet du composant tableClients
         tableKey.value++;
-      } else {
+      } else { // edit client
         // mettre a jour le patient modifier dans le store pour l'affichege
         store.clients
         const updated = data.patientData;

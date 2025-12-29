@@ -119,7 +119,7 @@
           </div>
 
           <div class="flex space-x-3 mt-6">
-            <button @click.prevent="closeModal()"
+            <button @click.prevent="closeModal(null, 'cancel')"
               class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 !rounded-button font-medium whitespace-nowrap">
               Annuler
             </button>
@@ -291,9 +291,10 @@ export default {
       Object.keys(errors).forEach(key => errors[key] = '');
     }
 
-    const closeModal = (patientData = null) => {
+    const closeModal = (patientData = null, type = 'save') => {
       resetForm();
       const data = {
+        type: type,
         patientData: patientData
       }
       

@@ -20,25 +20,44 @@
                                         class="w-4 h-4 flex items-center justify-center absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                                         <i class="ri-search-line text-sm"></i>
                                     </div>
-                                    <input type="text" v-model="clientNameSearch" @keyup.enter="onSearch"
+                                    <input type="text" v-model="clientNameSearch" @input="onSearch"
                                         placeholder="Rechercher un client..."
                                         class="w-full pl-10 pr-4 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
                                 </div>
                                 <div class="max-h-48 overflow-y-auto border border-gray-300 !rounded-button">
                                     <div id="customer-list" class="divide-y divide-gray-100">
-                                        <div v-for="(client, index) in store.clients.rows" :key="index" :class="[
-                                            'flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 cursor-pointer customer-item border-t-0',
-                                            selectedIndex === index ? 'bg-blue-50 border-primary border-l-4' : ''
-                                        ]" @click="selectClient(client.nid, index)">
+
+                                        <!-- Loader -->
+                                        <div v-if="loading" class="flex flex-col items-center justify-center py-6">
                                             <div
-                                                class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-medium uppercase ">
-                                                {{ client.title.slice(0, 2) }}
+                                                class="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin">
                                             </div>
-                                            <div class="flex-1">
-                                                <p class="text-sm font-medium text-gray-900">{{ client.title }}</p>
-                                                <p class="text-xs text-gray-500">{{ client.field_phone }}</p>
+                                            <p class="text-center text-xs text-gray-600 mt-2">Chargement...</p>
+                                        </div>
+
+                                        <!-- Liste des clients si non vide -->
+                                        <div v-else-if="store.clients.rows.length > 0">
+                                            <div v-for="(client, index) in store.clients.rows" :key="index" :class="[
+                                                'flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 cursor-pointer customer-item border-t-0',
+                                                selectedIndex === index ? 'bg-blue-50 border-primary border-l-4' : ''
+                                            ]" @click="selectClient(client.nid, index)">
+                                                <div
+                                                    class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-medium uppercase">
+                                                    {{ client.title.slice(0, 2) }}
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p class="text-sm font-medium text-gray-900">{{ client.title }}</p>
+                                                    <p class="text-xs text-gray-500">{{ client.field_phone }}</p>
+                                                </div>
                                             </div>
                                         </div>
+
+                                        <!-- Aucun client trouvé -->
+                                        <div v-else-if="store.clients.rows.length <= 0 && clientNameSearch !== ''"
+                                            class="flex flex-col items-center justify-center py-6 text-gray-500 text-xs">
+                                            Aucun client trouvé.
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>
@@ -71,7 +90,7 @@
 import { onMounted, ref } from 'vue';
 import { useClientStore } from '../../stores/index.js';
 import { toast } from 'vue-sonner';
-
+import { debounce } from 'lodash';
 
 export default {
     name: "CustomerModal",
@@ -79,7 +98,8 @@ export default {
         const store = useClientStore();
         const selectedClientNid = ref(null);
         const selectedIndex = ref(null);
-        const clientNameSearch = ref(null);
+        const clientNameSearch = ref('');
+        const loading = ref(false);
         // Paramètres dynamiques de la requête
         const queryOptions = ref({
             fields: [
@@ -98,24 +118,28 @@ export default {
 
         const fetchClients = async () => {
             await store.fetchClients(queryOptions.value);
+            loading.value = false;
         }
 
         const confirmSelectedClient = async () => {
             await store.fetchClient(selectedClientNid.value);
-
             if (store.error) {
                 toast.error("Une erreur est survenue lors de la sélection du client.")
                 return
             }
-
             toast.success('Client sélectionné avec succès !')
             emit('close')
         }
 
-        const onSearch = async () => {
-            updateFilter('title', clientNameSearch.value, 'CONTAINS')
-            fetchClients()
+        const onSearch = () => {
+            loading.value = true;
+            debouncedFetch();
         }
+
+        const debouncedFetch = debounce(() => {
+            updateFilter('title', clientNameSearch.value, 'CONTAINS');
+            fetchClients();
+        }, 600);
 
         const updateFilter = (key, value, op = '=') => {
             if (!value) delete queryOptions.value.filters[key]
@@ -127,8 +151,6 @@ export default {
             selectedClientNid.value = client
         }
 
-        onMounted(() => fetchClients());
-
         return {
             store,
             queryOptions,
@@ -137,7 +159,8 @@ export default {
             selectedIndex,
             clientNameSearch,
             onSearch,
-            selectClient
+            selectClient,
+            loading
         }
     }
 
