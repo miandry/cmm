@@ -15,7 +15,7 @@
                 <button @click="smartBack"
                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow flex items-center gap-2 transition-colors">
                     <i class="ri-arrow-left-line"></i>
-                    Revenir 456
+                    Revenir
                 </button>
             </div>
         </div>
