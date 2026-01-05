@@ -2,15 +2,22 @@
     <div v-if="orderToShow" class="p-4">
         <!-- Bouton d'impression -->
         <div class="fixed top-4 right-4 no-print z-50">
-            <button @click="printInvoice"
-                class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow flex items-center gap-2 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                Imprimer
-            </button>
+            <div class="flex gap-2">
+                <button @click="printInvoice"
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow flex items-center gap-2 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Imprimer
+                </button>
+                <button @click="smartBack"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow flex items-center gap-2 transition-colors">
+                    <i class="ri-arrow-left-line"></i>
+                    Revenir 456
+                </button>
+            </div>
         </div>
 
         <!-- Facture A5 -->
@@ -265,7 +272,7 @@
 </template>
 
 <script>
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useOrderStore } from '../stores/index.js';
 import { onMounted, ref, computed, watch, nextTick } from 'vue';
 
@@ -276,7 +283,15 @@ export default {
         const orderStore = useOrderStore()
         const slug = route.params.slug
         const orderToShow = ref(null);
+        const router = useRouter()
 
+        const smartBack = () => {
+            if (window.history.length > 1) {
+                router.back()
+            } else {
+                router.push({ name: 'commandes' })
+            }
+        }
         // Stocker les valeurs originales pour éviter les conflits
         const editingValues = ref({});
 
@@ -789,7 +804,8 @@ export default {
             patientDossierField,
             tvaRateField,
             paymentMethodField,
-            invoiceNotesField
+            invoiceNotesField,
+            smartBack
         };
     }
 }
