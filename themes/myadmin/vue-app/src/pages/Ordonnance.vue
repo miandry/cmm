@@ -337,7 +337,7 @@ export default {
                 nom: "Dr. RASOANAIJO Malalaniaina",
                 titre: "Médecin Généraliste",
                 centre: "CENTRE MÉDICAL VONJY AINA",
-                adresse: "3TH3 Tsarahoana, Tsiroanomandidy",
+                adresse: "3TH3 Tsarahonena, Tsiroanomandidy",
                 contact: "033 24 427 30 – 034 06 015 13",
                 immat: "NIF: 30024 555 38 / STAT: 65201 14 2016 0 00199"
             },
