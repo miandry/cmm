@@ -7,3 +7,7 @@ export function getArticles(params) {
 export function saveArticle(params) {
   return saveItem(params);
 }
+
+export function getCategories(params) {
+  return getLists('taxonomy_term', 'categorie', params)
+}

@@ -50,10 +50,11 @@
   <script>
     var mydata = []; // static var
     mydata.menu = [
-      { id: 2, name: "Caisses", path: "/", icon: "fas fa-shopping-cart", paths: ["/", "/caisse", "/fr", "/fr/frontdesk"] },
-      { id: 5, name: "Ventes", path: "/commandes", icon: "fas fa-users" },
+      { id: 2, name: "Caisses", path: "/", icon: "fas fa-home", paths: ["/", "/caisse", "/fr", "/fr/frontdesk"] },
+      { id: 5, name: "Ventes", path: "/commandes", icon: "fas fa-shopping-cart" },
       { id: 3, name: "Patients", path: "/patients", icon: "fas fa-users" },
-      { id: 4, name: "Consulter", path: "/consultations", icon: "fas fa-users", paths: ["/consultations", "/consultations/edit"]  },
+      { id: 4, name: "Consulter", path: "/consultations", icon: "fas fa-stethoscope", paths: ["/consultations", "/consultations/edit"]  },
+      // { id: 6, name: "Stocks", path: "/stocks", icon: "fas fa-boxes" },
     ];
     mydata.baseUrl = "http://www.pharmacy.full";
   </script>
