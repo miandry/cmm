@@ -34,7 +34,7 @@ function myadmin_preprocess_page(&$variables) {
     'baseUrl' => Url::fromRoute('<front>', [], ['absolute' => TRUE])->toString(),
     'menu' => [
       [ "id" => 1, "name" => "Caisse", "path" => "/", "icon" => "fas fa-home", "paths"=> ["/", "/caisse", "/fr", "/fr/frontdesk"] ],
-      [ "name" => "Ventes", "path" => "/commandes", "icon" => "fas fa-shopping-cart"],
+      [ "name" => "Commandes", "path" => "/commandes", "icon" => "fas fa-shopping-cart"],
       [ "name" => "Patients", "path" => "/patients", "icon" => "fas fa-users"],
       [ "name" => "Consulter", "path" => "/consultations", "icon" => "fas fa-stethoscope", "paths"=> ["/consultations", "/consultations/edit"]],
     ]

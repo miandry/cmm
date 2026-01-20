@@ -46,8 +46,7 @@
           <!-- Téléphone -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Téléphone <span
-                  class="text-red-500">*</span></label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
               <input type="tel" v-model="form.field_phone" :class="{ 'border-red-500': errors.phone }"
                 class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                 placeholder="+261 34 12 345 67">
@@ -66,8 +65,7 @@
 
           <!-- Adresse -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Adresse <span
-                class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Adresse</label>
             <textarea v-model="form.field_adresse" rows="2" :class="{ 'border-red-500': errors.adresse }"
               class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm resize-none"
               placeholder="Adresse complète"></textarea>
@@ -89,13 +87,11 @@
                 <input type="text" v-model="nameUrgence" :class="{ 'border-red-500': errors.name_urgence }"
                   class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                   placeholder="Nom du contact">
-                <p v-if="errors.phone_urgence" class="text-xs text-red-500">{{ errors.name_urgence }}</p>
               </div>
               <div>
                 <input type="tel" v-model="phoneUrgence" :class="{ 'border-red-500': errors.phone_urgence }"
                   class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                   placeholder="+261 34 12 345 67">
-                <p v-if="errors.phone_urgence" class="text-xs text-red-500">{{ errors.phone_urgence }}</p>
               </div>
             </div>
 
@@ -207,18 +203,6 @@ export default {
         valid = false;
       }
 
-      // Téléphone
-      if (!form.field_phone) {
-        errors.phone = "Le téléphone est requis.";
-        valid = false;
-      }
-
-      // Adresse
-      if (!form.field_adresse) {
-        errors.adresse = "L'adresse est requise.";
-        valid = false;
-      }
-
       // Email (non requis, mais valide si rempli)
       if (form.field_email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -226,16 +210,6 @@ export default {
           errors.email = "Format d'email invalide.";
           valid = false;
         }
-      }
-
-      if (!phoneUrgence.value) {
-        errors.phone_urgence = "Le téléphone pour urgence est requis.";
-        valid = false;
-      }
-
-      if (!nameUrgence.value) {
-        errors.name_urgence = "Le nom est requis.";
-        valid = false;
       }
 
       return valid;

@@ -107,14 +107,14 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-gray-200 mb-4 mx-4">
+                    <div class="mb-4 mx-4">
                         <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
+                            <div class="flex justify-between hidden">
                                 <span class="text-gray-600">Sous-total :</span>
                                 <span class="font-medium">{{ Number(orderToShow.field_total_vente ||
                                     0).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}</span>
                             </div>
-                            <div class="flex justify-between">
+                            <div class="flex justify-between hidden">
                                 <span class="text-gray-600">TVA (20%) :</span>
                                 <span class="font-medium">{{ Number((orderToShow.field_total_vente ||
                                     0) * 0.2).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' })

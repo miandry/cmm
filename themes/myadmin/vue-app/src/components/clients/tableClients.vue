@@ -9,8 +9,7 @@
               class="w-5 h-5 flex items-center justify-center absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
               <i class="ri-search-line text-lg"></i>
             </div>
-            <input type="text" placeholder="Rechercher" v-model="searchQuery"
-              @keyup.enter="searchByKeys" class="w-full pl-10 pr-4 py-3 border border-gray-300 !rounded-button text-sm 
+            <input type="text" placeholder="Rechercher" v-model="searchQuery" @keyup.enter="searchByKeys" class="w-full pl-10 pr-4 py-3 border border-gray-300 !rounded-button text-sm 
                  focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
           </div>
         </div>
@@ -52,7 +51,7 @@
                 ? 'text-primary bg-blue-50 border-primary'
                 : 'text-gray-600 hover:text-primary hover:bg-gray-50 border-gray-300'
             ]">
-              Consultation non finie
+              Consultation non achevée
             </button>
           </div>
           <!-- Ajouter patient -->
@@ -132,13 +131,14 @@
               </th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient
               </th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Âge</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Informations
+              </th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Téléphone</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Assurance</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">Dernière
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dernière
                 Consultation</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Prochaine consulatation</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions
               </th>
             </tr>
@@ -146,8 +146,9 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="client in clients.rows" :key="client.nid" class="hover:bg-gray-50 cursor-pointer patient-row"
               @click="createOrEditConsultation(client)">
-              <td class="px-4 py-3"  @click.stop>
-                <input type="checkbox" :checked="selectedIds.includes(client.nid)" @change.stop="toggleSelectOne(client.nid)"
+              <td class="px-4 py-3" @click.stop>
+                <input type="checkbox" :checked="selectedIds.includes(client.nid)"
+                  @change.stop="toggleSelectOne(client.nid)"
                   class="patient-checkbox w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
               </td>
               <td class="px-4 py-3">
@@ -162,24 +163,40 @@
                       v-if="client.field_consultation && client.field_consultation.field_consultation_status == 'draft' && client.field_last_consultation_status && client.field_last_consultation_status == 0">
                       <span class="text-orange-600 cursor-pointer">Finaliser consultation</span>
                     </p>
+                    <div>
+                      <div class="flex items-center space-x-1"
+                        v-if="client.field_assurance && client.field_assurance == 1">
+                        <div class="w-2 h-2 bg-secondary rounded-full"></div>
+                        <span class="text-xs font-medium text-secondary ">Assuré</span>
+                      </div>
+                      <div class="flex items-center space-x-1"
+                        v-if="client.field_assurance && client.field_assurance == 0">
+                        <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <span class="text-xs font-medium text-red-500 ">Non assuré</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </td>
-              <td class="px-4 py-3 text-sm text-gray-900">{{ client.field_age ? client.field_age + " ans" : '' }}</td>
+              <td class="px-4 py-3 text-sm text-gray-900">
+                <p>Âge: {{ client.field_age ? client.field_age + " ans" : '' }}</p>
+                <p>
+                  Sexe: {{ client.field_sexe === 'masculin'
+                    ? 'Masculin'
+                    : client.field_sexe === 'feminin'
+                      ? 'Féminin'
+                      : '' }}
+                </p>
+              </td>
               <td class="px-4 py-3 text-sm text-gray-900">
                 {{ client.field_phone }}
               </td>
-              <td class="px-4 py-3" @click.stop>
-                <div class="flex items-center space-x-1" v-if="client.field_assurance && client.field_assurance == 1">
-                  <div class="w-2 h-2 bg-secondary rounded-full"></div>
-                  <span class="text-xs font-medium text-secondary ">Oui</span>
-                </div>
-                <div class="flex items-center space-x-1" v-if="client.field_assurance && client.field_assurance == 0">
-                  <div class="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span class="text-xs font-medium text-red-500 ">Non</span>
-                </div>
+              <td class="px-4 py-3 text-sm">
+                {{ formatDate(null, client.field_consultation?.created , 'short') }}
               </td>
-              <td class="px-4 py-3 text-sm text-gray-500 hidden">15 Nov 2024</td>
+              <td class="px-4 py-3 text-sm">
+                {{ formatDate(client.field_consultation?.field_prochaine_consultation, null, 'short') }}
+              </td>
               <td class="px-4 py-3" @click.stop>
                 <div class="flex items-center space-x-2">
                   <button @click.stop="showDetails(client)" class="text-primary hover:text-blue-600 view-patient">
@@ -267,6 +284,7 @@
 import { computed, ref, defineExpose, watch } from 'vue';
 import Details from './Details.vue';
 import { useRouter } from 'vue-router';
+import { formatDate } from '../../utils/formateDate';
 
 export default {
   name: 'tableClients',
@@ -476,7 +494,8 @@ export default {
       confirmDelete,
       editConsultation,
       createConsultation,
-      createOrEditConsultation
+      createOrEditConsultation,
+      formatDate
     }
   }
 }

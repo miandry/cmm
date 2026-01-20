@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="flex items-center justify-between mb-4">
-            <h4 class="text-base font-medium text-gray-900">Examens complémentaires prescrits</h4>
+            <h4 class="text-base font-medium text-gray-900">Liste des examens</h4>
             <button @click="isModalOpen = true"
                 class="px-3 py-2 bg-primary text-white !rounded-button text-sm font-medium whitespace-nowrap flex items-center space-x-2 cursor-pointer">
                 <div class="w-4 h-4 flex items-center justify-center">

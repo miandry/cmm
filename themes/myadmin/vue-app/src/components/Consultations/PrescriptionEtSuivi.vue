@@ -10,7 +10,7 @@
                 <button @click="setActiveTab('recommendations')"
                     :class="['px-4 py-2 text-sm font-medium cursor-pointer border-b-2',
                         activeTab === 'recommendations' ? 'text-primary border-primary' : 'text-gray-600 hover:text-primary']">
-                    Recommandations
+                    Examen  complémentaires
                 </button>
 
                 <button @click="setActiveTab('followup')" :class="['px-4 py-2 text-sm font-medium cursor-pointer border-b-2',

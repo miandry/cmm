@@ -39,20 +39,16 @@
 
                         </div>
                         <div>
-                            <span class="text-gray-600">Groupe sanguin</span>
-                            <p class="font-medium">O+</p>
-                        </div>
-                        <div>
                             <span class="text-gray-600">Téléphone</span>
                             <p class="font-medium" v-if="client.field_phone">{{ client.field_phone }}</p>
                         </div>
-                    </div>
-                    <div class="space-y-3">
                         <div>
-                            <span class="text-sm text-gray-600">Email</span>
+                            <span class="text-gray-600">Email</span>
                             <p class="text-sm font-medium" v-if="client.field_email">{{ client.field_email }}</p>
                             <p class="text-sm font-medium" v-else>Non renseigner</p>
                         </div>
+                    </div>
+                    <div class="space-y-3">
                         <div>
                             <span class="text-sm text-gray-600">Adresse</span>
                             <p class="text-sm font-medium" v-if="client.field_adresse">{{ client.field_adresse }}</p>
@@ -95,22 +91,38 @@
                             </div>
                         </div>
                     </div>
-                    <div class="border-t border-gray-200 pt-4">
-                        <h5 class="text-sm font-semibold text-gray-900 mb-3">Historique médical récent</h5>
-                        <div class="space-y-1" v-if="consultationsStore.consultations.rows.length">
+
+                    <div class="p-3 border-b border-gray-200">
+                        <div class="flex justify-between">
+                            <h3 class="text-sm font-semibold text-gray-900 mb-3">Historique médical</h3>
+                            <span class="text-xs text-primary" v-if="consultationsStore.consultations.rows.length > 5">voir plus</span>
+                        </div>
+                        <div class="space-y-1 max-h-48 overflow-y-auto"
+                            v-if="consultationsStore.consultations.rows.length">
                             <div v-for="cons in consultationsStore.consultations.rows" :key="cons.nid"
-                                @click="editConsultation(cons.nid)"
-                                class="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer">
+                                @click="editConsultation(cons)" class="p-2 rounded-lg cursor-pointer"
+                                :class="[cons.field_consultation_status == 'draft' ? 'bg-orange-100 hover:bg-orange-200' : 'bg-green-100 hover:bg-green-200']">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs flex-1 two-lines font-medium text-gray-900">{{ cons.field_motif
-                                    }}</span>
-                                    <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short')
-                                    }}</span>
+                                        }}</span>
+                                    <p class="text-xs text-green-500"
+                                        v-if="cons.field_consultation_status == 'completed'"><i
+                                            class="ri-checkbox-circle-line"></i> Payé</p>
+                                    <p class="text-xs text-orange-500" v-else><i class="ri-time-line"></i> Non payé</p>
                                 </div>
-                                <p class="text-xs text-gray-600">
-                                    <span>{{ cons.field_temperature }}°C </span>
-                                    <span> - {{ cons.field_tension_arterielle }} mmHg</span>
-                                </p>
+                                <div class="flex items-center justify-between mb-1">
+                                    <p class="text-xs text-gray-600">
+                                        <span>{{ cons.field_temperature }}°C </span>
+                                        <span> - {{ cons.field_tension_arterielle }} mmHg</span>
+                                    </p>
+                                    <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short')
+                                        }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else>
+                            <div class="text-center text-gray-300 py-4">
+                                Aucun consulatations
                             </div>
                         </div>
                     </div>
@@ -142,6 +154,7 @@ import { ref, watch } from 'vue';
 import { useConsultationStore } from '../../stores/index.js';
 import { formatDate } from '../../utils/formateDate.js';
 import { useRouter } from 'vue-router';
+import { toast } from 'vue-sonner';
 
 export default {
     name: 'Details',
@@ -172,6 +185,7 @@ export default {
                 'field_tension_arterielle',
                 'field_client',
                 'created',
+                'field_consultation_status'
             ],
             sort: { val: 'nid', op: 'desc' },
             filters: {},
@@ -214,13 +228,18 @@ export default {
         }
 
         // edit consulatation
-        const editConsultation = (consultationId) => {
-            router.push({
-                name: 'consultation.edit',
-                params: {
-                    id: consultationId
-                }
-            });
+        const editConsultation = (consultation) => {
+            if (consultation.field_consultation_status == "draft") {
+                router.push({
+                    name: 'consultation.edit',
+                    params: {
+                        id: consultation.nid
+                    }
+                });
+                toast("Consultation chargé.", { class: "!bg-orange-100 !text-orange-700", });
+            } else {
+                toast("Consultation déja payé.", { class: "!bg-green-100 !text-green-700", });
+            }
         };
 
         return {

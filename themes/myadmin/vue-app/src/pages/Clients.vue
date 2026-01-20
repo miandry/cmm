@@ -52,7 +52,7 @@ export default {
       sort: { val: 'nid', op: 'desc' },
       filters: {},
       values: {
-        field_consultation: ['title', 'nid', 'field_consultation_status']
+        field_consultation: ['title', 'nid', 'field_consultation_status', 'created', 'field_prochaine_consultation' ]
       },
       pager: 0,
       offset: 10

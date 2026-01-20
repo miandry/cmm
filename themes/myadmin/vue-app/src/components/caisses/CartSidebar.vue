@@ -89,11 +89,11 @@
                 </div>
                 <div class="space-y-2 mb-3">
                     <button @click="creatOrder"
-                        class="w-full py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 !rounded-button font-medium whitespace-nowrap flex items-center justify-center space-x-2 text-xs">
+                        class="w-full py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 !rounded-button font-medium whitespace-nowrap flex items-center justify-center space-x-2 text-xs">
                         <div class="w-4 h-4 flex items-center justify-center">
                             <i class="ri-save-line"></i>
                         </div>
-                        <span>Sauvegarder as non payé</span>
+                        <span>Sauvegarder non payé</span>
                     </button>
                 </div>
             </div>
@@ -101,7 +101,7 @@
                 <button
                     class="w-full py-2 bg-secondary hover:bg-green-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap"
                     @click="handleFinalizeSale">
-                    Finaliser la vente
+                    Finaliser la commande
                 </button>
             </div>
         </div>
@@ -202,18 +202,18 @@
                     </div>
                     <div class="space-y-2 mb-3">
                         <button @click="creatOrder"
-                            class="w-full py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 !rounded-button font-medium whitespace-nowrap flex items-center justify-center space-x-2 text-xs">
+                            class="w-full py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 !rounded-button font-medium whitespace-nowrap flex items-center justify-center space-x-2 text-xs">
                             <div class="w-4 h-4 flex items-center justify-center">
                                 <i class="ri-save-line"></i>
                             </div>
-                            <span>Sauvegarder as non payé</span>
+                            <span>Sauvegarder non payé</span>
                         </button>
                     </div>
                     <div class="flex-1">
                         <button
                             class="w-full py-2 bg-secondary hover:bg-green-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap"
                             @click="handleFinalizeSale">
-                            Finaliser la vente
+                            Finaliser la commande
                         </button>
                     </div>
                 </div>
@@ -404,7 +404,8 @@ export default {
                     }
                     articleStore.clearCart(true);
                     orderStore.loading = false;
-                    toast.success("Commande ajoutée avec succès !", {
+                    toast("Commande ajoutée – non payée.", {
+                        class: "!bg-yellow-100 !text-yellow-700",
                         description: h(
                             RouterLink,
                             {

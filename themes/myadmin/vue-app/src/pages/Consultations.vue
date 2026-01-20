@@ -38,11 +38,11 @@
                         <div class="w-4 h-4 flex items-center justify-center">
                             <i class="ri-save-line"></i>
                         </div>
-                        <span>Sauvegarder consultation</span>
+                        <span>Sauvegarder sans paiement</span>
                     </button>
                     <button @click="handleConsultationSubmit(true)" v-if="canFinalizeConsultation"
                         class="w-full py-2 bg-secondary hover:bg-green-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap cursor-pointer">
-                        Finaliser consultation
+                        Consultation avec paiement
                     </button>
                     <router-link v-if="isEditMode" :to="{ name: 'consultations' }"
                         class="w-full py-2 bg-primary hover:bg-bleu-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap cursor-pointer inline-block text-center">
