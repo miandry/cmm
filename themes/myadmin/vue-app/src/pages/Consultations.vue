@@ -256,7 +256,7 @@ export default {
                             entity_type: "paragraph",
                             bundle: "commande",
                             field_article: item.field_articles,
-                            field_quantite: item.quantity,
+                            field_quantite: item.field_quantite,
                             field_prix_d_achat: item.field_prix,
                             field_prix_unitaire: item.field_prix,
                         }));
