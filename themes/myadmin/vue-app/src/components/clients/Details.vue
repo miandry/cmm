@@ -95,7 +95,7 @@
                     <div class="p-3 border-b border-gray-200">
                         <div class="flex justify-between">
                             <h3 class="text-sm font-semibold text-gray-900 mb-3">Historique médical</h3>
-                            <span class="text-xs text-primary cursor-pointer" v-if="consultationsStore.consultations.rows.length > 2"
+                            <span class="text-xs text-primary cursor-pointer" v-if="consultationsStore.consultations.rows.length > 5"
                                 @click="showAllHistory(client.nid)">voir plus</span>
                         </div>
                         <div class="space-y-1 max-h-48 overflow-y-auto"

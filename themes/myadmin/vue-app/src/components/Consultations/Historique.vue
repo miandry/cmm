@@ -2,7 +2,8 @@
     <div class="p-3 border-b border-gray-200">
         <div class="flex justify-between">
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Historique médical</h3>
-            <span class="text-xs text-primary" v-if="consultationsStore.consultations.rows.length > 5">voir plus</span>
+            <span class="text-xs text-primary" v-if="consultationsStore.consultations.rows.length > 5"
+                @click="showAllHistory(consultationsStore.consultations.rows[0].field_client.nid)">voir plus</span> 
         </div>
         <div class="space-y-1 max-h-48 overflow-y-auto" v-if="consultationsStore.consultations.rows.length">
             <div v-for="cons in consultationsStore.consultations.rows" :key="cons.nid" @click="editConsultation(cons)"
@@ -40,7 +41,8 @@ import { toast } from 'vue-sonner';
 
 export default {
     name: "Historique",
-    setup() {
+    emits: ['openHistory'],
+    setup(_, { emit }) {
         const patienStore = useClientStore();
         const consultationsStore = useConsultationStore();
         const consultationNid = ref('');
@@ -99,16 +101,21 @@ export default {
                         id: consultation.nid
                     }
                 });
-                toast("Consultation chargé.", { class: "!bg-orange-100 !text-orange-700",});
+                toast("Consultation chargé.", { class: "!bg-orange-100 !text-orange-700", });
             } else {
-                toast("Consultation déja payé.", { class: "!bg-green-100 !text-green-700",});
+                toast("Consultation déja payé.", { class: "!bg-green-100 !text-green-700", });
             }
         };
+
+        const showAllHistory = (clientId) => {
+            emit('openHistory', clientId);
+        }
 
         return {
             consultationsStore,
             formatDate,
-            editConsultation
+            editConsultation,
+            showAllHistory
         }
     },
 }

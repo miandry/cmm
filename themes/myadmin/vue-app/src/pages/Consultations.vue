@@ -23,7 +23,10 @@
             class="w-full lg:w-80 bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col order-1 lg:order-2 h-full">
             <!-- Patient actuelle -->
             <Patient :canChange="canChange" />
-            <Historique />
+            <Historique @openHistory="openHistory" />
+            <!-- History modal -->
+            <AllHistory v-if="isHistoryModalOpen" @closeHistory="closeHistory" :clientId="clientId" />
+
             <div class="flex-1 p-3 flex flex-col justify-end">
                 <div class="space-y-2">
                     <button @click="handleConsultationSubmit(false, 'ordonnance')"
@@ -89,6 +92,7 @@ import { ref, onMounted, computed, nextTick } from 'vue'
 import { toast } from 'vue-sonner'
 import { useRouter, useRoute } from 'vue-router'
 import { watch } from 'vue'
+import AllHistory from '../components/Consultations/AllHistory.vue'
 
 export default {
     name: 'Consultations',
@@ -98,7 +102,8 @@ export default {
         PrescriptionEtSuivi,
         Patient,
         Historique,
-        PageLoader
+        PageLoader,
+        AllHistory
     },
     setup() {
         // const clientStore = useClientStore();
@@ -115,6 +120,8 @@ export default {
         const isEditMode = computed(() => !!route.params.id);
         const loader = ref(false);
         const continueToNextStep = ref(() => { });
+        const clientId = ref(null)
+        const isHistoryModalOpen = ref(false)
 
         const handleConsultationSubmit = async (withOrder, ordonnance = null) => {
             // confirmSaveModal.value = true;
@@ -409,6 +416,16 @@ export default {
             });
         };
 
+
+        const openHistory = (cid) => {
+            clientId.value = cid;
+            isHistoryModalOpen.value = true
+        }
+
+        const closeHistory = () => {
+            isHistoryModalOpen.value = false
+        }
+
         return {
             patienStore,
             handleConsultationSubmit,
@@ -422,7 +439,10 @@ export default {
             canChange,
             loader,
             confirmSaveModal,
-            continueToNextStep
+            continueToNextStep,
+            openHistory,
+            closeHistory,
+            isHistoryModalOpen
         };
     }
 }
