@@ -51,6 +51,29 @@
                 </div>
             </div>
         </div>
+        <!-- modal -->
+        <div v-if="confirmSaveModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-90">
+            <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                    Confirmation
+                </h3>
+                <p class="text-sm text-gray-600 mb-6">
+                    Après la sauvegarde, vous quitterez cette page et il ne sera plus possible de modifier ni de rouvrir
+                    cette consultation. Voulez-vous continuer ?
+                </p>
+
+                <div class="flex justify-end space-x-2">
+                    <button @click="continueToNextStep(false)"
+                        class="px-4 py-2 text-sm border border-gray-300 !rounded-button">
+                        Annuler
+                    </button>
+                    <button @click="continueToNextStep(true)"
+                        class="px-4 py-2 text-sm bg-red-600 text-white !rounded-button">
+                        Continuer
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -88,11 +111,13 @@ export default {
         const router = useRouter();
         const route = useRoute();
         const canChange = ref(true);
+        const confirmSaveModal = ref(false);
         const isEditMode = computed(() => !!route.params.id);
         const loader = ref(false);
+        const continueToNextStep = ref(() => { });
 
         const handleConsultationSubmit = async (withOrder, ordonnance = null) => {
-
+            // confirmSaveModal.value = true;
             try {
                 loader.value = true
                 if (
@@ -135,6 +160,8 @@ export default {
                 if (generalFormData.hasError) return;
 
                 /** fin validation global */
+
+
                 let allMedications = null;
                 let allExamens = null;
 
@@ -157,6 +184,17 @@ export default {
                         field_prix: item.field_prix,
                         field_justification: item.field_justification,
                     }));
+                }
+
+                const hasExamens = allExamens?.length > 0;
+                const hasMedications = allMedications?.length > 0;
+                if (withOrder && (hasExamens || hasMedications)) {
+                    loader.value = false;
+                    const proceed = await askConfirm();
+                    if (!proceed) {
+                        return; // utilisateur a annulé
+                    }
+                    loader.value = true;
                 }
 
                 const consulatationGlobalData = {
@@ -234,8 +272,6 @@ export default {
                 };
 
                 // sauvegarde commande si c'est finaliser
-                const hasExamens = allExamens?.length > 0;
-                const hasMedications = allMedications?.length > 0;
                 if (withOrder && (hasExamens || hasMedications)) {
                     // field_examens_order
                     const data = {
@@ -345,8 +381,8 @@ export default {
             { immediate: true }
         );
 
-        // patient preselectionner et edit
         onMounted(async () => {
+            // patient preselectionner et edit
             const clientId = route.query.client;
             if (clientId) {
                 prescriptionEtSuivi.value.resetAll();
@@ -362,6 +398,17 @@ export default {
             }
         });
 
+        const askConfirm = () => {
+            return new Promise((resolve) => {
+                continueToNextStep.value = (choice) => {
+                    confirmSaveModal.value = false;
+                    resolve(choice);
+                };
+
+                confirmSaveModal.value = true;
+            });
+        };
+
         return {
             patienStore,
             handleConsultationSubmit,
@@ -373,7 +420,9 @@ export default {
             canFinalizeConsultation,
             isEditMode,
             canChange,
-            loader
+            loader,
+            confirmSaveModal,
+            continueToNextStep
         };
     }
 }

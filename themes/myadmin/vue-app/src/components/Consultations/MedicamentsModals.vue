@@ -2,7 +2,7 @@
     <div>
         <div class="flex items-center justify-between mb-4">
             <h4 class="text-base font-medium text-gray-900">Liste des médicaments</h4>
-            <button @click="isOpen = true"
+            <button @click="isOpen = true" v-if="!isEdit"
                 class="px-3 py-2 bg-primary text-white !rounded-button text-sm font-medium whitespace-nowrap flex items-center space-x-2 cursor-pointer">
                 <div class="w-4 h-4 flex items-center justify-center">
                     <i class="ri-add-line"></i>
@@ -23,7 +23,7 @@
                         {{ Number(item.field_prix).toLocaleString() }} Ar
                         <span class="text-gray-500"> x {{ item.quantity }}</span>
                     </p>
-                    <button class="text-red-500 hover:text-red-700 cursor-pointer"
+                    <button class="text-red-500 hover:text-red-700 cursor-pointer" v-if="!isEdit"
                         @click="removeFromList(item.nid, item.field_prix, item.quantity)">
                         <div class="w-5 h-5 flex items-center justify-center">
                             <i class="ri-delete-bin-line"></i>
@@ -176,6 +176,7 @@ export default {
     name: 'MedicamentsModals',
     setup() {
         const isOpen = ref(false);
+        const isEdit = ref(false);
         const showArticleList = ref(false);
         const searchKeywords = ref('');
         const articleStore = useArticleStore();
@@ -315,6 +316,7 @@ export default {
             consultationsStore.resetMedication();
             // Ajouter chaque médicament dans le store
             if (medications.length > 0) {
+                isEdit.value = true;
                 medications.forEach(item => {
                     consultationsStore.saveMedication({
                         nid: item.field_articles || item.nid,
@@ -324,6 +326,8 @@ export default {
                         field_description: item.field_description || ''
                     });
                 });
+            } else {
+                isEdit.value = false;
             }
 
             // Pré-remplir l'instruction globale
@@ -359,7 +363,8 @@ export default {
             instructionGlobal,
             getMedicationData,
             resetAll,
-            setData
+            setData,
+            isEdit
         }
     }
 }
