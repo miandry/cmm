@@ -125,8 +125,8 @@
         <table class="w-full">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-4 py-3 text-left">
-                <input type="checkbox" class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+              <th class="px-4 py-3 text-left hidden">
+                <input type="checkbox" class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary hidden"
                   :checked="isAllSelected" @change="toggleSelectAll">
               </th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient
@@ -146,7 +146,7 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="client in clients.rows" :key="client.nid" class="hover:bg-gray-50 cursor-pointer patient-row"
               @click="createOrEditConsultation(client)">
-              <td class="px-4 py-3" @click.stop>
+              <td class="px-4 py-3 hidden" @click.stop>
                 <input type="checkbox" :checked="selectedIds.includes(client.nid)"
                   @change.stop="toggleSelectOne(client.nid)"
                   class="patient-checkbox w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
@@ -192,7 +192,7 @@
                 {{ client.field_phone }}
               </td>
               <td class="px-4 py-3 text-sm">
-                {{ formatDate(null, client.field_consultation?.created , 'short') }}
+                {{ formatDate(null, client.field_consultation?.created, 'short') }}
               </td>
               <td class="px-4 py-3 text-sm">
                 {{ formatDate(client.field_consultation?.field_prochaine_consultation, null, 'short') }}
@@ -253,7 +253,10 @@
     <Details class="fixed right-0 top-0 h-full w-96 bg-white shadow-xl
          transition-transform duration-300 z-40 border-l border-gray-200"
       :class="isDetailsOpen ? 'translate-x-0' : 'translate-x-full'" @closePannel="closePannel"
-      :clientToShow="clientToShow" @sendClient="sendClient" ref="detailsRef" />
+      :clientToShow="clientToShow" @sendClient="sendClient" @openHistory="openHistory" ref="detailsRef" />
+
+    <!-- History modal -->
+    <AllHistory v-if="isHistoryModalOpen" @closeHistory="closeHistory" :clientId="clientId"/>
 
     <!-- modal -->
     <div v-if="isDeleteModalOpen" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -285,11 +288,13 @@ import { computed, ref, defineExpose, watch } from 'vue';
 import Details from './Details.vue';
 import { useRouter } from 'vue-router';
 import { formatDate } from '../../utils/formateDate';
+import AllHistory from '../Consultations/AllHistory.vue';
 
 export default {
   name: 'tableClients',
   components: {
-    Details
+    Details,
+    AllHistory,
   },
   // Définition des props
   props: {
@@ -314,7 +319,8 @@ export default {
     const router = useRouter()
     const selectedIds = ref([]);
     const isDeleteModalOpen = ref(false);
-
+    const isHistoryModalOpen = ref(false);
+    const clientId = ref(null);
     // au moins un élément sélectionné
     const hasSelection = computed(() => selectedIds.value.length > 0);
 
@@ -462,6 +468,15 @@ export default {
       }
     }
 
+    const openHistory = (cid) => {
+      clientId.value = cid;
+      isHistoryModalOpen.value = true
+    }
+
+    const closeHistory = () => {
+      isHistoryModalOpen.value = false
+    }
+
     defineExpose({
       resetFilterUi,
     })
@@ -495,7 +510,11 @@ export default {
       editConsultation,
       createConsultation,
       createOrEditConsultation,
-      formatDate
+      formatDate,
+      isHistoryModalOpen,
+      openHistory,
+      closeHistory,
+      clientId
     }
   }
 }
