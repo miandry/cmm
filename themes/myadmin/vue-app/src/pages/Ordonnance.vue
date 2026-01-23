@@ -1,7 +1,7 @@
 <template>
     <div>
-        <!-- Bouton d'impression -->
-        <div class="fixed top-4 right-4 no-print z-50">
+        <!-- Boutons supérieurs -->
+        <div class="fixed top-16 right-2 sm:top-4 sm:right-4 no-print z-50">
             <div class="flex gap-2">
                 <button @click="printOrdonnance"
                     class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow flex items-center gap-2 transition-colors">
@@ -20,274 +20,410 @@
             </div>
         </div>
 
-        <!-- Feuille A5 -->
-        <div class="sheet-a5 p-5 relative flex flex-col justify-between" v-if="ordonnanceData">
-            <div class="print-colors-fix">
-                <!-- En-tête -->
-                <div
-                    class="flex justify-between items-start border-b-4 border-double border-medical-blue pb-2 mb-4 font-sans">
-                    <div class="w-2/3">
-                        <h1 class="text-sm font-bold text-medical-blue uppercase tracking-wide leading-tight editable-field"
-                            contenteditable="true" @blur="updateField('medecin.nom', $event)"
-                            @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'medecinNom')"
-                            @input="preventVueUpdate($event)" ref="medecinNomField">
-                            {{ ordonnanceData.medecin.nom }}
-                        </h1>
-                        <p class="text-sm font-medium text-gray-600 leading-tight editable-field" contenteditable="true"
-                            @blur="updateField('medecin.titre', $event)" @keydown.enter="saveAndBlur($event)"
-                            @focus="handleFocus($event, 'medecinTitre')" @input="preventVueUpdate($event)"
-                            ref="medecinTitreField">
-                            {{ ordonnanceData.medecin.titre }}
-                        </p>
-                        <div class="text-[11px] text-gray-500 leading-snug mt-1">
-                            <p class="font-bold text-medical-blue inline mr-3 editable-field" contenteditable="true"
-                                @blur="updateField('medecin.centre', $event)" @keydown.enter="saveAndBlur($event)"
-                                @focus="handleFocus($event, 'medecinCentre')" @input="preventVueUpdate($event)"
-                                ref="medecinCentreField">
-                                {{ ordonnanceData.medecin.centre }}
-                            </p>
-                            <span class="inline editable-field" contenteditable="true"
-                                @blur="updateField('medecin.adresse', $event)" @keydown.enter="saveAndBlur($event)"
-                                @focus="handleFocus($event, 'medecinAdresse')" @input="preventVueUpdate($event)"
-                                ref="medecinAdresseField">
-                                {{ ordonnanceData.medecin.adresse }}
-                            </span>
-                            <p class="mt-[2px] editable-field" contenteditable="true"
-                                @blur="updateField('medecin.contact', $event)" @keydown.enter="saveAndBlur($event)"
-                                @focus="handleFocus($event, 'medecinContact')" @input="preventVueUpdate($event)"
-                                ref="medecinContactField">
-                                {{ ordonnanceData.medecin.contact }}
-                            </p>
-                            <p class="mt-[2px] text-[9px] editable-field" contenteditable="true"
-                                @blur="updateField('medecin.immat', $event)" @keydown.enter="saveAndBlur($event)"
-                                @focus="handleFocus($event, 'medecinImmat')" @input="preventVueUpdate($event)"
-                                ref="medecinImmatField">
-                                {{ ordonnanceData.medecin.immat }}
-                            </p>
-                        </div>
-                    </div>
+        <!-- Conteneur principal avec pagination -->
+        <div>
 
-                    <div class="w-1/3 text-right pt-1">
-                        <div class="text-sm text-medical-blue font-semibold leading-tight">
-                            <span class="editable-field" contenteditable="true"
-                                @blur="updateField('cabinet.ville', $event)" @keydown.enter="saveAndBlur($event)"
-                                @focus="handleFocus($event, 'cabinetVille')" @input="preventVueUpdate($event)"
-                                ref="cabinetVilleField">
-                                {{ ordonnanceData.cabinet.ville }}
-                            </span>, le
-                        </div>
-                        <div class="text-base font-bold text-gray-800 mt-[2px]">
-                            <span class="date-editable editable-field" contenteditable="true"
-                                @blur="updateField('date', $event)" @keydown.enter="saveAndBlur($event)"
-                                @focus="handleFocus($event, 'date')" @input="preventVueUpdate($event)" ref="dateField">
-                                {{ ordonnanceData.date }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Informations patient -->
-                <div class="bg-medical-gray rounded-md p-2.5 mb-4 print:bg-transparent print:p-0 print:mb-3">
-                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm items-end leading-snug">
-                        <div class="min-w-[100px] flex items-baseline">
-                            <span class="font-sans font-bold text-medical-blue inline-block">Nom :</span>
-                            <span class="font-bold text-base patient-nom editable-field" contenteditable="true"
-                                @blur="updateField('patient.nom', $event)" @keydown.enter="saveAndBlur($event)"
-                                @focus="handleFocus($event, 'patientNom')" @input="preventVueUpdate($event)"
-                                ref="patientNomField">
-                                {{ ordonnanceData.patient.nom }}
-                            </span>
-                        </div>
-                        <div class="flex items-baseline">
-                            <span class="font-sans font-bold text-medical-blue">Âge :</span>
-                            <span class="patient-age editable-field" contenteditable="true"
-                                @blur="updateField('patient.age', $event)" @keydown.enter="saveAndBlur($event)"
-                                @focus="handleFocus($event, 'patientAge')" @input="preventVueUpdate($event)"
-                                ref="patientAgeField">
-                                {{ ordonnanceData.patient.age }}
-                            </span>
-                        </div>
-                        <div class="flex items-baseline">
-                            <span class="font-sans font-bold text-medical-blue">Dossier :</span>
-                            <span class="patient-dossier editable-field" contenteditable="true"
-                                @blur="updateField('patient.dossier', $event)" @keydown.enter="saveAndBlur($event)"
-                                @focus="handleFocus($event, 'patientDossier')" @input="preventVueUpdate($event)"
-                                ref="patientDossierField">
-                                {{ ordonnanceData.patient.dossier }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section Prescription Médicaments -->
-                <div class="mb-3">
-                    <h2 v-if="ordonnanceData.traitements.length"
-                        class="font-sans text-base font-bold text-medical-blue border-b border-gray-300 mb-3 pb-0.5">
-                        Prescription
-                    </h2>
-
-                    <ul class="med-counter space-y-2.5">
-                        <li v-for="(traitement, index) in ordonnanceData.traitements" :key="index"
-                            class="med-item relative group border-b border-gray-100 pb-2 print:border-none">
-                            <div class="pl-6">
-                                <div class="flex justify-between items-baseline">
-                                    <strong
-                                        class="text-medical-red font-bold text-sm block leading-tight editable-field"
-                                        contenteditable="true" @blur="(e) => updateTraitementField(index, 'nom', e)"
-                                        @keydown.enter="saveAndBlur($event)"
-                                        @focus="(e) => handleTraitementFocus(e, index, 'nom')"
-                                        @input="preventVueUpdate($event)"
-                                        :ref="el => setTraitementFieldRef(el, 'nom', index)">
-                                        {{ traitement.nom }}
-                                    </strong>
-                                    <button @click="removeTraitement(index)"
-                                        class="no-print text-red-400 hover:text-red-600 font-bold px-2 text-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                        ×
-                                    </button>
-                                </div>
-                                <div class="dosage-info text-xs text-gray-700 ml-2 space-y-0.5 leading-snug">
-                                    <div class="flex items-baseline">
-                                        <span class="w-2 h-1 bg-gray-300 rounded-full mr-1.5 print:hidden"></span>
-                                        <span class="flex-1 editable-field" contenteditable="true"
-                                            @blur="(e) => updateTraitementField(index, 'posologie', e)"
-                                            @keydown.enter="saveAndBlur($event)"
-                                            @focus="(e) => handleTraitementFocus(e, index, 'posologie')"
-                                            @input="preventVueUpdate($event)"
-                                            :ref="el => setTraitementFieldRef(el, 'posologie', index)">
-                                            {{ traitement.posologie }}
-                                        </span>
-                                    </div>
-                                    <div class="flex items-baseline">
-                                        <span class="w-2 h-1 bg-gray-300 rounded-full mr-1.5 print:hidden"></span>
-                                        <span class="flex-1 text-gray-500 italic editable-field" contenteditable="true"
-                                            @blur="(e) => updateTraitementField(index, 'duree', e)"
-                                            @keydown.enter="saveAndBlur($event)"
-                                            @focus="(e) => handleTraitementFocus(e, index, 'duree')"
-                                            @input="preventVueUpdate($event)"
-                                            :ref="el => setTraitementFieldRef(el, 'duree', index)">
-                                            {{ traitement.duree }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-
-                    <div class="mt-3 no-print">
-                        <button @click="addTraitement"
-                            class="flex items-center text-xs font-bold text-medical-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
-                            <span class="text-lg mr-1 leading-none">+</span> Ajouter un médicament
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Section Examens -->
-                <div class="mb-3 mt-4">
-                    <h2 v-if="ordonnanceData.examens.length"
-                        class="font-sans text-base font-bold text-medical-blue border-b border-gray-300 mb-3 pb-0.5">
-                        Examens Prescrits
-                    </h2>
-
-                    <ul class="examen-counter space-y-2.5">
-                        <li v-for="(examen, index) in ordonnanceData.examens" :key="index"
-                            class="examen-item relative group border-b border-gray-100 pb-2 print:border-none">
-                            <div class="pl-6">
-                                <div class="flex justify-between items-baseline">
-                                    <strong
-                                        class="text-medical-blue font-bold text-sm block leading-tight editable-field"
-                                        contenteditable="true" @blur="(e) => updateExamenField(index, 'nom', e)"
-                                        @keydown.enter="saveAndBlur($event)"
-                                        @focus="(e) => handleExamenFocus(e, index, 'nom')"
-                                        @input="preventVueUpdate($event)"
-                                        :ref="el => setExamenFieldRef(el, 'nom', index)">
-                                        {{ examen.nom }}
-                                    </strong>
-                                    <button @click="removeExamen(index)"
-                                        class="no-print text-red-400 hover:text-red-600 font-bold px-2 text-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                        ×
-                                    </button>
-                                </div>
-                                <div class="examen-info text-xs text-gray-700 ml-2 space-y-0.5 leading-snug">
-                                    <div class="flex items-baseline">
-                                        <span class="w-2 h-1 bg-gray-300 rounded-full mr-1.5 print:hidden"></span>
-                                        <span class="flex-1 editable-field" contenteditable="true"
-                                            @blur="(e) => updateExamenField(index, 'description', e)"
-                                            @keydown.enter="saveAndBlur($event)"
-                                            @focus="(e) => handleExamenFocus(e, index, 'description')"
-                                            @input="preventVueUpdate($event)"
-                                            :ref="el => setExamenFieldRef(el, 'description', index)">
-                                            {{ examen.description }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-
-                    <div class="mt-3 no-print">
-                        <button @click="addExamen"
-                            class="flex items-center text-xs font-bold text-medical-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
-                            <span class="text-lg mr-1 leading-none">+</span> Ajouter un examen
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Instructions & Rendez-vous -->
-                <div class="mt-4 border-t border-dashed border-gray-300 pt-3">
-                    <h3 class="font-sans text-xs font-bold text-medical-blue uppercase mb-1">
-                        Instructions & Rendez-vous
-                    </h3>
-                    <ul id="instructions-list"
-                        class="list-disc list-outside ml-4 text-sm text-gray-700 space-y-0.5 leading-snug">
-                        <li v-for="(instruction, index) in ordonnanceData.instructions" :key="index"
-                            class="instruction-item">
-                            <span class="instruction-text editable-field" contenteditable="true"
-                                @blur="(e) => updateInstruction(index, e)" @keydown.enter="saveAndBlur($event)"
-                                @focus="(e) => handleInstructionFocus(e, index)" @input="preventVueUpdate($event)"
-                                :ref="el => setInstructionFieldRef(el, index)">
-                                {{ instruction }}
-                            </span>
-                            <button @click="removeInstruction(index)"
-                                class="no-print text-red-400 hover:text-red-600 font-bold px-1 text-lg opacity-0 hover:opacity-100 transition-opacity ml-2">
-                                ×
-                            </button>
-                        </li>
-                    </ul>
-
-                    <div class="mt-2 no-print">
-                        <button @click="addInstruction"
-                            class="flex items-center text-xs font-bold text-medical-blue hover:text-blue-800 px-2 py-1 rounded transition-colors">
-                            <span class="text-lg mr-1 leading-none">+</span> Ajouter une instruction
-                        </button>
-                    </div>
+            <!-- Onglets -->
+            <div class="w-[350px] mx-auto mt-4 text-xs no-print z-40">
+                <div class="flex bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+                    <button @click="activeTab = 'medicaments'" :class="[
+                        'py-2 font-medium text-xs transition-colors w-full',
+                        activeTab === 'medicaments'
+                            ? 'bg-medical-blue text-white'
+                            : 'text-gray-700 hover:bg-gray-100'
+                    ]">
+                        Médicaments & Instructions
+                    </button>
+                    <button @click="activeTab = 'examens'" :class="[
+                        'py-2 font-medium text-xs transition-colors w-full',
+                        activeTab === 'examens'
+                            ? 'bg-medical-blue text-white'
+                            : 'text-gray-700 hover:bg-gray-100'
+                    ]">
+                        Examens
+                    </button>
                 </div>
             </div>
 
-            <!-- Signature -->
-            <div class="mt-8 pt-3 border-t border-gray-200 text-right">
-                <p class="text-xs italic text-gray-500 mb-1">Signature & Cachet</p>
-                <div class="inline-block w-40 h-14 border border-gray-300 rounded print:border-none"></div>
+            <!-- Onglet Médicaments & Instructions -->
+            <div v-if="activeTab === 'medicaments'" v-for="pageNumber in displayedMedicamentsPages"
+                :key="`med-page-${pageNumber}`" class="sheet-a5 p-5 relative flex flex-col justify-between mb-6"
+                :class="{ 'hidden': pageNumber !== currentMedicamentsPage }" v-show="ordonnanceData">
+                <div class="print-colors-fix">
+                    <!-- En-tête -->
+                    <div
+                        class="flex justify-between items-start border-b-4 border-double border-medical-blue pb-2 mb-4 font-sans">
+                        <div class="w-2/3">
+                            <h1 class="text-sm font-bold text-medical-blue uppercase tracking-wide leading-tight editable-field"
+                                contenteditable="true" @blur="updateField('medecin.nom', $event)"
+                                @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'medecinNom')"
+                                @input="preventVueUpdate($event)" ref="medecinNomField">
+                                {{ ordonnanceData.medecin.nom }}
+                            </h1>
+                            <p class="text-sm font-medium text-gray-600 leading-tight editable-field"
+                                contenteditable="true" @blur="updateField('medecin.titre', $event)"
+                                @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'medecinTitre')"
+                                @input="preventVueUpdate($event)" ref="medecinTitreField">
+                                {{ ordonnanceData.medecin.titre }}
+                            </p>
+                            <div class="text-[11px] text-gray-500 leading-snug mt-1">
+                                <p class="font-bold text-medical-blue inline mr-3 editable-field" contenteditable="true"
+                                    @blur="updateField('medecin.centre', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'medecinCentre')" @input="preventVueUpdate($event)"
+                                    ref="medecinCentreField">
+                                    {{ ordonnanceData.medecin.centre }}
+                                </p>
+                                <span class="inline editable-field" contenteditable="true"
+                                    @blur="updateField('medecin.adresse', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'medecinAdresse')" @input="preventVueUpdate($event)"
+                                    ref="medecinAdresseField">
+                                    {{ ordonnanceData.medecin.adresse }}
+                                </span>
+                                <p class="mt-[2px] editable-field" contenteditable="true"
+                                    @blur="updateField('medecin.contact', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'medecinContact')" @input="preventVueUpdate($event)"
+                                    ref="medecinContactField">
+                                    {{ ordonnanceData.medecin.contact }}
+                                </p>
+                                <p class="mt-[2px] text-[9px] editable-field" contenteditable="true"
+                                    @blur="updateField('medecin.immat', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'medecinImmat')" @input="preventVueUpdate($event)"
+                                    ref="medecinImmatField">
+                                    {{ ordonnanceData.medecin.immat }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="w-1/3 text-right pt-1">
+                            <div class="text-sm text-medical-blue font-semibold leading-tight">
+                                <span class="editable-field" contenteditable="true"
+                                    @blur="updateField('cabinet.ville', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'cabinetVille')" @input="preventVueUpdate($event)"
+                                    ref="cabinetVilleField">
+                                    {{ ordonnanceData.cabinet.ville }}
+                                </span>, le
+                            </div>
+                            <div class="text-base font-bold text-gray-800 mt-[2px]">
+                                <span class="date-editable editable-field" contenteditable="true"
+                                    @blur="updateField('date', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'date')" @input="preventVueUpdate($event)"
+                                    ref="dateField">
+                                    {{ ordonnanceData.date }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informations patient (uniquement sur la première page) -->
+                    <div v-if="pageNumber === 1"
+                        class="bg-medical-gray rounded-md p-2.5 mb-4 print:bg-transparent print:p-0 print:mb-3">
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm items-end leading-snug">
+                            <div class="min-w-[100px] flex items-baseline">
+                                <span class="font-sans font-bold text-medical-blue text-xs inline-block">Nom :</span>
+                                <span class="font-bold text-base text-xs patient-nom editable-field" contenteditable="true"
+                                    @blur="updateField('patient.nom', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'patientNom')" @input="preventVueUpdate($event)"
+                                    ref="patientNomField">
+                                    {{ ordonnanceData.patient.nom }}
+                                </span>
+                            </div>
+                            <div class="flex items-baseline">
+                                <span class="font-sans font-bold text-medical-blue text-xs">Âge :</span>
+                                <span class="patient-age editable-field text-xs" contenteditable="true"
+                                    @blur="updateField('patient.age', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'patientAge')" @input="preventVueUpdate($event)"
+                                    ref="patientAgeField">
+                                    {{ ordonnanceData.patient.age }}
+                                </span>
+                            </div>
+                            <div class="flex items-baseline">
+                                <span class="font-sans font-bold text-medical-blue text-xs">Dossier :</span>
+                                <span class="patient-dossier editable-field text-xs" contenteditable="true"
+                                    @blur="updateField('patient.dossier', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'patientDossier')" @input="preventVueUpdate($event)"
+                                    ref="patientDossierField">
+                                    {{ ordonnanceData.patient.dossier }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Prescription Médicaments -->
+                    <div class="mb-3">
+                        <h2 v-if="getMedicamentsForPage(pageNumber).length"
+                            class="font-sans text-base font-bold text-medical-blue border-b border-gray-300 mb-3 pb-0.5">
+                            Prescription
+                        </h2>
+
+                        <ul class="med-counter">
+                            <li v-for="(traitement, index) in getMedicamentsForPage(pageNumber)" :key="index"
+                                class="med-item relative group border-b border-gray-100 pb-2 print:border-none">
+                                <div class="pl-6">
+                                    <div class="flex justify-between items-baseline">
+                                        <strong
+                                            class="text-medical-red font-bold text-xs block leading-tight editable-field"
+                                            contenteditable="true"
+                                            @blur="(e) => updateTraitementField(traitement.originalIndex, 'nom', e)"
+                                            @keydown.enter="saveAndBlur($event)"
+                                            @focus="(e) => handleTraitementFocus(e, traitement.originalIndex, 'nom')"
+                                            @input="preventVueUpdate($event)">
+                                            {{ traitement.nom }}
+                                        </strong>
+                                        <button @click="removeTraitement(traitement.originalIndex)"
+                                            class="no-print text-red-400 hover:text-red-600 font-bold px-2 text-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                            ×
+                                        </button>
+                                    </div>
+                                    <div class="dosage-info text-xs text-gray-700 ml-2 space-y-0.5 leading-snug">
+                                        <div class="flex items-baseline">
+                                            <span class="w-2 h-1 bg-gray-300 rounded-full mr-1.5 print:hidden"></span>
+                                            <span class="flex-1 editable-field" contenteditable="true"
+                                                @blur="(e) => updateTraitementField(traitement.originalIndex, 'posologie', e)"
+                                                @keydown.enter="saveAndBlur($event)"
+                                                @focus="(e) => handleTraitementFocus(e, traitement.originalIndex, 'posologie')"
+                                                @input="preventVueUpdate($event)">
+                                                {{ traitement.posologie }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+
+                        <div v-if="pageNumber === totalMedicamentsPages" class="mt-3 no-print">
+                            <button @click="addTraitement"
+                                class="flex items-center text-xs font-bold text-medical-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
+                                <span class="text-lg mr-1 leading-none">+</span> Ajouter un médicament
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Instructions & Rendez-vous (uniquement sur la dernière page des médicaments) -->
+                    <div v-if="pageNumber === totalMedicamentsPages"
+                        class="mt-4 border-t border-dashed border-gray-300 pt-3">
+                        <h3 class="font-sans text-xs font-bold text-medical-blue uppercase mb-1">
+                            Instructions & Rendez-vous
+                        </h3>
+                        <ul id="instructions-list"
+                            class="list-disc list-outside ml-4 text-sm text-gray-700 space-y-0.5 leading-snug">
+                            <li v-for="(instruction, index) in ordonnanceData.instructions" :key="index"
+                                class="instruction-item">
+                                <span class="instruction-text editable-field" contenteditable="true"
+                                    @blur="(e) => updateInstruction(index, e)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="(e) => handleInstructionFocus(e, index)" @input="preventVueUpdate($event)">
+                                    {{ instruction }}
+                                </span>
+                                <button @click="removeInstruction(index)"
+                                    class="no-print text-red-400 hover:text-red-600 font-bold px-1 text-lg opacity-0 hover:opacity-100 transition-opacity ml-2">
+                                    ×
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Signature -->
+                <div class="mt-8 pt-3 border-t border-gray-200 text-right">
+                    <p class="text-xs italic text-gray-500 mb-1">Signature & Cachet</p>
+                    <div class="inline-block w-40 h-14 border border-gray-300 rounded print:border-none"></div>
+                </div>
+            </div>
+
+            <!-- Onglet Examens -->
+            <div v-if="activeTab === 'examens'" v-for="pageNumber in displayedExamensPages"
+                :key="`ex-page-${pageNumber}`" class="sheet-a5 p-5 relative flex flex-col justify-between mb-6"
+                :class="{ 'hidden': pageNumber !== currentExamensPage }" v-show="ordonnanceData">
+                <div class="print-colors-fix">
+                    <!-- En-tête (identique) -->
+                    <div
+                        class="flex justify-between items-start border-b-4 border-double border-medical-blue pb-2 mb-4 font-sans">
+                        <div class="w-2/3">
+                            <h1 class="text-sm font-bold text-medical-blue uppercase tracking-wide leading-tight editable-field"
+                                contenteditable="true" @blur="updateField('medecin.nom', $event)"
+                                @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'medecinNom')"
+                                @input="preventVueUpdate($event)">
+                                {{ ordonnanceData.medecin.nom }}
+                            </h1>
+                            <p class="text-sm font-medium text-gray-600 leading-tight editable-field"
+                                contenteditable="true" @blur="updateField('medecin.titre', $event)"
+                                @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'medecinTitre')"
+                                @input="preventVueUpdate($event)">
+                                {{ ordonnanceData.medecin.titre }}
+                            </p>
+                            <div class="text-[11px] text-gray-500 leading-snug mt-1">
+                                <p class="font-bold text-medical-blue inline mr-3 editable-field" contenteditable="true"
+                                    @blur="updateField('medecin.centre', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'medecinCentre')" @input="preventVueUpdate($event)">
+                                    {{ ordonnanceData.medecin.centre }}
+                                </p>
+                                <span class="inline editable-field" contenteditable="true"
+                                    @blur="updateField('medecin.adresse', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'medecinAdresse')" @input="preventVueUpdate($event)">
+                                    {{ ordonnanceData.medecin.adresse }}
+                                </span>
+                                <p class="mt-[2px] editable-field" contenteditable="true"
+                                    @blur="updateField('medecin.contact', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'medecinContact')" @input="preventVueUpdate($event)">
+                                    {{ ordonnanceData.medecin.contact }}
+                                </p>
+                                <p class="mt-[2px] text-[9px] editable-field" contenteditable="true"
+                                    @blur="updateField('medecin.immat', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'medecinImmat')" @input="preventVueUpdate($event)">
+                                    {{ ordonnanceData.medecin.immat }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="w-1/3 text-right pt-1">
+                            <div class="text-sm text-medical-blue font-semibold leading-tight">
+                                <span class="editable-field" contenteditable="true"
+                                    @blur="updateField('cabinet.ville', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'cabinetVille')" @input="preventVueUpdate($event)">
+                                    {{ ordonnanceData.cabinet.ville }}
+                                </span>, le
+                            </div>
+                            <div class="text-base font-bold text-gray-800 mt-[2px]">
+                                <span class="date-editable editable-field" contenteditable="true"
+                                    @blur="updateField('date', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'date')" @input="preventVueUpdate($event)">
+                                    {{ ordonnanceData.date }}
+                                </span>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1 no-print">
+                                Page {{ pageNumber }}/{{ totalExamensPages }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informations patient (uniquement sur la première page) -->
+                    <div v-if="pageNumber === 1"
+                        class="bg-medical-gray rounded-md p-2.5 mb-4 print:bg-transparent print:p-0 print:mb-3">
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm items-end leading-snug">
+                            <div class="min-w-[100px] flex items-baseline">
+                                <span class="font-sans font-bold text-medical-blue inline-block text-xs">Nom :</span>
+                                <span class="font-bold text-base patient-nom editable-field text-xs" contenteditable="true"
+                                    @blur="updateField('patient.nom', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'patientNom')" @input="preventVueUpdate($event)">
+                                    {{ ordonnanceData.patient.nom }}
+                                </span>
+                            </div>
+                            <div class="flex items-baseline">
+                                <span class="font-sans font-bold text-medical-blue text-xs">Âge :</span>
+                                <span class="patient-age editable-field text-xs" contenteditable="true"
+                                    @blur="updateField('patient.age', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'patientAge')" @input="preventVueUpdate($event)">
+                                    {{ ordonnanceData.patient.age }}
+                                </span>
+                            </div>
+                            <div class="flex items-baseline">
+                                <span class="font-sans font-bold text-medical-blue text-xs">Dossier :</span>
+                                <span class="patient-dossier editable-field text-xs" contenteditable="true"
+                                    @blur="updateField('patient.dossier', $event)" @keydown.enter="saveAndBlur($event)"
+                                    @focus="handleFocus($event, 'patientDossier')" @input="preventVueUpdate($event)">
+                                    {{ ordonnanceData.patient.dossier }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Examens -->
+                    <div class="mb-3 mt-4">
+                        <h2
+                            class="font-sans text-base font-bold text-medical-blue border-b border-gray-300 mb-3 pb-0.5">
+                            Examens Prescrits
+                        </h2>
+
+                        <ul class="examen-counter">
+                            <li v-for="(examen, index) in getExamensForPage(pageNumber)" :key="index"
+                                class="examen-item relative group border-b border-gray-100 pb-2 print:border-none">
+                                <div class="pl-6">
+                                    <div class="flex justify-between items-baseline">
+                                        <strong
+                                            class="text-medical-blue font-bold text-xs block leading-tight editable-field"
+                                            contenteditable="true"
+                                            @blur="(e) => updateExamenField(examen.originalIndex, 'nom', e)"
+                                            @keydown.enter="saveAndBlur($event)"
+                                            @focus="(e) => handleExamenFocus(e, examen.originalIndex, 'nom')"
+                                            @input="preventVueUpdate($event)">
+                                            {{ examen.nom }}
+                                        </strong>
+                                        <button @click="removeExamen(examen.originalIndex)"
+                                            class="no-print text-red-400 hover:text-red-600 font-bold px-2 text-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                            ×
+                                        </button>
+                                    </div>
+                                    <div class="examen-info text-xs text-gray-700 ml-2 space-y-0.5 leading-snug">
+                                        <div class="flex items-baseline">
+                                            <span class="w-2 h-1 bg-gray-300 rounded-full mr-1.5 print:hidden"></span>
+                                            <span class="flex-1 editable-field" contenteditable="true"
+                                                @blur="(e) => updateExamenField(examen.originalIndex, 'description', e)"
+                                                @keydown.enter="saveAndBlur($event)"
+                                                @focus="(e) => handleExamenFocus(e, examen.originalIndex, 'description')"
+                                                @input="preventVueUpdate($event)">
+                                                {{ examen.description }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+
+                        <div v-if="pageNumber === totalExamensPages" class="mt-3 no-print">
+                            <button @click="addExamen"
+                                class="flex items-center text-xs font-bold text-medical-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
+                                <span class="text-lg mr-1 leading-none">+</span> Ajouter un examen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Signature -->
+                <div class="mt-8 pt-3 border-t border-gray-200 text-right">
+                    <p class="text-xs italic text-gray-500 mb-1">Signature & Cachet</p>
+                    <div class="inline-block w-40 h-14 border border-gray-300 rounded print:border-none"></div>
+                </div>
             </div>
         </div>
 
-        <!-- Loading State -->
-        <div v-else class="flex items-center justify-center h-64">
-            <div class="text-center">
-                <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg"
-                    fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                    </path>
-                </svg>
-                <p class="text-gray-500">Chargement de l'ordonnance...</p>
+        <!-- Pagination en bas (fixe) -->
+        <div v-if="activeTab === 'medicaments' && totalMedicamentsPages > 1"
+            class="fixed bottom-4 left-1/2 transform -translate-x-1/2 no-print z-40">
+            <div class="flex items-center gap-4 bg-white px-6 py-3 rounded-lg shadow-lg border border-gray-200">
+                <button @click="prevPage('medicaments')" :disabled="currentMedicamentsPage === 1"
+                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="ri-arrow-left-line"></i>
+                </button>
+                <span class="font-medium text-gray-700 min-w-[100px] text-center">
+                    Page {{ currentMedicamentsPage }} / {{ totalMedicamentsPages }}
+                </span>
+                <button @click="nextPage('medicaments')" :disabled="currentMedicamentsPage === totalMedicamentsPages"
+                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="ri-arrow-right-line"></i>
+                </button>
+            </div>
+        </div>
+
+        <div v-if="activeTab === 'examens' && totalExamensPages > 1"
+            class="fixed bottom-4 left-1/2 transform -translate-x-1/2 no-print z-40">
+            <div class="flex items-center gap-4 bg-white px-6 py-3 rounded-lg shadow-lg border border-gray-200">
+                <button @click="prevPage('examens')" :disabled="currentExamensPage === 1"
+                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="ri-arrow-left-line"></i>
+                </button>
+                <span class="font-medium text-gray-700 min-w-[100px] text-center">
+                    Page {{ currentExamensPage }} / {{ totalExamensPages }}
+                </span>
+                <button @click="nextPage('examens')" :disabled="currentExamensPage === totalExamensPages"
+                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="ri-arrow-right-line"></i>
+                </button>
             </div>
         </div>
     </div>
 </template>
 
 <script>
-import { onMounted, ref, watch, nextTick } from 'vue';
+import { onMounted, ref, watch, nextTick, computed } from 'vue';
 import { useConsultationStore } from '../stores/index.js';
 import { useRoute, useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
@@ -300,6 +436,12 @@ export default {
         const consultationsStore = useConsultationStore();
         const loader = ref(false);
 
+        // Variables pour les onglets et pagination
+        const activeTab = ref('medicaments');
+        const currentMedicamentsPage = ref(1);
+        const currentExamensPage = ref(1);
+        const itemsPerPage = 10;
+
         const smartBack = () => {
             if (window.history.length > 1) {
                 router.back()
@@ -310,22 +452,6 @@ export default {
 
         // Stocker les valeurs originales pour éviter les conflits
         const editingValues = ref({});
-        const traitementFields = ref([]);
-        const examenFields = ref([]);
-        const instructionFields = ref([]);
-
-        // Références aux champs
-        const medecinNomField = ref(null);
-        const medecinTitreField = ref(null);
-        const medecinCentreField = ref(null);
-        const medecinAdresseField = ref(null);
-        const medecinContactField = ref(null);
-        const medecinImmatField = ref(null);
-        const cabinetVilleField = ref(null);
-        const dateField = ref(null);
-        const patientNomField = ref(null);
-        const patientAgeField = ref(null);
-        const patientDossierField = ref(null);
 
         // Données par défaut de l'ordonnance
         const defaultOrdonnanceData = {
@@ -357,6 +483,69 @@ export default {
         // Données réactives de l'ordonnance
         const ordonnanceData = ref(JSON.parse(JSON.stringify(defaultOrdonnanceData)));
 
+        // Computed pour la pagination des médicaments
+        const totalMedicamentsPages = computed(() => {
+            const pages = Math.ceil(ordonnanceData.value.traitements.length / itemsPerPage);
+            return pages || 1; // Toujours au moins 1 page
+        });
+
+        const displayedMedicamentsPages = computed(() => {
+            // Ajuster la page courante si elle est hors limites
+            if (currentMedicamentsPage.value > totalMedicamentsPages.value) {
+                currentMedicamentsPage.value = totalMedicamentsPages.value;
+            }
+            return Array.from({ length: totalMedicamentsPages.value }, (_, i) => i + 1);
+        });
+
+        const getMedicamentsForPage = (page) => {
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            return ordonnanceData.value.traitements.slice(start, end).map((item, index) => ({
+                ...item,
+                originalIndex: start + index
+            }));
+        };
+
+        // Computed pour la pagination des examens
+        const totalExamensPages = computed(() => {
+            const pages = Math.ceil(ordonnanceData.value.examens.length / itemsPerPage);
+            return pages || 1; // Toujours au moins 1 page
+        });
+
+        const displayedExamensPages = computed(() => {
+            // Ajuster la page courante si elle est hors limites
+            if (currentExamensPage.value > totalExamensPages.value) {
+                currentExamensPage.value = totalExamensPages.value;
+            }
+            return Array.from({ length: totalExamensPages.value }, (_, i) => i + 1);
+        });
+
+        const getExamensForPage = (page) => {
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            return ordonnanceData.value.examens.slice(start, end).map((item, index) => ({
+                ...item,
+                originalIndex: start + index
+            }));
+        };
+
+        // Navigation de pagination
+        const prevPage = (tab) => {
+            if (tab === 'medicaments' && currentMedicamentsPage.value > 1) {
+                currentMedicamentsPage.value--;
+            } else if (tab === 'examens' && currentExamensPage.value > 1) {
+                currentExamensPage.value--;
+            }
+        };
+
+        const nextPage = (tab) => {
+            if (tab === 'medicaments' && currentMedicamentsPage.value < totalMedicamentsPages.value) {
+                currentMedicamentsPage.value++;
+            } else if (tab === 'examens' && currentExamensPage.value < totalExamensPages.value) {
+                currentExamensPage.value++;
+            }
+        };
+
         // Charger les données de consultation
         const loadConsultation = async (consultationId) => {
             try {
@@ -378,7 +567,7 @@ export default {
                     if (consultationsStore.consultation.field_medicaments?.length > 0) {
                         ordonnanceData.value.traitements = consultationsStore.consultation.field_medicaments.map(med => ({
                             nom: med.field_articles?.title || "Médicament",
-                            posologie: "Posologie à définir",
+                            posologie: "Posologie et Durée à définir",
                             duree: "Durée à definir"
                         }));
                     }
@@ -399,18 +588,14 @@ export default {
             }
         };
 
-        // Empêcher Vue de mettre à jour pendant l'édition (CRITIQUE)
+        // Empêcher Vue de mettre à jour pendant l'édition
         function preventVueUpdate(event) {
             // Ne rien faire - laisser le DOM gérer l'édition
-            // On sauvegarde seulement au blur
         }
 
         // Gérer le focus - sauvegarder la valeur actuelle
         function handleFocus(event, fieldName) {
-            // Stocker la valeur originale
             editingValues.value[fieldName] = event.target.textContent;
-
-            // Sélectionner tout le texte pour faciliter l'édition
             nextTick(() => {
                 selectAllText(event.target);
             });
@@ -420,7 +605,6 @@ export default {
         function handleTraitementFocus(event, index, fieldType) {
             const fieldName = `traitement_${index}_${fieldType}`;
             editingValues.value[fieldName] = event.target.textContent;
-
             nextTick(() => {
                 selectAllText(event.target);
             });
@@ -430,7 +614,6 @@ export default {
         function handleExamenFocus(event, index, fieldType) {
             const fieldName = `examen_${index}_${fieldType}`;
             editingValues.value[fieldName] = event.target.textContent;
-
             nextTick(() => {
                 selectAllText(event.target);
             });
@@ -440,7 +623,6 @@ export default {
         function handleInstructionFocus(event, index) {
             const fieldName = `instruction_${index}`;
             editingValues.value[fieldName] = event.target.textContent;
-
             nextTick(() => {
                 selectAllText(event.target);
             });
@@ -461,37 +643,12 @@ export default {
             event.target.blur();
         }
 
-        // Fonction pour référencer les champs de traitements
-        function setTraitementFieldRef(el, type, index) {
-            if (!el) return;
-            if (!traitementFields.value[index]) {
-                traitementFields.value[index] = {};
-            }
-            traitementFields.value[index][type] = el;
-        }
-
-        // Fonction pour référencer les champs d'examens
-        function setExamenFieldRef(el, type, index) {
-            if (!el) return;
-            if (!examenFields.value[index]) {
-                examenFields.value[index] = {};
-            }
-            examenFields.value[index][type] = el;
-        }
-
-        // Fonction pour référencer les champs d'instructions
-        function setInstructionFieldRef(el, index) {
-            if (!el) return;
-            instructionFields.value[index] = el;
-        }
-
         // Mettre à jour un champ simple
         function updateField(path, event) {
             const newValue = event.target.textContent.trim();
             const keys = path.split('.');
             let obj = ordonnanceData.value;
 
-            // Vérifier si la valeur a changé
             const fieldName = keys.join('_');
             if (newValue === editingValues.value[fieldName]) {
                 return;
@@ -550,25 +707,19 @@ export default {
         function addTraitement() {
             ordonnanceData.value.traitements.push({
                 nom: "Nouveau Médicament",
-                posologie: "Posologie...",
+                posologie: "Posologie et Durée à définir",
                 duree: "Durée..."
-            });
-
-            // Focus sur le nouveau champ après ajout
-            nextTick(() => {
-                const lastIndex = ordonnanceData.value.traitements.length - 1;
-                const field = traitementFields.value[lastIndex]?.nom;
-                if (field) {
-                    field.focus();
-                    selectAllText(field);
-                }
             });
         }
 
-        // Supprimer un traitement (SANS CONFIRM)
+        // Supprimer un traitement
         function removeTraitement(index) {
             ordonnanceData.value.traitements.splice(index, 1);
-            traitementFields.value.splice(index, 1);
+
+            // Ajuster la page courante si nécessaire
+            if (currentMedicamentsPage.value > totalMedicamentsPages.value) {
+                currentMedicamentsPage.value = totalMedicamentsPages.value;
+            }
         }
 
         // Ajouter un nouvel examen
@@ -577,47 +728,21 @@ export default {
                 nom: "Nouvel Examen",
                 description: "Description de l'examen..."
             });
-
-            // Focus sur le nouveau champ après ajout
-            nextTick(() => {
-                const lastIndex = ordonnanceData.value.examens.length - 1;
-                const field = examenFields.value[lastIndex]?.nom;
-                if (field) {
-                    field.focus();
-                    selectAllText(field);
-                }
-            });
         }
 
-        // Supprimer un examen (SANS CONFIRM)
+        // Supprimer un examen
         function removeExamen(index) {
             ordonnanceData.value.examens.splice(index, 1);
-            examenFields.value.splice(index, 1);
-        }
 
-        // Ajouter une nouvelle instruction
-        function addInstruction() {
-            ordonnanceData.value.instructions.push("Nouvelle instruction...");
-
-            // Focus sur la nouvelle instruction après ajout
-            nextTick(() => {
-                const lastIndex = ordonnanceData.value.instructions.length - 1;
-                const field = instructionFields.value[lastIndex];
-                if (field) {
-                    field.focus();
-                    selectAllText(field);
-                }
-            });
-        }
-
-        // Supprimer une instruction (SANS CONFIRM)
-        function removeInstruction(index) {
-            ordonnanceData.value.instructions.splice(index, 1);
-            instructionFields.value.splice(index, 1);
+            // Ajuster la page courante si nécessaire
+            if (currentExamensPage.value > totalExamensPages.value) {
+                currentExamensPage.value = totalExamensPages.value;
+            }
         }
 
         // Imprimer l'ordonnance
         function printOrdonnance() {
+            // Afficher toutes les pages pour l'impression
             window.print();
         }
 
@@ -652,9 +777,19 @@ export default {
             removeTraitement,
             addExamen,
             removeExamen,
-            addInstruction,
-            removeInstruction,
             printOrdonnance,
+            // Onglets et pagination
+            activeTab,
+            currentMedicamentsPage,
+            currentExamensPage,
+            totalMedicamentsPages,
+            totalExamensPages,
+            displayedMedicamentsPages,
+            displayedExamensPages,
+            getMedicamentsForPage,
+            getExamensForPage,
+            prevPage,
+            nextPage,
             // Fonctions d'édition
             updateField,
             updateTraitementField,
@@ -666,21 +801,6 @@ export default {
             handleExamenFocus,
             handleInstructionFocus,
             preventVueUpdate,
-            setTraitementFieldRef,
-            setExamenFieldRef,
-            setInstructionFieldRef,
-            // Références
-            medecinNomField,
-            medecinTitreField,
-            medecinCentreField,
-            medecinAdresseField,
-            medecinContactField,
-            medecinImmatField,
-            cabinetVilleField,
-            dateField,
-            patientNomField,
-            patientAgeField,
-            patientDossierField,
             smartBack
         };
     }
@@ -688,7 +808,7 @@ export default {
 </script>
 
 <style scoped>
-/* CSS Spécifique pour le format papier A5 */
+/* Styles CSS inchangés - exactement les mêmes qu'avant */
 @page {
     size: A5;
     margin: 0;
@@ -698,7 +818,6 @@ body {
     background-color: #e5e7eb;
 }
 
-/* La feuille A5 exacte */
 .sheet-a5 {
     width: 148mm;
     min-height: 210mm;
@@ -707,7 +826,6 @@ body {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Comportement des champs éditables */
 .editable-field {
     outline: none;
     min-width: 20px;
@@ -729,7 +847,6 @@ body {
     outline: none;
 }
 
-/* Empêcher la sélection multiple sur les champs éditables */
 .editable-field:focus {
     user-select: text;
     -webkit-user-select: text;
@@ -737,7 +854,6 @@ body {
     -ms-user-select: text;
 }
 
-/* Numérotation automatique CSS */
 .med-counter {
     counter-reset: med-counter;
 }
@@ -754,7 +870,6 @@ body {
     counter-increment: examen-counter;
 }
 
-/* Style des éléments de liste avec numérotation */
 .med-item::before {
     content: counter(med-counter) ".";
     position: absolute;
@@ -775,17 +890,26 @@ body {
     padding-top: 0.28rem;
 }
 
-/* --- STYLES D'IMPRESSION CRITIQUES pour la compacité --- */
 @media print {
-    .sheet-a5 {
-        /* Réduit la marge interne pour l'impression */
-        padding: 8mm !important;
-        margin: 0;
-        box-shadow: none;
-        border: none;
+
+    html,
+    body {
+        width: 148mm;
+        height: 200mm;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
     }
 
-    /* Réduit l'interligne générale pour compresser */
+    .sheet-a5 {
+        width: 148mm !important;
+        max-height: 200mm !important;
+        margin: 0 auto !important;
+        box-shadow: none !important;
+        border: none !important;
+        page-break-after: avoid !important;
+    }
+
     .sheet-a5 * {
         line-height: 1.25 !important;
     }
@@ -812,7 +936,6 @@ body {
         color-adjust: exact !important;
     }
 
-    /* Répétez pour toutes les couleurs */
     .print-colors-fix .text-medical-red {
         color: #CC0000 !important;
         -webkit-print-color-adjust: exact !important;
@@ -820,13 +943,24 @@ body {
         color-adjust: exact !important;
     }
 
-    /* Cacher les boutons de suppression */
     button {
         display: none !important;
     }
+
+    /* MODIFICATION CRITIQUE: Comme dans la facture */
+    /* Masquer les pages avec la classe .hidden */
+    .sheet-a5.hidden {
+        display: none !important;
+    }
+
+    /* Afficher uniquement la page sans .hidden (la page active) */
+    .sheet-a5:not(.hidden) {
+        display: block !important;
+        page-break-after: avoid !important;
+        margin: 0 auto !important;
+    }
 }
 
-/* Animation pour les nouveaux éléments */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -845,7 +979,6 @@ body {
     animation: fadeIn 0.3s ease-out;
 }
 
-/* Style pour le bouton d'ajout */
 button[class*="Ajouter"] {
     transition: all 0.2s ease;
 }
@@ -854,7 +987,6 @@ button[class*="Ajouter"]:hover {
     transform: translateY(-1px);
 }
 
-/* Style pour les champs éditables du patient */
 .patient-nom {
     min-width: 200px;
 }
@@ -868,7 +1000,6 @@ button[class*="Ajouter"]:hover {
     min-width: 100px;
 }
 
-/* Style pour les instructions */
 .instruction-item {
     position: relative;
     padding-right: 20px;
@@ -878,16 +1009,29 @@ button[class*="Ajouter"]:hover {
     min-width: 300px;
 }
 
-/* Style spécifique pour éviter l'inversion du texte */
 .text-medical-red.font-bold,
 .text-medical-blue.font-bold {
     display: inline-block;
     width: 100%;
 }
+
+/* Nouveaux styles pour les onglets et pagination */
+.hidden {
+    display: none;
+}
+
+/* Styles pour les onglets */
+.tab-button {
+    transition: all 0.2s ease;
+}
+
+.tab-button:hover:not(.active) {
+    background-color: #f8fafc;
+}
 </style>
 
 <style>
-/* Styles globaux ajoutés au document */
+/* Styles globaux inchangés */
 .font-serif {
     font-family: 'Times New Roman', Times, serif;
 }
@@ -920,7 +1064,6 @@ button[class*="Ajouter"]:hover {
     border-color: #0A346C;
 }
 
-/* Style pour les listes dans l'impression */
 @media print {
     .list-disc li::before {
         content: "•";
@@ -930,16 +1073,21 @@ button[class*="Ajouter"]:hover {
         width: 1em;
         margin-left: -1em;
     }
+
+    /* S'assurer que les couleurs s'impriment correctement */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
 }
 
-/* Correction pour éviter le RTL sur les champs éditables */
 [contenteditable] {
     unicode-bidi: plaintext;
     direction: ltr;
     text-align: left;
 }
 
-/* Empêcher les sauts de ligne indésirables */
 .editable-field br {
     display: none;
 }
