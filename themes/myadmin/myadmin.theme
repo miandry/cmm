@@ -37,6 +37,7 @@ function myadmin_preprocess_page(&$variables) {
       [ "name" => "Commandes", "path" => "/commandes", "icon" => "fas fa-shopping-cart"],
       [ "name" => "Patients", "path" => "/patients", "icon" => "fas fa-users"],
       [ "name" => "Consulter", "path" => "/consultations", "icon" => "fas fa-stethoscope", "paths"=> ["/consultations", "/consultations/edit"]],
+      // [ "name" => "Stocks", "path" => "/stocks", "icon" => "fas fa-boxes"],
     ]
   ];
 

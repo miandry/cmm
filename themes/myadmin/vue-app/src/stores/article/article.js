@@ -1,11 +1,12 @@
 import { defineStore } from "pinia";
 import { computed, h, ref } from "vue";
-import { getArticles } from "../../services/article";
+import { getArticles, getCategories, saveArticle } from "../../services/article";
 import { buildQueryParams } from "../../utils/queryBuilder.js";
 import { toast } from "vue-sonner";
 
 export const useArticleStore = defineStore("article", () => {
   const articles = ref({ rows: [], total: 0 });
+  const categories = ref({ rows: [], total: 0 });
   const loading = ref(false);
   const error = ref(null);
   const savedOrder = ref(null);
@@ -27,6 +28,18 @@ export const useArticleStore = defineStore("article", () => {
         // Remplacer les données
         articles.value = data;
       }
+    } catch (err) {
+      error.value = err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  // Save article
+  async function createArticle(data) {
+    try {
+      const response = await saveArticle(data);
+      return response;
     } catch (err) {
       error.value = err;
     } finally {
@@ -133,11 +146,28 @@ export const useArticleStore = defineStore("article", () => {
     return savedOrder.value;
   }
 
+  // categories
+  async function fetchCategories(options) {
+    loading.value = true;
+    try {
+      const query = buildQueryParams(options);
+      const response = await getCategories(query);
+      const data = response.data;
+      categories.value = data;
+    } catch (err) {
+      error.value = err;
+    } finally {
+      loading.value = false;
+    }
+  }
   return {
     articles,
+    categories,
     loading,
     error,
     fetchArticles,
+    fetchCategories,
+    createArticle,
     cardItems,
     addItem,
     removeItem,
