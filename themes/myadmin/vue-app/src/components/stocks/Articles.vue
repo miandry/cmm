@@ -69,6 +69,8 @@
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Prix de vente</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Quantité</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Date d'achat</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Date de péremption</th>
@@ -106,6 +108,9 @@
                                         style: 'currency',
                                         currency: 'MGA'
                                     }) }}
+                            </td>
+                            <td class="px-6 py-4 text-sm whitespace-nowrap text-center">
+                                {{ stock.field_quantite <= 0 ? 0 : stock.field_quantite }}
                             </td>
                             <td class="px-6 py-4 text-sm whitespace-nowrap">
                                 {{ formatDate(stock.field_date, null, 'short') }}
@@ -169,8 +174,8 @@
 
         <!-- modala add & edit :class="openModal ? 'flex' : 'hidden'" -->
         <SaveStock class="fixed inset-0 flex bg-black bg-opacity-50 items-center justify-center z-50" v-if="openModal"
-            @close="closeStockModal" :suppliers="stockStore.suppliers.rows"
-            @addStocks="addStocks" :stock="selectedStock" @updateStock="updateStock"/>
+            @close="closeStockModal" :suppliers="stockStore.suppliers.rows" @addStocks="addStocks"
+            :stock="selectedStock" @updateStock="updateStock" />
 
     </div>
 </template>
