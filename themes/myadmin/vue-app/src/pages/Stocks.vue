@@ -8,12 +8,12 @@
                 <p class="text-gray-600">Gérez l'inventaire des produits médicaux de votre clinique</p>
             </div>
             <div class="flex flex-wrap gap-3 mt-4 lg:mt-0">
-                <button @click="openSaveArticleModal = true"
+                <button @click="openAddModal"
                     class="px-4 py-2 bg-primary text-white !rounded-button font-medium text-sm whitespace-nowrap flex items-center space-x-2">
                     <div class="w-5 h-5 flex items-center justify-center">
                         <i class="ri-add-line"></i>
                     </div>
-                    <span>Ajouter Produit</span>
+                    <span>Ajouter Stock</span>
                 </button>
                 <button
                     class="hidden bg-secondary hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors !rounded-button whitespace-nowrap">
@@ -93,7 +93,8 @@
             </div>
         </div>
         <!-- Recherche, Filtres et Tableau Principal -->
-        <Articles :openModal="openSaveArticleModal" @close="openSaveArticleModal = false"/>
+        <Articles :openModal="openSaveArticleModal" @openModal="openEditModal" @close="openSaveArticleModal = false"
+            :selectedStock="selectedStock" />
     </main>
 </template>
 
@@ -108,9 +109,22 @@ export default {
     },
     setup() {
         const openSaveArticleModal = ref(false);
+        const selectedStock = ref(null);
 
+        const openEditModal = (stock) => {
+            selectedStock.value = stock;
+            openSaveArticleModal.value = true;
+        };
+
+        const openAddModal = () => {
+            selectedStock.value = null;
+            openSaveArticleModal.value = true;
+        };
         return {
             openSaveArticleModal,
+            selectedStock,
+            openEditModal,
+            openAddModal
         }
     }
 }

@@ -3,25 +3,51 @@
         <PageLoader v-if="loader" />
         <!-- Recherche et Filtres -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-            <div class="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4">
+            <div
+                class="flex flex-col md:flex-row lg:items-center space-y-4 md:space-y-0 lg:space-x-4 gap-2 md:items-end">
                 <!-- Barre de Recherche -->
                 <div class="w-full md:w-1/2 relative">
-                    <input type="text" placeholder="Rechercher par nom" v-model="searchKeyWord"
-                        @keypress.enter="handleSearch"
-                        class="w-full px-4 py-3 pl-12 pr-4 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                    <input type="text" placeholder="Rechercher par article" v-model="searchKeyWord"
+                        @input="handleSearch" @focus="showList = true" @blur="showList = false"
+                        class="w-full px-4 py-2.5 pl-12 pr-4 text-gray-900 bg-gray-50 border border-gray-300 !rounded-button focus:ring-2 focus:ring-primary focus:border-primary outline-none">
                     <div
                         class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center">
                         <i class="ri-search-line text-gray-400"></i>
                     </div>
+
+                    <div v-if="showList" @mousedown.prevent
+                        class="max-h-48 overflow-y-auto border border-gray-300 !rounded-button bg-white absolute right-0 left-0 z-50">
+
+                        <!-- Loader -->
+                        <div v-if="loading" class="flex flex-col items-center justify-center py-6">
+                            <div class="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin">
+                            </div>
+                            <p class="text-center text-xs text-gray-600 mt-2">Chargement...</p>
+                        </div>
+                        <div v-else-if="articleStore.articles.rows.length" class="divide-y divide-gray-100">
+                            <div v-for="article in articleStore.articles.rows" :key="article.nid"
+                                :class="[
+                                    'flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 cursor-pointer customer-item border-t-0']"
+                                @click="selectArticle(article.nid, article.title)">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">{{ article.title }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else>
+                            <h3 class="text-center text-gray-400 py-2">Aucun article trouvé avec ce mot-clé</h3>
+                        </div>
+                    </div>
+
                 </div>
                 <!-- Filtres -->
                 <div class="w-full md:w-1/2 flex flex-wrap gap-3">
                     <div class="relative w-full">
-                        <select v-model="selectedCategory" @change="handleCategorieFilter"
+                        <select v-model="selectedSupplier" @change="handleSupplierFilter"
                             class=" w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors flex items-center space-x-2 !rounded-button whitespace-nowrap">
-                            <option value="">Toutes Catégories</option>
-                            <option v-for="cat in articleStore.categories.rows" :key="cat.tid" :value="cat.tid">
-                                {{ cat.name }}
+                            <option value="">Tous Fournisseurs</option>
+                            <option v-for="supp in stockStore.suppliers.rows" :key="supp.nid" :value="supp.nid">
+                                {{ supp.title }}
                             </option>
                         </select>
                     </div>
@@ -37,87 +63,71 @@
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Produit</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Catégorie</th>
+                                Fournisseur</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Stock</th>
+                                Prix d'achat</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Prix Unitaire</th>
+                                Prix de vente</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Valeur Totale</th>
+                                Date d'achat</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Statut</th>
+                                Date de péremption</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
-                        <tr class="hover:bg-gray-50" v-for="article in articleStore.articles.rows" :key="article.nid">
+                        <tr class="hover:bg-gray-50" v-for="stock in stockStore.stocks.rows" :key="stock.nid">
                             <td class="px-6 py-4">
                                 <div class="flex items-center space-x-3">
                                     <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                                         <i class="ri-medicine-bottle-line text-blue-600"></i>
                                     </div>
                                     <div class="flex-1">
-                                        <div class="font-medium text-gray-900 text-xs">{{ article.title }}</div>
-                                        <div class="text-sm text-gray-500 hidden">REF: PAR-500-001</div>
+                                        <div class="font-medium text-gray-900 text-xs">{{ stock.field_article.title }}
+                                        </div>
+                                        <div class="text-sm text-gray-500">REF: {{ stock.title }}</div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-900 text-center">
-                                {{ article.field_categorie ? article.field_categorie.title : "-" }}
+                            <td class="px-6 py-4 text-sm text-center">
+                                {{ stock.field_fournisseur ? stock.field_fournisseur.title : "-" }}
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-sm font-medium text-gray-900">
-                                        {{ article.field_quantite_stock < 0 ? "0" : article.field_quantite_stock }}
-                                            </span>
-                                            <div class="w-3 h-3 bg-secondary rounded-full"
-                                                v-if="article.field_quantite_stock > 10"></div>
-                                            <div class="w-3 h-3 bg-yellow-500 rounded-full"
-                                                v-else-if="article.field_quantite_stock > 0"></div>
-                                            <div class="w-3 h-3 bg-red-500 rounded-full" v-else></div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-900">
-
-                                {{ article.field_prix_unitaire ?
-                                    Number(article.field_prix_unitaire).toLocaleString('fr-MG', {
+                            <td class="px-6 py-4 text-sm">
+                                {{
+                                    Number(stock.field_prix_d_achat).toLocaleString('fr-MG', {
                                         style: 'currency',
                                         currency: 'MGA'
-                                    }) : "-" }}
+                                    }) }}
                             </td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900">
-                                {{ calculTotalPrice(article.field_prix_unitaire, article.field_quantite_stock) }}
+                            <td class="px-6 py-4 text-sm">
+                                {{
+                                    Number(stock.field_prix_unitaire).toLocaleString('fr-MG', {
+                                        style: 'currency',
+                                        currency: 'MGA'
+                                    }) }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span v-if="article.field_quantite_stock > 10"
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    En stock
-                                </span>
-                                <span v-else-if="article.field_quantite_stock > 0"
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    Stock faible
-                                </span>
-                                <span v-else
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                    Rupture de stock
-                                </span>
+                            <td class="px-6 py-4 text-sm whitespace-nowrap">
+                                {{ formatDate(stock.field_date, null, 'short') }}
+                            </td>
+                            <td class="px-6 py-4 text-sm whitespace-nowrap">
+                                {{ formatDate(stock.field_peremption, null, 'short') }}
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center space-x-2">
                                     <button class="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                                        title="Modifier">
+                                        title="Modifier" @click.prevent="editStock(stock)">
                                         <div class="w-4 h-4 flex items-center justify-center">
                                             <i class="ri-edit-line"></i>
                                         </div>
                                     </button>
-                                    <button class="p-2 text-gray-400 hover:text-green-600 transition-colors"
+                                    <button class="p-2 text-gray-400 hover:text-green-600 transition-colors hidden"
                                         title="Réapprovisionner">
                                         <div class="w-4 h-4 flex items-center justify-center">
                                             <i class="ri-add-circle-line"></i>
                                         </div>
                                     </button>
-                                    <button class="p-2 text-gray-400 hover:text-purple-600 transition-colors"
+                                    <button class="p-2 text-gray-400 hover:text-purple-600 transition-colors hidden"
                                         title="Détails">
                                         <div class="w-4 h-4 flex items-center justify-center">
                                             <i class="ri-eye-line"></i>
@@ -157,19 +167,21 @@
             </div>
         </div>
 
-        <!-- modala add & edit -->
-        <SaveStock class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50"
-            :class="openModal ? 'flex' : 'hidden'" @close="$emit('close')"
-            :categories="articleStore.categories.rows" @addArticle="addArticle"/>
+        <!-- modala add & edit :class="openModal ? 'flex' : 'hidden'" -->
+        <SaveStock class="fixed inset-0 flex bg-black bg-opacity-50 items-center justify-center z-50" v-if="openModal"
+            @close="closeStockModal" :suppliers="stockStore.suppliers.rows"
+            @addStocks="addStocks" :stock="selectedStock" @updateStock="updateStock"/>
 
     </div>
 </template>
 
 <script>
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
-import { useArticleStore } from '../../stores/index.js';
+import { computed, nextTick, onMounted, ref } from 'vue';
+import { useArticleStore, useStockStore } from '../../stores/index.js';
 import PageLoader from '../PageLoader.vue';
 import SaveStock from './SaveStock.vue';
+import { formatDate } from '../../utils/formateDate.js';
+import { debounce } from 'lodash';
 
 export default {
     name: "Articles",
@@ -181,29 +193,39 @@ export default {
         openModal: {
             type: Boolean,
             required: true,
+        },
+        selectedStock: {
+            type: Object,
+            default: null
         }
     },
-    setup() {
+    emits: ['openModal', 'close'],
+    setup(props, { emit }) {
         const articleStore = useArticleStore();
+        const stockStore = useStockStore();
         const perPage = 15;
         const currentPage = ref(1);
-        const totalPages = computed(() => Math.ceil(articleStore.articles.total / perPage));
+        const totalPages = computed(() => Math.ceil(stockStore.stocks.total / perPage));
         const loader = ref(false);
         const searchKeyWord = ref('');
         const isFirstLoad = ref(true);
-        const selectedCategory = ref('');
+        const selectedSupplier = ref('');
+        const showList = ref(false);
+        const loading = ref(false)
+
+
         // Paramètres dynamiques de la requête
-        const queryOptions = ref({
+        const queryOptions = ref({ //stock
             fields: [
                 'nid',
                 'title',
+                'field_article',
+                'field_date',
+                'field_peremption',
+                'field_fournisseur',
+                'field_prix_d_achat',
                 'field_prix_unitaire',
-                'field_nombre_par_unite',
-                'field_quantite_stock',
-                'field_image',
-                'field_stock_unitaire',
-                'field_categorie',
-                'field_limite_stock',
+                'field_quantite',
             ],
             sort: { val: 'nid', op: 'desc' },
             filters: {},
@@ -211,21 +233,42 @@ export default {
             offset: 15
         })
 
-        const categoryQueryOptions = ref({
+        const queryOptionsArticle = ref({
             fields: [
-                'tid',
-                'name',
+                'nid',
+                'title'
             ],
-            sort: { val: 'name', op: 'asc' },
+            sort: { val: 'nid', op: 'desc' },
+            filters: {},
+            pager: 0,
+            offset: 10
+        })
+
+        const supplierQueryOptions = ref({
+            fields: [
+                'nid',
+                'title',
+            ],
+            sort: { val: 'title', op: 'asc' },
             pager: 0,
             offset: 1000
         })
 
-        // Charger les articles (append=true pour "Voir plus")
         const fetchArticles = async (append = false) => {
             try {
+                await articleStore.fetchArticles(queryOptionsArticle.value, append)
+            } catch (error) {
+                console.error("une erreur c'est produit lors de la chargment des données")
+            } finally {
+                loader.value = false
+            }
+        }
+
+        // Charger les articles (append=true pour "Voir plus")
+        const fetchStocks = async (append = false) => {
+            try {
                 loader.value = true
-                await articleStore.fetchArticles(queryOptions.value, append)
+                await stockStore.fetchStocks(queryOptions.value, append)
             } catch (error) {
                 console.error("une erreur c'est produit lors de la chargment des données")
             } finally {
@@ -244,31 +287,18 @@ export default {
             }
         }
 
-        const fetchCategories = async (append = false) => {
+        const fetchSuppliers = async (append = false) => {
             try {
-                await articleStore.fetchCategories(categoryQueryOptions.value)
+                await stockStore.fetchSuppliers(supplierQueryOptions.value)
             } catch (error) {
                 console.error("une erreur c'est produit lors de la chargment des données")
             }
         }
 
         onMounted(async () => {
-            await fetchArticles(false)
-            await fetchCategories();
+            await fetchStocks(false)
+            await fetchSuppliers();
         })
-
-        const calculTotalPrice = (unitePrice, qtty) => {
-            if (unitePrice && qtty && qtty >= 0) {
-                return Number(unitePrice * qtty).toLocaleString('fr-MG', {
-                    style: 'currency',
-                    currency: 'MGA'
-                })
-            } else if (unitePrice && qtty && qtty <= 0) {
-                return "0,00 Ar";
-            } else {
-                return '-'
-            }
-        }
 
         // Pages visibles (3 pages max)
         const visiblePages = computed(() => {
@@ -313,38 +343,68 @@ export default {
 
         const onPagination = async (value) => {
             queryOptions.value.pager = value - 1;
-            await fetchArticles(false);
+            await fetchStocks(false);
         }
 
-        const handleSearch = async () => {
+        const handleSearch = () => {
+            showList.value = true;
+            loading.value = true;
+            debouncedFetch();
+        }
+
+        const debouncedFetch = debounce(async () => {
+            if (searchKeyWord.value == "") {
+                showList.value = false;
+                selectArticle('', '');
+                return;
+            }
+            updateFilter(queryOptionsArticle.value, 'title', searchKeyWord.value, 'CONTAINS')
+            await fetchArticles(false);
+            loading.value = false;
+        }, 600);
+
+        const selectArticle = async (nid, name) => {
+            searchKeyWord.value = name;
+            updateFilter(queryOptions.value, 'field_article', nid, '=')
+            await fetchStocks(false)
+            showList.value = false;
+        }
+
+        const handleSupplierFilter = async () => {
             queryOptions.value.pager = 0
-            updateFilter('title', searchKeyWord.value, 'CONTAINS')
-            await fetchArticles(false);
+            updateFilter(queryOptions.value, 'field_fournisseur', selectedSupplier.value, '=')
+            await fetchStocks(false);
         }
 
-        const handleCategorieFilter = async () => {
-            queryOptions.value.pager = 0
-            updateFilter('field_categorie', selectedCategory.value)
-            await fetchArticles(false);
+        // Fonction générique pour mettre à jour les filtres
+        const updateFilter = (queryOptionsRef, key, value, op = '=') => {
+            if (!value) delete queryOptionsRef.filters[key]
+            else queryOptionsRef.filters[key] = { val: value, op }
         }
 
-        // Ajouter / supprimer un filtre
-        const updateFilter = (key, value, op = '=') => {
-            if (!value) delete queryOptions.value.filters[key]
-            else queryOptions.value.filters[key] = { val: value, op }
+        const closeStockModal = () => {
+            emit('close')
         }
 
-        const addArticle = async () => {
+        const addStocks = async () => {
             searchKeyWord.value = "";
-            selectedCategory.value = "";
-            updateFilter('title', searchKeyWord.value, 'CONTAINS')
-            updateFilter('field_categorie', selectedCategory.value)
-            await fetchArticles(false);
+            selectedSupplier.value = "";
+            updateFilter(queryOptions.value, 'title', searchKeyWord.value, 'CONTAINS')
+            updateFilter(queryOptions.value, 'field_fournisseur', selectedSupplier.value)
+            await fetchStocks(false);
+        }
+
+        const updateStock = async () => {
+            await fetchStocks(false);
+        }
+
+        const editStock = (stock) => {
+            emit('openModal', stock);
         }
 
         return {
             articleStore,
-            calculTotalPrice,
+            stockStore,
             goToPage,
             nextPage,
             previousPage,
@@ -352,11 +412,18 @@ export default {
             totalPages,
             currentPage,
             loader,
+            loading,
             searchKeyWord,
             handleSearch,
-            handleCategorieFilter,
-            selectedCategory,
-            addArticle
+            handleSupplierFilter,
+            selectedSupplier,
+            addStocks,
+            updateStock,
+            formatDate,
+            selectArticle,
+            showList,
+            editStock,
+            closeStockModal
         }
     }
 }
