@@ -75,7 +75,8 @@ export default {
         'field_prix_unitaire',
         'field_nombre_par_unite',
         'field_quantite_stock',
-        'field_image'
+        'field_image',
+        'status'
       ],
       sort: { val: 'nid', op: 'desc' },
       filters: {},

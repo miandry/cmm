@@ -15,12 +15,12 @@
                     </div>
                     <span>Ajouter Stock</span>
                 </button>
-                <button
-                    class="hidden bg-secondary hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors !rounded-button whitespace-nowrap">
+                <button @click="openAddArticleModal"
+                    class="bg-secondary hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors !rounded-button font-medium text-sm whitespace-nowrap">
                     <div class="w-5 h-5 flex items-center justify-center">
-                        <i class="ri-upload-line"></i>
+                        <i class="ri-add-line"></i>
                     </div>
-                    <span>Importer Stock</span>
+                    <span>Ajouter Article</span>
                 </button>
                 <button
                     class="hidden bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors !rounded-button whitespace-nowrap">
@@ -94,7 +94,7 @@
         </div>
         <!-- Recherche, Filtres et Tableau Principal -->
         <Articles :openModal="openSaveArticleModal" @openModal="openEditModal" @close="openSaveArticleModal = false"
-            :selectedStock="selectedStock" />
+            :selectedStock="selectedStock" :openArticleModal="openArticleModal" @closeArticleModal="openArticleModal = false"/>
     </main>
 </template>
 
@@ -109,6 +109,7 @@ export default {
     },
     setup() {
         const openSaveArticleModal = ref(false);
+        const openArticleModal = ref(false);
         const selectedStock = ref(null);
 
         const openEditModal = (stock) => {
@@ -120,11 +121,17 @@ export default {
             selectedStock.value = null;
             openSaveArticleModal.value = true;
         };
+
+        const openAddArticleModal = () => {
+            openArticleModal.value = true;
+        };
         return {
             openSaveArticleModal,
             selectedStock,
             openEditModal,
-            openAddModal
+            openAddModal,
+            openAddArticleModal,
+            openArticleModal
         }
     }
 }

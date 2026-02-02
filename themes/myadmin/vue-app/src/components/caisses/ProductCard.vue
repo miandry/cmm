@@ -35,7 +35,6 @@
 export default {
   name: 'ProductCard',
 
-  // Définition des props
   props: {
     article: {
       type: Object,
@@ -43,17 +42,14 @@ export default {
     }
   },
 
-  // Déclaration des événements émis
   emits: ['add-to-cart'],
 
   setup(props, { emit }) {
 
-    // Fonction pour émettre l'événement vers le parent
     function addToCart() {
       emit('add-to-cart', props.article)
     }
 
-    // Fonction pour obtenir l'image optimisée
     function getOptimizedImage() {
       const originalUrl = props.article.field_image?.image?.url
       const defaultImage = '/sites/default/files/2025-12/defaultProductImagePng.png'
@@ -63,7 +59,30 @@ export default {
         return defaultImage
       }
 
-      return `https://images.weserv.nl/?url=${encodeURIComponent(originalUrl)}&w=400&h=400&output=webp&q=80&fit=cover`
+      try {
+        // Nettoyer l'URL si elle contient des caractères bizarres
+        let cleanUrl = originalUrl;
+        
+        // Si l'URL contient des caractères comme %3D ( = ), décoder d'abord
+        if (cleanUrl.includes('%3D')) {
+          cleanUrl = decodeURIComponent(cleanUrl);
+        }
+        
+        // Extraire seulement la partie après /sites/default/files/
+        const match = cleanUrl.match(/\/sites\/default\/files\/(.+)$/);
+        if (match) {
+          const filePath = match[1];
+          // Recoder proprement pour l'URL
+          const encodedPath = encodeURIComponent(filePath);
+          return `https://images.weserv.nl/?url=${window.location.origin}/sites/default/files/${encodedPath}&w=400&h=400&output=webp&q=80&fit=cover`;
+        }
+        
+        // Sinon, utiliser l'URL originale
+        return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}&w=400&h=400&output=webp&q=80&fit=cover`;
+      } catch (error) {
+        console.error('Erreur optimisation image:', error);
+        return defaultImage;
+      }
     }
 
     return {
