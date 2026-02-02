@@ -79,13 +79,19 @@ export default {
         'status'
       ],
       sort: { val: 'nid', op: 'desc' },
-      filters: {},
+      filters: {
+        status: {
+          val: 1,
+          op: "="
+        }
+      },
       pager: 0,
       offset: 12
     })
 
     // Charger les articles (append=true pour "Voir plus")
     const fetchArticles = async (append = false) => {
+      console.log(queryOptions.value)
       await store.fetchArticles(queryOptions.value, append)
     }
 
