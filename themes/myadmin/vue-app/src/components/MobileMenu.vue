@@ -1,17 +1,10 @@
 <template>
   <div class="mobile-menu-wrapper">
     <!-- Backdrop Overlay -->
-    <div 
-      class="menu-backdrop" 
-      :class="{ 'active': isOpen }"
-      @click="closeMenu"
-    />
+    <div class="menu-backdrop" :class="{ 'active': isOpen }" @click="closeMenu" />
 
     <!-- Mobile Menu Panel -->
-    <div 
-      class="mobile-menu-panel z-30"
-      :class="{ 'open': isOpen }"
-    >
+    <div class="mobile-menu-panel z-30" :class="{ 'open': isOpen }">
       <!-- Menu Header -->
       <div class="menu-header">
         <div class="brand">
@@ -19,26 +12,16 @@
             Clinic Vonjy Aina
           </h1>
         </div>
-        
-        <button 
-          class="close-button"
-          @click="closeMenu"
-          aria-label="Close menu"
-        >
+
+        <button class="close-button" @click="closeMenu" aria-label="Close menu">
           <i class="fas fa-times"></i>
         </button>
       </div>
 
       <!-- Navigation Menu -->
       <nav class="menu-navigation">
-        <router-link
-          v-for="menuItem in menuItems"
-          :key="menuItem.id"
-          :to="menuItem.path"
-          class="menu-item"
-          :class="getMenuItemClass(menuItem.path)"
-          @click="closeMenu"
-        >
+        <router-link v-for="menuItem in menuItems" :key="menuItem.id" :to="menuItem.path" class="menu-item"
+          :class="getMenuItemClass(menuItem.path)" @click="closeMenu">
           <i :class="menuItem.icon" class="menu-icon" />
           <span class="menu-label">
             {{ menuItem.name }}
@@ -54,7 +37,7 @@
             {{ username }}
           </span>
         </div>
-        
+
         <div class="store-info">
           <a href="/user/logout">
             <i class="fas fa-sign-out-alt text-red-500 me-0 pe-0 text-sm"></i>
@@ -68,68 +51,99 @@
 
 <script>
 export default {
-  name: 'MobileMenu',
-  
-  // Props from parent component
+  name: "MobileMenu",
+
   props: {
     isOpen: {
       type: Boolean,
-      required: true
-    }
+      required: true,
+    },
   },
-  
-  // Events emitted to parent
-  emits: ['close'],
-  
+
+  emits: ["close"],
+
   data() {
     return {
-      // Menu configuration - easily customizable
-      menuItems: mydata.menu,
-      username: mydata.username
-    }
+      user: window.APP_DATA || {},
+    };
   },
-  
+
+  computed: {
+    username() {
+      return this.user.username || "";
+    },
+
+    roles() {
+      return this.user.roles || [];
+    },
+
+    // MENU FILTRÉ SELON LES RÔLES
+    menuItems() {
+      return (this.user.menu || []).filter(item => {
+        // menu public
+        if (!item.roles || item.roles.length === 0) {
+          return true;
+        }
+
+        // intersection des rôles
+        return item.roles.some(role =>
+          this.roles.includes(role)
+        );
+      });
+    },
+  },
+
   methods: {
-    // Close menu and notify parent
     closeMenu() {
-      this.$emit('close')
+      this.$emit("close");fr/frontdesk
     },
-    
-    // Determine CSS classes for menu item based on current route
+
+    // même logique que le header
     getMenuItemClass(itemPath) {
-      const isActive = this.$route.path === itemPath
-      
+      const current = this.$route.path;
+      const item = this.menuItems.find(x => x.path === itemPath);
+
+      let isActive = false;
+
+      if (item?.paths) {
+        if (item.path === "/") {
+          isActive = item.paths.includes(current);
+        } else {
+          isActive = item.paths.some(p => current.startsWith(p));
+        }
+      } else {
+        isActive = current === itemPath;
+      }
+
       return {
-        'menu-item-active': isActive,
-        'menu-item-inactive': !isActive
+        "menu-item-active": isActive,
+        "menu-item-inactive": !isActive,
+      };
+    },
+
+    handleEscapeKey(event) {
+      if (event.key === "Escape" && this.isOpen) {
+        this.closeMenu();
       }
     },
-    
-    // Handle Escape key press to close menu
-    handleEscapeKey(event) {
-      if (event.key === 'Escape' && this.isOpen) {
-        this.closeMenu()
-      }
-    }
   },
-  
-  // Add/remove event listeners when menu opens/closes
+
   watch: {
     isOpen(newValue) {
       if (newValue) {
-        document.addEventListener('keydown', this.handleEscapeKey)
+        document.addEventListener("keydown", this.handleEscapeKey);
       } else {
-        document.removeEventListener('keydown', this.handleEscapeKey)
+        document.removeEventListener("keydown", this.handleEscapeKey);
       }
-    }
+    },
   },
-  
-  // Cleanup event listener when component is destroyed
+
   beforeUnmount() {
-    document.removeEventListener('keydown', this.handleEscapeKey)
-  }
-}
+    document.removeEventListener("keydown", this.handleEscapeKey);
+  },
+};
 </script>
+
 
 <style scoped>
 .mobile-menu-wrapper {
@@ -183,7 +197,8 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  border-bottom: 1px solid #e5e7eb; /* gray-200 */
+  border-bottom: 1px solid #e5e7eb;
+  /* gray-200 */
 }
 
 .brand {
@@ -199,18 +214,21 @@ export default {
 
 .store-name {
   font-weight: 600;
-  color: #1f2937; /* gray-800 */
+  color: #1f2937;
+  /* gray-800 */
 }
 
 .close-button {
   padding: 0.5rem;
   border-radius: 0.375rem;
-  color: #4b5563; /* gray-600 */
+  color: #4b5563;
+  /* gray-600 */
   transition: background-color 0.2s;
 }
 
 .close-button:hover {
-  background-color: #f9fafb; /* gray-50 */
+  background-color: #f9fafb;
+  /* gray-50 */
 }
 
 .close-button i {
@@ -239,17 +257,21 @@ export default {
 }
 
 .menu-item-active {
-  background-color: #3b82f6; /* primary */
+  background-color: #3b82f6;
+  /* primary */
   color: white;
 }
 
 .menu-item-inactive {
-  color: #4b5563; /* gray-600 */
+  color: #4b5563;
+  /* gray-600 */
 }
 
 .menu-item-inactive:hover {
-  color: #3b82f6; /* primary */
-  background-color: #f9fafb; /* gray-50 */
+  color: #3b82f6;
+  /* primary */
+  background-color: #f9fafb;
+  /* gray-50 */
 }
 
 .menu-icon {
@@ -265,7 +287,8 @@ export default {
 /* Menu Footer */
 .menu-footer {
   padding: 1rem;
-  border-top: 1px solid #f3f4f6; /* gray-100 */
+  border-top: 1px solid #f3f4f6;
+  /* gray-100 */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -276,19 +299,22 @@ export default {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.75rem;
-  color: #4b5563; /* gray-600 */
+  color: #4b5563;
+  /* gray-600 */
 }
 
 .online-dot {
   width: 0.5rem;
   height: 0.5rem;
-  background-color: #10b981; /* secondary */
+  background-color: #10b981;
+  /* secondary */
   border-radius: 50%;
 }
 
 .store-info {
   font-size: 0.75rem;
-  color: #4b5563; /* gray-600 */
+  color: #4b5563;
+  /* gray-600 */
 }
 
 /* Hide mobile menu on large screens */

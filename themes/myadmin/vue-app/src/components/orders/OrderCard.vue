@@ -144,8 +144,6 @@
 
 <script>
 import { formatDate } from '../../utils/formateDate';
-import { usePDF } from "vue3-pdfmake";
-import { generateInvoicePdf } from '../../utils/invoicePdf.js';
 
 export default {
     name: 'OrderCard',
@@ -195,13 +193,6 @@ export default {
             cancel: "Annulée"
         };
 
-        const pdfMake = usePDF();
-
-        const downloadPdf = (order) => {
-            generateInvoicePdf(order, statusMap, pdfMake);
-        };
-
-
         return {
             showEditStatusModal,
             showDetailsModal,
@@ -209,7 +200,6 @@ export default {
             statusStyle,
             statusLabel,
             formatDate,
-            downloadPdf
         }
     }
 }

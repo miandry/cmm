@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: mydata.baseUrl,
+  baseURL: window.APP_DATA.baseUrl,
   headers: {
     Accept: "application/json",
   },

@@ -53,21 +53,41 @@
 <script>
 export default {
   name: "AppHeader",
-
-  // Define events this component emits
   emits: ["toggle-menu"],
 
   data() {
     return {
-      // Menu configuration - easily customizable
-      menuItems: mydata.menu,
+      user: window.APP_DATA || {},
       showUserMenu: false,
-      username: mydata.username,
-    }
+    };
+  },
+
+  computed: {
+    username() {
+      return this.user.username || "";
+    },
+
+    roles() {
+      return this.user.roles || [];
+    },
+
+    // MENU FILTRÉ SELON LES RÔLES
+    menuItems() {
+      return (this.user.menu || []).filter(item => {
+        // menu public
+        if (!item.roles || item.roles.length === 0) {
+          return true;
+        }
+
+        // au moins un rôle commun
+        return item.roles.some(role =>
+          this.roles.includes(role)
+        );
+      });
+    },
   },
 
   mounted() {
-    // Fermer le dropdown si clic en dehors
     document.addEventListener("click", this.closeMenuOnClickOutside);
   },
 
@@ -76,41 +96,38 @@ export default {
   },
 
   methods: {
-    // Emit event to parent to toggle menu
     emitToggleMenu() {
       this.$emit("toggle-menu");
     },
-    // Determine CSS classes for menu item based on current route
-    getMenuItemClass(itemPath) {
-      const current = this.$route.path
-      const item = this.menuItems.find(x => x.path === itemPath)
 
-      let isActive = false
+    getMenuItemClass(itemPath) {
+      const current = this.$route.path;
+      const item = this.menuItems.find(x => x.path === itemPath);
+
+      let isActive = false;
 
       if (item?.paths) {
-        // cas spécial pour "/"
         if (item.path === "/") {
-          isActive = item.paths.includes(current)
+          isActive = item.paths.includes(current);
         } else {
-          isActive = item.paths.some(p => current.startsWith(p))
+          isActive = item.paths.some(p => current.startsWith(p));
         }
       } else {
-        isActive = current === itemPath
+        isActive = current === itemPath;
       }
 
       return {
-        'px-4 xl:px-6 py-3 bg-primary text-white !rounded-button': isActive,
-        'px-4 xl:px-6 py-3 text-gray-600 hover:text-primary hover:bg-gray-50 !rounded-button': !isActive
-      }
+        "px-4 xl:px-6 py-3 bg-primary text-white !rounded-button": isActive,
+        "px-4 xl:px-6 py-3 text-gray-600 hover:text-primary hover:bg-gray-50 !rounded-button": !isActive,
+      };
     },
 
     toggleUserMenu(event) {
       this.showUserMenu = !this.showUserMenu;
-      event.stopPropagation(); // empêche la fermeture immédiate
+      event.stopPropagation();
     },
 
     closeMenuOnClickOutside(event) {
-      // si clic en dehors
       if (!event.target.closest("#user")) {
         this.showUserMenu = false;
       }
@@ -118,6 +135,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 .app-header {

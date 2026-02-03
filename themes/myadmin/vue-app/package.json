@@ -11,12 +11,10 @@
     "axios": "^1.12.2",
     "html2canvas": "^1.4.1",
     "lodash": "^4.17.21",
-    "pdfmake": "^0.3.0-beta.18",
     "pinia": "^3.0.3",
     "vue": "^3.4.0",
     "vue-router": "^4.2.0",
-    "vue-sonner": "^2.0.9",
-    "vue3-pdfmake": "^2.3.0"
+    "vue-sonner": "^2.0.9"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",

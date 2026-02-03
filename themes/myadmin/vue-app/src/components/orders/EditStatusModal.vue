@@ -75,7 +75,6 @@ export default {
 
         const changeOrderStatus = async (newStatus) => {
             form.field_status = newStatus;
-            console.log(form);
             await orderStore.saveOrderData(form);
             if (orderStore.error) {
                 toast.error("Une erreur est survenue lors de la modification.")

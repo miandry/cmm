@@ -91,7 +91,6 @@ export default {
 
     // Charger les articles (append=true pour "Voir plus")
     const fetchArticles = async (append = false) => {
-      console.log(queryOptions.value)
       await store.fetchArticles(queryOptions.value, append)
     }
 

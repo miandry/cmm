@@ -79,8 +79,8 @@
     </script>
   </head>
   <body class="bg-gray-50 min-h-screen">
-    <script> 
-          var mydata =  (window.drupalSettings?.data || []); 
+    <script>
+      window.APP_DATA = window.drupalSettings?.data || {};
     </script>
     {{ page_top }}
     {{ page }}

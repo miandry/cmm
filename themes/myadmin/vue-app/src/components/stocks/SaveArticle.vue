@@ -29,7 +29,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Catégorie</label>
                             <div class="relative">
                                 <select v-model="form.field_categorie"
-                                    class="w-full px-3 py-2 bg-white border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                                    class="w-full px-3 py-2.5 bg-white border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
                                     <option value="">Sélectionner une catégorie</option>
                                     <option v-for="cat in articleStore.categories.rows" :key="cat.tid" :value="cat.tid">
                                         {{ cat.name }}
@@ -47,14 +47,14 @@
                         <p v-if="errors.field_prix_unitaire" class="text-red-500 text-xs">Veuillez ajouter un prix
                             supérieur à 0</p>
                     </div>
-                    <div class="hidden">
-                        <label class="block text-sm font-medium text-gray-700 mb-2 ">Quantité initiale<span
-                                class="text-red-500"> *</span></label>
-                        <input type="number" min="1" v-model="form.field_quantite_stock"
-                            class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
-                        <p v-if="errors.field_quantite_stock" class="text-red-500 text-xs">Veuillez ajouter une quantité
-                            supérieure à 0</p>
-                    </div>
+                </div>
+                <div class="">
+                    <label class="block text-sm font-medium text-gray-700 mb-2 ">Nombre par boîte<span
+                            class="text-red-500"> *</span></label>
+                    <input type="number" min="1" v-model="form.field_nombre_par_unite"
+                        class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                    <p v-if="errors.field_nombre_par_unite" class="text-red-500 text-xs">Veuillez ajouter une quantité
+                        supérieure à 0</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Posologie de référence</label>
@@ -72,7 +72,8 @@
                             <div class="text-center mb-4">
                                 <div class="w-40 h-40 mx-auto relative">
                                     <!-- Placeholder quand pas d'image -->
-                                    <div v-if="!imagePreview" class="w-full h-full flex items-center justify-center bg-gray-100 rounded-button">
+                                    <div v-if="!imagePreview"
+                                        class="w-full h-full flex items-center justify-center bg-gray-100 rounded-button">
                                         <i class="ri-image-line text-4xl text-gray-400"></i>
                                     </div>
                                     <!-- Preview quand image -->
@@ -101,7 +102,8 @@
                                 <p v-else class="text-xs text-gray-500 mt-2">
                                     JPG, JPEG, PNG (max. 10MB)
                                 </p>
-                                <input type="file" ref="fileInput" hidden @change="handleImageUpload" accept=".jpg,.jpeg,.png">
+                                <input type="file" ref="fileInput" hidden @change="handleImageUpload"
+                                    accept=".jpg,.jpeg,.png">
                             </div>
                         </div>
                         <p v-if="imageError" class="text-red-500 text-xs text-center mt-2">{{ imageError }}</p>
@@ -145,7 +147,7 @@ export default {
         const articleStore = useArticleStore();
         const loader = ref(false)
         const fileInput = ref(null)
-        
+
         // Variables pour l'image
         const imagePreview = ref(null)
         const imageName = ref('')
@@ -162,6 +164,7 @@ export default {
             field_quantite_stock: 1,
             field_posologie: "",
             status: 1,
+            field_nombre_par_unite: 1,
             // field_image sera ajouté dynamiquement seulement si une image existe
         })
 
@@ -170,6 +173,7 @@ export default {
             title: false,
             field_prix_unitaire: false,
             field_quantite_stock: false,
+            field_nombre_par_unite: false
         });
 
         // ---- FONCTIONS POUR L'IMAGE ----
@@ -180,39 +184,39 @@ export default {
         const validateImage = (file) => {
             // Réinitialiser l'erreur
             imageError.value = ''
-            
+
             // Vérifier le type de fichier
             const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
             if (!allowedTypes.includes(file.type)) {
                 imageError.value = 'Format non supporté. Utilisez JPG, JPEG ou PNG.'
                 return false
             }
-            
+
             // Vérifier la taille (10Mo max)
             const maxSize = 10 * 1024 * 1024 // 10MB en bytes
             if (file.size > maxSize) {
                 imageError.value = 'L\'image est trop volumineuse (max 10MB).'
                 return false
             }
-            
+
             return true
         }
 
         const handleImageUpload = (event) => {
             const file = event.target.files[0]
             if (!file) return
-            
+
             // Validation
             if (!validateImage(file)) {
                 // Réinitialiser l'input
                 event.target.value = ""
                 return
             }
-            
+
             // Sauvegarder les informations du fichier
             imageName.value = file.name
             imageSize.value = file.size
-            
+
             // Utiliser FileReader pour lire l'image en base64
             const reader = new FileReader()
             reader.onload = (e) => {
@@ -221,7 +225,7 @@ export default {
                 imagePreview.value = result
                 base64Image.value = result // Stocker le base64 complet
             }
-            
+
             reader.onerror = () => {
                 imageError.value = 'Erreur lors de la lecture du fichier'
                 // Réinitialiser
@@ -229,9 +233,9 @@ export default {
                 imageName.value = ''
                 imageSize.value = 0
             }
-            
+
             reader.readAsDataURL(file)
-            
+
             // Ne pas réinitialiser l'input ici pour garder la valeur
         }
 
@@ -241,7 +245,7 @@ export default {
             imageSize.value = 0
             base64Image.value = null
             imageError.value = ''
-            
+
             // Réinitialiser l'input file
             if (fileInput.value) {
                 fileInput.value.value = ""
@@ -279,6 +283,15 @@ export default {
                 isValid = false;
             }
 
+            // nbr par boite > 0
+            if (
+                !form.field_nombre_par_unite ||
+                Number(form.field_nombre_par_unite) <= 0
+            ) {
+                errors.field_nombre_par_unite = true;
+                isValid = false;
+            }
+
             return isValid;
         };
 
@@ -286,10 +299,10 @@ export default {
             if (!validateForm()) {
                 return;
             }
-            
+
             try {
                 loader.value = true
-                
+
                 // Préparer les données à envoyer, similaire à votre exemple
                 const newArticle = {
                     entity_type: "node",
@@ -300,30 +313,28 @@ export default {
                     field_quantite_stock: parseInt(form.field_quantite_stock),
                     field_posologie: form.field_posologie || "",
                     status: 1,
+                    field_nombre_par_unite: form.field_nombre_par_unite || 1,
                     // Ajouter l'image en base64 seulement si elle existe
                     ...(base64Image.value && { field_image: base64Image.value })
                 }
-                
+
                 // Nettoyer les valeurs vides
                 Object.keys(newArticle).forEach(key => {
                     if (newArticle[key] === "" || newArticle[key] === null || newArticle[key] === undefined) {
                         delete newArticle[key]
                     }
                 })
-                
-                console.log("Données envoyées:", newArticle)
-                
+
                 await articleStore.createArticle(newArticle)
-                
+
                 if (articleStore.error) {
                     toast.error("Une erreur est survenue lors de l'enregistrement.")
                     return
                 }
-                
+
                 toast.success("Article enregistré avec succès")
                 cancelAdd();
             } catch (error) {
-                console.log("Une erreur est survenue lors de l'enregistrement", error)
                 toast.error("Une erreur est survenue lors de l'enregistrement.")
             } finally {
                 loader.value = false
@@ -336,6 +347,7 @@ export default {
             form.field_prix_unitaire = "";
             form.field_quantite_stock = 1;
             form.field_posologie = "";
+            form.field_nombre_par_unite = 1;
             removeImage() // Réinitialiser aussi l'image
         }
 
