@@ -4,9 +4,9 @@
         <!-- Recherche et Filtres -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
             <div
-                class="flex flex-col md:flex-row lg:items-center space-y-4 md:space-y-0 lg:space-x-4 gap-2 md:items-end">
+                class="flex flex-col xl:flex-row lg:items-center space-y-4 md:space-y-0 lg:space-x-4 gap-2 md:items-end">
                 <!-- Barre de Recherche -->
-                <div class="w-full md:w-1/2 relative">
+                <div class="w-full xl:w-2/5 relative">
                     <input type="text" placeholder="Rechercher par article" v-model="searchKeyWord"
                         @input="handleSearch" @focus="showList = true" @blur="showList = false"
                         class="w-full px-4 py-2.5 pl-12 pr-4 text-gray-900 bg-gray-50 border border-gray-300 !rounded-button focus:ring-2 focus:ring-primary focus:border-primary outline-none">
@@ -41,7 +41,7 @@
 
                 </div>
                 <!-- Filtres -->
-                <div class="w-full md:w-1/2 flex flex-wrap gap-3">
+                <div class="w-full xl:w-1/5 flex flex-wrap gap-3">
                     <div class="relative w-full">
                         <select v-model="selectedSupplier" @change="handleSupplierFilter"
                             class=" w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors flex items-center space-x-2 !rounded-button whitespace-nowrap">
@@ -50,6 +50,18 @@
                                 {{ supp.title }}
                             </option>
                         </select>
+                    </div>
+                </div>
+                <div class="md:flex w-full xl:w-2/5 justify-between gap-4 items-center">
+                    <div class="text-gray-400 text-xs">Date achat entre :</div>
+                    <div class="md:w-1/2">
+                        <input type="date" placeholder="date debut" v-model="dateStart"
+                            class="w-full px-4 py-2.5 text-gray-900 bg-gray-50 border border-gray-300 !rounded-button focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                    </div>
+                    <div class="text-gray-400 text-xs"> Et</div>
+                    <div class="md:w-1/2">
+                        <input type="date" placeholder="date fin" v-model="dateEnd"
+                            class="w-full px-4 py-2.5 text-gray-900 bg-gray-50 border border-gray-300 !rounded-button focus:ring-2 focus:ring-primary focus:border-primary outline-none">
                     </div>
                 </div>
             </div>
@@ -63,18 +75,15 @@
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Produit</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Fournisseur</th>
-                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Prix d'achat</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Prix de vente</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Quantité</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Date d'achat</th>
-                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Date de péremption</th>
-                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Date</th>
+                            <th
+                                class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">
                                 Actions</th>
                         </tr>
                     </thead>
@@ -89,11 +98,10 @@
                                         <div class="font-medium text-gray-900 text-xs">{{ stock.field_article.title }}
                                         </div>
                                         <div class="text-sm text-gray-500">REF: {{ stock.title }}</div>
+                                        <div class="text-xs text-green-500">{{ stock.field_fournisseur ?
+                                            stock.field_fournisseur.title : "-" }}</div>
                                     </div>
                                 </div>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-center">
-                                {{ stock.field_fournisseur ? stock.field_fournisseur.title : "-" }}
                             </td>
                             <td class="px-6 py-4 text-sm">
                                 {{
@@ -112,12 +120,16 @@
                             <td class="px-6 py-4 text-sm whitespace-nowrap text-center">
                                 {{ stock.field_quantite <= 0 ? 0 : stock.field_quantite }} </td>
                             <td class="px-6 py-4 text-sm whitespace-nowrap">
-                                {{ formatDate(stock.field_date, null, 'short') }}
+                                <div>
+                                    Achat: <span class="text-green-500">{{ formatDate(stock.field_date, null, 'short')
+                                    }}</span>
+                                </div>
+                                <div>
+                                    Péremption: <span class="text-red-500">{{ formatDate(stock.field_peremption, null,
+                                        'short') }}</span>
+                                </div>
                             </td>
-                            <td class="px-6 py-4 text-sm whitespace-nowrap">
-                                {{ formatDate(stock.field_peremption, null, 'short') }}
-                            </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 hidden">
                                 <div class="flex items-center space-x-2">
                                     <button class="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                                         title="Modifier" @click.prevent="editStock(stock)">
@@ -177,14 +189,14 @@
             :stock="selectedStock" @updateStock="updateStock" />
 
         <SaveArticle class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50"
-            :class="openArticleModal ? 'flex' : 'hidden'" @close="$emit('close')" :categories="articleStore.categories.rows"
-            @closeArticleModal="$emit('closeArticleModal')" />
+            :class="openArticleModal ? 'flex' : 'hidden'" @close="$emit('close')"
+            :categories="articleStore.categories.rows" @closeArticleModal="$emit('closeArticleModal')" />
 
     </div>
 </template>
 
 <script>
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useArticleStore, useStockStore } from '../../stores/index.js';
 import PageLoader from '../PageLoader.vue';
 import SaveStock from './SaveStock.vue';
@@ -226,7 +238,8 @@ export default {
         const selectedSupplier = ref('');
         const showList = ref(false);
         const loading = ref(false)
-
+        const dateStart = ref('');
+        const dateEnd = ref('');
 
         // Paramètres dynamiques de la requête
         const queryOptions = ref({ //stock
@@ -392,9 +405,21 @@ export default {
 
         // Fonction générique pour mettre à jour les filtres
         const updateFilter = (queryOptionsRef, key, value, op = '=') => {
-            if (!value) delete queryOptionsRef.filters[key]
-            else queryOptionsRef.filters[key] = { val: value, op }
-        }
+            if (
+                value === null ||
+                value === undefined ||
+                value === '' ||
+                (Array.isArray(value) && value.length === 0)
+            ) {
+                delete queryOptionsRef.filters[key];
+                return;
+            }
+
+            queryOptionsRef.filters[key] = {
+                val: value,
+                op
+            };
+        };
 
         const closeStockModal = () => {
             emit('close')
@@ -415,6 +440,39 @@ export default {
         const editStock = (stock) => {
             emit('openModal', stock);
         }
+
+        const applyDateBetweenFilter = async () => {
+            const start = dateStart.value;
+            const end = dateEnd.value;
+
+            //  Les deux dates vides → reset filtre + reload
+            if (!start && !end) {
+                if (queryOptions.value.filters.field_date) {
+                    delete queryOptions.value.filters.field_date;
+                    queryOptions.value.pager = 0;
+                    await fetchStocks(false);
+                }
+                return;
+            }
+
+            // Une seule date → on ne fait rien
+            if (!start || !end) {
+                return;
+            }
+
+            // Deux dates → BETWEEN
+            updateFilter(
+                queryOptions.value,
+                'field_date',
+                [start, end],
+                'BETWEEN'
+            );
+
+            queryOptions.value.pager = 0;
+            await fetchStocks(false);
+        };
+
+        watch([dateStart, dateEnd], applyDateBetweenFilter);
 
         return {
             articleStore,
@@ -437,7 +495,9 @@ export default {
             selectArticle,
             showList,
             editStock,
-            closeStockModal
+            closeStockModal,
+            dateStart,
+            dateEnd
         }
     }
 }

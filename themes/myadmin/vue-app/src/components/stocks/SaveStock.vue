@@ -40,8 +40,7 @@
                             <div v-else-if="articleStore.articles.rows.length" class="divide-y divide-gray-100">
                                 <div v-for="article in articleStore.articles.rows" :key="article.nid"
                                     :class="[
-                                        'flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 cursor-pointer customer-item border-t-0']"
-                                    @click="selectArticle(article.nid, article.title)">
+                                        'flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 cursor-pointer customer-item border-t-0']" @click="selectArticle(article)">
                                     <div class="flex-1">
                                         <p class="text-sm font-medium text-gray-900">{{ article.title }}</p>
                                     </div>
@@ -53,16 +52,41 @@
                         </div>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantité<span class="text-red-500">
-                                *</span></label>
-                        <input type="number" min="1" v-model="form.field_quantite"
-                            class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
-                        <p v-if="errors.field_quantite" class="text-red-500 text-xs">Veuillez ajouter une quantité
-                            supérieure à 0</p>
+                <div v-if="selectedArticle">
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-2 gap-6 p-3 bg-blue-50 rounded-lg border border-blue-200 mb-2">
+                        <div>
+                            <p class="text-xs font-medium text-blue-900">Type pack: <span
+                                    class="text-xs text-blue-600">{{ selectedArticle.field_type_pack?.title }}</span>
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-blue-900">Nom par pack: <span
+                                    class="text-xs text-blue-600">{{ selectedArticle.field_nombre_par_unite }}</span>
+                            </p>
+                        </div>
                     </div>
-                    <div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Combien de pack?<span
+                                    class="text-red-500">
+                                    *</span></label>
+                            <input type="number" min="1" v-model="form.field_quantite"
+                                class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <p v-if="errors.field_quantite" class="text-red-500 text-xs">Veuillez ajouter une quantité
+                                supérieure à 0</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quantité untaire<span
+                                    class="text-red-500">
+                                    *</span></label>
+                            <input type="number" min="1" v-model="form.field_quantite"
+                                class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <p v-if="errors.field_quantite" class="text-red-500 text-xs">Veuillez ajouter une quantité
+                                supérieure à 0</p>
+                        </div>
+                    </div>
+                    <div class="mb-2">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Fournisseurs</label>
                         <div class="relative">
                             <select v-model="form.field_fournisseur"
@@ -74,41 +98,41 @@
                             </select>
                         </div>
                     </div>
-                </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Prix unitaire (Ar)<span
+                                    class="text-red-500"> *</span></label>
+                            <input type="number" v-model="form.field_prix_d_achat" min="1"
+                                class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                                placeholder="0">
+                            <p v-if="errors.field_prix_d_achat" class="text-red-500 text-xs">Veuillez ajouter un prix
+                                valide
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Prix de vente (Ar)<span
+                                    class="text-red-500"> *</span></label>
+                            <input type="number" v-model="form.field_prix_unitaire" min="1"
+                                class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                                placeholder="0">
+                            <p v-if="errors.field_prix_unitaire" class="text-red-500 text-xs">Veuillez ajouter un prix
+                                valide</p>
+                        </div>
+                    </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Prix unitaire (Ar)<span
-                                class="text-red-500"> *</span></label>
-                        <input type="number" v-model="form.field_prix_d_achat" min="1"
-                            class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                            placeholder="0">
-                        <p v-if="errors.field_prix_d_achat" class="text-red-500 text-xs">Veuillez ajouter un prix valide
-                        </p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Prix de vente (Ar)<span
-                                class="text-red-500"> *</span></label>
-                        <input type="number" v-model="form.field_prix_unitaire" min="1"
-                            class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                            placeholder="0">
-                        <p v-if="errors.field_prix_unitaire" class="text-red-500 text-xs">Veuillez ajouter un prix
-                            valide</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Date d'achat</label>
-                        <input type="date" v-model="form.field_date"
-                            class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                            placeholder="Date d'achat">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Date de péremption</label>
-                        <input type="date" v-model="form.field_peremption"
-                            class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                            placeholder="Date de péremption">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date d'achat</label>
+                            <input type="date" v-model="form.field_date"
+                                class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                                placeholder="Date d'achat">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date de péremption</label>
+                            <input type="date" v-model="form.field_peremption"
+                                class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                                placeholder="Date de péremption">
+                        </div>
                     </div>
                 </div>
 
@@ -157,6 +181,7 @@ export default {
         const loader = ref(false)
         const loading = ref(false)
         const showList = ref(false);
+        const selectedArticle = ref(null);
         const searchKeyWord = ref('');
         const form = reactive({
             entity_type: "node",
@@ -247,7 +272,7 @@ export default {
                 if (form.field_fournisseur == "") {
                     delete payload.field_fournisseur;
                 }
-                
+
                 if (isEdit.value) {
                     // MODE EDIT
                     payload.nid = props.stock.nid;
@@ -302,7 +327,9 @@ export default {
         const queryOptionsArticle = ref({
             fields: [
                 'nid',
-                'title'
+                'title',
+                'field_type_pack',
+                'field_nombre_par_unite',
             ],
             sort: { val: 'nid', op: 'desc' },
             filters: {},
@@ -329,7 +356,7 @@ export default {
         const debouncedFetch = debounce(async () => {
             if (searchKeyWord.value == "") {
                 showList.value = false;
-                selectArticle('', '');
+                selectArticle(null);
                 return;
             }
             updateFilter(queryOptionsArticle.value, 'title', searchKeyWord.value, 'CONTAINS')
@@ -337,9 +364,16 @@ export default {
             loading.value = false;
         }, 600);
 
-        const selectArticle = async (nid, name) => {
-            form.field_article = nid;
-            searchKeyWord.value = name;
+        const selectArticle = async (article) => {
+            if (article) {
+                form.field_article = article.nid;
+                selectedArticle.value = article;
+                searchKeyWord.value = article.title;
+            } else {
+                form.field_article = '';
+                selectedArticle.value = null;
+                searchKeyWord.value = '';
+            }
             showList.value = false;
         }
 
@@ -380,6 +414,7 @@ export default {
             searchKeyWord,
             selectArticle,
             isEdit,
+            selectedArticle,
         };
     }
 }

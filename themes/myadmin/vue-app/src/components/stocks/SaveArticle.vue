@@ -24,6 +24,32 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2 ">Type pack<span
+                                class="text-red-500"> *</span></label>
+                        <div class="relative">
+                            <select v-model="form.field_type_pack"
+                                class="w-full px-3 py-2.5 bg-white border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                                <option value="">Sélectionner une type pack</option>
+                                <option v-for="pack in articleStore.packs.rows" :key="pack.tid" :value="pack.tid">
+                                    {{ pack.name }}
+                                </option>
+                            </select>
+                            <p v-if="errors.field_type_pack" class="text-red-500 text-xs">Le type du pack est requis</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2 ">Nbr unité par pack<span
+                                class="text-red-500"> *</span></label>
+                        <input type="number" min="1" v-model="form.field_nombre_par_unite"
+                            class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                        <p v-if="errors.field_nombre_par_unite" class="text-red-500 text-xs">Veuillez ajouter une
+                            quantité
+                            supérieure à 0</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Catégorie</label>
@@ -47,14 +73,6 @@
                         <p v-if="errors.field_prix_unitaire" class="text-red-500 text-xs">Veuillez ajouter un prix
                             supérieur à 0</p>
                     </div>
-                </div>
-                <div class="">
-                    <label class="block text-sm font-medium text-gray-700 mb-2 ">Nombre par boîte<span
-                            class="text-red-500"> *</span></label>
-                    <input type="number" min="1" v-model="form.field_nombre_par_unite"
-                        class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
-                    <p v-if="errors.field_nombre_par_unite" class="text-red-500 text-xs">Veuillez ajouter une quantité
-                        supérieure à 0</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Posologie de référence</label>
@@ -163,6 +181,7 @@ export default {
             field_prix_unitaire: "",
             field_quantite_stock: 1,
             field_posologie: "",
+            field_type_pack: "",
             status: 1,
             field_nombre_par_unite: 1,
             // field_image sera ajouté dynamiquement seulement si une image existe
@@ -173,7 +192,8 @@ export default {
             title: false,
             field_prix_unitaire: false,
             field_quantite_stock: false,
-            field_nombre_par_unite: false
+            field_nombre_par_unite: false,
+            field_type_pack: false,
         });
 
         // ---- FONCTIONS POUR L'IMAGE ----
@@ -267,6 +287,7 @@ export default {
             // Reset erreurs
             errors.title = false;
             errors.field_prix_unitaire = false;
+            errors.field_type_pack = false;
 
             // Nom requis
             if (!form.title || form.title.trim() === "") {
@@ -292,6 +313,11 @@ export default {
                 isValid = false;
             }
 
+            if (form.field_type_pack == "") {
+                errors.field_type_pack = true;
+                isValid = false;
+            }
+
             return isValid;
         };
 
@@ -312,6 +338,7 @@ export default {
                     field_prix_unitaire: parseFloat(form.field_prix_unitaire),
                     field_quantite_stock: parseInt(form.field_quantite_stock),
                     field_posologie: form.field_posologie || "",
+                    field_type_pack: form.field_type_pack,
                     status: 1,
                     field_nombre_par_unite: form.field_nombre_par_unite || 1,
                     // Ajouter l'image en base64 seulement si elle existe
@@ -374,8 +401,28 @@ export default {
             }
         }
 
+        const packQueryOptions = ref({
+            fields: [
+                'tid',
+                'name',
+            ],
+            sort: { val: 'name', op: 'asc' },
+            pager: 0,
+            offset: 1000
+        })
+
+        const fetchPacks = async (append = false) => {
+            try {
+                await articleStore.fetchTypePack(packQueryOptions.value)
+            } catch (error) {
+                console.error("une erreur c'est produit lors de la chargment des données")
+            }
+        }
+
+
         onMounted(async () => {
             await fetchCategories();
+            await fetchPacks();
         })
 
         return {

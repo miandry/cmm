@@ -1,12 +1,13 @@
 import { defineStore } from "pinia";
 import { computed, h, ref } from "vue";
-import { getArticles, getCategories, saveArticle } from "../../services/article";
+import { getArticles, getCategories, getPacks, saveArticle } from "../../services/article";
 import { buildQueryParams } from "../../utils/queryBuilder.js";
 import { toast } from "vue-sonner";
 
 export const useArticleStore = defineStore("article", () => {
   const articles = ref({ rows: [], total: 0 });
   const categories = ref({ rows: [], total: 0 });
+  const packs = ref({ rows: [], total: 0 });
   const loading = ref(false);
   const error = ref(null);
   const savedOrder = ref(null);
@@ -160,6 +161,21 @@ export const useArticleStore = defineStore("article", () => {
       loading.value = false;
     }
   }
+
+    // categories
+  async function fetchTypePack(options) {
+    loading.value = true;
+    try {
+      const query = buildQueryParams(options);
+      const response = await getPacks(query);
+      const data = response.data;
+      packs.value = data;
+    } catch (err) {
+      error.value = err;
+    } finally {
+      loading.value = false;
+    }
+  }
   return {
     articles,
     categories,
@@ -177,5 +193,7 @@ export const useArticleStore = defineStore("article", () => {
     saveOrder,
     decrementQuantity,
     incrementQuantity,
+    fetchTypePack,
+    packs,
   };
 });

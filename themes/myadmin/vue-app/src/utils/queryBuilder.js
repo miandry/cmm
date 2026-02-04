@@ -1,4 +1,3 @@
-
 // Construction parametre url
 // field a utiliser
 // filter, sort, pager
@@ -20,25 +19,32 @@ export function buildQueryParams(options) {
   // Filters
   if (options.filters && Object.keys(options.filters).length > 0) {
     for (const [key, filter] of Object.entries(options.filters)) {
-      if (filter?.val !== null && filter?.val !== undefined && filter?.val !== '') {
-        params.append(`filters[${key}][val]`, filter.val);
-        if (filter.op) params.append(`filters[${key}][op]`, filter.op);
-      }
-    }
-  }
+      if (
+        filter?.val !== null &&
+        filter?.val !== undefined &&
+        filter?.val !== ""
+      ) {
+        // 👉 CAS TABLEAU (ex: BETWEEN)
+        if (Array.isArray(filter.val)) {
+          filter.val.forEach((v) => {
+            params.append(`filters[${key}][val][]`, v);
+          });
+        }
+        // 👉 CAS SIMPLE
+        else {
+          params.append(`filters[${key}][val]`, filter.val);
+        }
 
-  // Values dynamiques pour n'importe quel champ
-  if (options.values) {
-    for (const [field, arr] of Object.entries(options.values)) {
-      if (Array.isArray(arr)) {
-        arr.forEach(v => params.append(`values[${field}][]`, v));
+        if (filter.op) {
+          params.append(`filters[${key}][op]`, filter.op);
+        }
       }
     }
   }
 
   // Pagination
-  params.append("pager", options.pager);
-  params.append("offset", options.offset);
+  if (options.pager !== undefined) params.append("pager", options.pager);
+  if (options.offset !== undefined) params.append("offset", options.offset);
 
   return params.toString();
 }
