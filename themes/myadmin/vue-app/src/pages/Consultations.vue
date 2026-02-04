@@ -41,11 +41,12 @@
                         <div class="w-4 h-4 flex items-center justify-center">
                             <i class="ri-save-line"></i>
                         </div>
-                        <span>Sauvegarder sans paiement</span>
+                        <span>Sauvegarder en brouillon</span>
                     </button>
-                    <button @click="handleConsultationSubmit(true)" v-if="canFinalizeConsultation"
+                    <!--  v-if="canFinalizeConsultation" -->
+                    <button @click="handleConsultationSubmit(true)" 
                         class="w-full py-2 bg-secondary hover:bg-green-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap cursor-pointer">
-                        Consultation avec paiement
+                        Finaliser la consultation
                     </button>
                     <router-link v-if="isEditMode" :to="{ name: 'consultations' }"
                         class="w-full py-2 bg-primary hover:bg-bleu-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap cursor-pointer inline-block text-center">
@@ -215,6 +216,7 @@ export default {
                     field_temperature: generalFormData.temperature,
                     field_tension_arterielle: generalFormData.tension,
                     field_poids: generalFormData.poids,
+                    field_montant: generalFormData.montant,
 
                     // medicaments
                     field_instructions: medicamentsData.instructionGlobal,

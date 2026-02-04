@@ -20,6 +20,27 @@
             </div>
         </div>
 
+        <!-- Popup de confirmation pour nouvelle page -->
+        <div v-if="showConfirmPopup" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] no-print">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-[90%] mx-4 overflow-hidden">
+                <div class="p-5">
+                    <p class="text-center text-gray-600 mb-4">
+                        Voulez-vous créer une nouvelle page pour ajouter cet élément ?
+                    </p>
+                    <div class="flex gap-3 justify-center mt-6">
+                        <button @click="cancelAddItem" 
+                            class="flex-1 text-sm px-4 py-2 bg-gray-500 text-white hover:bg-gray-600 !rounded-button font-medium whitespace-nowrap">
+                            Annuler
+                        </button>
+                        <button @click="confirmAddItem" 
+                            class="flex-1 text-sm px-4 py-2 bg-green-500 text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap">
+                            Continuer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Conteneur principal avec pagination -->
         <div>
 
@@ -191,7 +212,7 @@
                         </ul>
 
                         <div v-if="pageNumber === totalMedicamentsPages" class="mt-3 no-print">
-                            <button @click="addTraitement"
+                            <button @click="addTraitementWithPageCheck"
                                 class="flex items-center text-xs font-bold text-medical-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
                                 <span class="text-lg mr-1 leading-none">+</span> Ajouter un médicament
                             </button>
@@ -369,7 +390,7 @@
                         </ul>
 
                         <div v-if="pageNumber === totalExamensPages" class="mt-3 no-print">
-                            <button @click="addExamen"
+                            <button @click="addExamenWithPageCheck"
                                 class="flex items-center text-xs font-bold text-medical-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
                                 <span class="text-lg mr-1 leading-none">+</span> Ajouter un examen
                             </button>
@@ -442,6 +463,10 @@ export default {
         const currentExamensPage = ref(1);
         const itemsPerPage = 10;
 
+        // Variables pour la popup de confirmation
+        const showConfirmPopup = ref(false);
+        const pendingItemType = ref(null); // 'medicament' ou 'examen'
+
         const smartBack = () => {
             if (window.history.length > 1) {
                 router.back()
@@ -506,6 +531,12 @@ export default {
             }));
         };
 
+        // Vérifie si la page actuelle de médicaments est pleine
+        const isCurrentMedicamentsPageFull = computed(() => {
+            const itemsCount = ordonnanceData.value.traitements.length - ((currentMedicamentsPage.value - 1) * itemsPerPage);
+            return itemsCount >= itemsPerPage;
+        });
+
         // Computed pour la pagination des examens
         const totalExamensPages = computed(() => {
             const pages = Math.ceil(ordonnanceData.value.examens.length / itemsPerPage);
@@ -528,6 +559,12 @@ export default {
                 originalIndex: start + index
             }));
         };
+
+        // Vérifie si la page actuelle d'examens est pleine
+        const isCurrentExamensPageFull = computed(() => {
+            const itemsCount = ordonnanceData.value.examens.length - ((currentExamensPage.value - 1) * itemsPerPage);
+            return itemsCount >= itemsPerPage;
+        });
 
         // Navigation de pagination
         const prevPage = (tab) => {
@@ -703,7 +740,66 @@ export default {
             }
         }
 
-        // Ajouter un nouveau traitement
+        // ============== GESTION DES TRAITEMENTS ET EXAMENS AVEC CONFIRMATION ==============
+
+        // Fonction pour ajouter un médicament avec vérification de la page
+        function addTraitementWithPageCheck() {
+            // Vérifier si la page actuelle est pleine
+            if (isCurrentMedicamentsPageFull.value) {
+                // Afficher la popup de confirmation
+                pendingItemType.value = 'medicament';
+                showConfirmPopup.value = true;
+            } else {
+                // Ajouter directement le médicament
+                addTraitement();
+            }
+        }
+
+        // Fonction pour ajouter un examen avec vérification de la page
+        function addExamenWithPageCheck() {
+            // Vérifier si la page actuelle est pleine
+            if (isCurrentExamensPageFull.value) {
+                // Afficher la popup de confirmation
+                pendingItemType.value = 'examen';
+                showConfirmPopup.value = true;
+            } else {
+                // Ajouter directement l'examen
+                addExamen();
+            }
+        }
+
+        // Fonction appelée quand l'utilisateur confirme l'ajout
+        function confirmAddItem() {
+            showConfirmPopup.value = false;
+            
+            if (pendingItemType.value === 'medicament') {
+                addTraitement();
+                // Aller automatiquement à la dernière page (nouvelle page)
+                nextTick(() => {
+                    if (currentMedicamentsPage.value !== totalMedicamentsPages.value) {
+                        currentMedicamentsPage.value = totalMedicamentsPages.value;
+                    }
+                });
+            } else if (pendingItemType.value === 'examen') {
+                addExamen();
+                // Aller automatiquement à la dernière page (nouvelle page)
+                nextTick(() => {
+                    if (currentExamensPage.value !== totalExamensPages.value) {
+                        currentExamensPage.value = totalExamensPages.value;
+                    }
+                });
+            }
+            
+            pendingItemType.value = null;
+        }
+
+        // Fonction appelée quand l'utilisateur annule
+        function cancelAddItem() {
+            showConfirmPopup.value = false;
+            pendingItemType.value = null;
+        }
+
+        // Fonction d'ajout de traitement originale
         function addTraitement() {
             ordonnanceData.value.traitements.push({
                 nom: "Nouveau Médicament",
@@ -722,7 +818,7 @@ export default {
             }
         }
 
-        // Ajouter un nouvel examen
+        // Fonction d'ajout d'examen originale
         function addExamen() {
             ordonnanceData.value.examens.push({
                 nom: "Nouvel Examen",
@@ -773,9 +869,10 @@ export default {
             loadConsultation,
             consultationsStore,
             ordonnanceData,
-            addTraitement,
+            // Fonctions avec confirmation
+            addTraitementWithPageCheck,
+            addExamenWithPageCheck,
             removeTraitement,
-            addExamen,
             removeExamen,
             printOrdonnance,
             // Onglets et pagination
@@ -801,6 +898,10 @@ export default {
             handleExamenFocus,
             handleInstructionFocus,
             preventVueUpdate,
+            // Variables et fonctions de confirmation
+            showConfirmPopup,
+            confirmAddItem,
+            cancelAddItem,
             smartBack
         };
     }

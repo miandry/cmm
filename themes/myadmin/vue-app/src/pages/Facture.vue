@@ -92,6 +92,27 @@
             </div>
         </div>
 
+        <!-- Popup de confirmation pour nouvelle page -->
+        <div v-if="showConfirmPopup" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] no-print">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-[90%] mx-4 overflow-hidden">
+                <div class="p-5">
+                    <p class="text-center text-gray-600 mb-4">
+                        Voulez-vous créer une nouvelle page pour ajouter cet élément ?
+                    </p>
+                    <div class="flex gap-3 justify-center mt-6">
+                        <button @click="cancelAddItem" 
+                            class="flex-1 text-sm px-4 py-2 bg-gray-500 text-white hover:bg-gray-600 !rounded-button font-medium whitespace-nowrap">
+                            Annuler
+                        </button>
+                        <button @click="confirmAddItem" 
+                            class="flex-1 text-sm px-4 py-2 bg-green-500 text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap">
+                            Continuer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Affichage de la page courante -->
         <div v-for="page in [currentPage]" :key="page">
             <!--  justify-between -->
@@ -312,11 +333,11 @@
 
                         <!-- Boutons d'ajout (uniquement sur la dernière page) -->
                         <div v-if="currentPage === totalPages" class="mt-2 no-print">
-                            <button v-if="showMedicaments" @click="addArticle"
+                            <button v-if="showMedicaments" @click="addArticleWithPageCheck"
                                 class="flex items-center text-xs font-bold text-medical-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
                                 <i class="ri-add-line mr-1"></i> Ajouter un médicament
                             </button>
-                            <button v-if="!showMedicaments" @click="addExamen"
+                            <button v-if="!showMedicaments" @click="addExamenWithPageCheck"
                                 class="flex items-center text-xs font-bold text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 px-3 py-1 rounded transition-colors">
                                 <i class="ri-add-line mr-1"></i> Ajouter un examen
                             </button>
@@ -416,6 +437,10 @@ export default {
         const currentPage = ref(1);
         const itemsPerPage = ref(10); // 10 articles maximum par page
 
+        // Variables pour la popup de confirmation
+        const showConfirmPopup = ref(false);
+        const pendingItemType = ref(null); // 'article' ou 'examen'
+
         // Stocker les valeurs originales pour éviter les conflits
         const editingValues = ref({});
 
@@ -476,6 +501,15 @@ export default {
             const pagesNeeded = Math.ceil(itemsToShow / itemsPerPage.value);
 
             return Math.max(pagesNeeded, 1);
+        });
+
+        // Vérifie si la page actuelle est pleine
+        const isCurrentPageFull = computed(() => {
+            const itemsCount = showMedicaments.value ? 
+                articles.value.length - ((currentPage.value - 1) * itemsPerPage.value) :
+                examens.value.length - ((currentPage.value - 1) * itemsPerPage.value);
+            
+            return itemsCount >= itemsPerPage.value;
         });
 
         // Médicaments de la page courante
@@ -919,6 +953,52 @@ export default {
 
         // ============== GESTION DES ARTICLES ET EXAMENS ==============
 
+        // Fonction pour ajouter un médicament avec vérification de la page
+        const addArticleWithPageCheck = () => {
+            // Vérifier si la page actuelle est pleine
+            if (isCurrentPageFull.value) {
+                // Afficher la popup de confirmation
+                pendingItemType.value = 'article';
+                showConfirmPopup.value = true;
+            } else {
+                // Ajouter directement l'article
+                addArticle();
+            }
+        };
+
+        // Fonction pour ajouter un examen avec vérification de la page
+        const addExamenWithPageCheck = () => {
+            // Vérifier si la page actuelle est pleine
+            if (isCurrentPageFull.value) {
+                // Afficher la popup de confirmation
+                pendingItemType.value = 'examen';
+                showConfirmPopup.value = true;
+            } else {
+                // Ajouter directement l'examen
+                addExamen();
+            }
+        };
+
+        // Fonction appelée quand l'utilisateur confirme l'ajout
+        const confirmAddItem = () => {
+            showConfirmPopup.value = false;
+            
+            if (pendingItemType.value === 'article') {
+                addArticle();
+            } else if (pendingItemType.value === 'examen') {
+                addExamen();
+            }
+            
+            pendingItemType.value = null;
+        };
+
+        // Fonction appelée quand l'utilisateur annule
+        const cancelAddItem = () => {
+            showConfirmPopup.value = false;
+            pendingItemType.value = null;
+        };
+
+        // Fonctions d'ajout originales
         const addArticle = () => {
             articles.value.push({
                 description: "Nouveau produit",
@@ -1085,6 +1165,7 @@ export default {
         return {
             // Variables d'affichage
             showMedicaments,
+            showConfirmPopup,
 
             // Variables existantes
             orderToShow,
@@ -1110,8 +1191,8 @@ export default {
             pageGrandTotal,
 
             // Fonctions existantes
-            addArticle,
-            addExamen,
+            addArticleWithPageCheck,
+            addExamenWithPageCheck,
             removeArticle,
             removeExamen,
             formatCurrency,
@@ -1137,6 +1218,10 @@ export default {
             handleArticleFocus,
             handleExamenFocus,
             preventVueUpdate,
+
+            // Fonctions de confirmation
+            confirmAddItem,
+            cancelAddItem,
 
             // Fonctions de pagination
             nextPage,

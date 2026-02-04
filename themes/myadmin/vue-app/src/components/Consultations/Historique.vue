@@ -12,8 +12,8 @@
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-xs flex-1 two-lines font-medium text-gray-900">{{ cons.field_motif }}</span>
                     <p class="text-xs text-green-500" v-if="cons.field_consultation_status == 'completed'"><i
-                            class="ri-checkbox-circle-line"></i> Payé</p>
-                    <p class="text-xs text-orange-500" v-else><i class="ri-time-line"></i> Non payé</p>
+                            class="ri-checkbox-circle-line"></i> Achevé</p>
+                    <p class="text-xs text-orange-500" v-else><i class="ri-time-line"></i> Non Achevé</p>
                 </div>
                 <div class="flex items-center justify-between mb-1">
                     <p class="text-xs text-gray-600">

@@ -59,27 +59,27 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
-  const requiredRoles = to.meta.roles;
+// router.beforeEach((to, from, next) => {
+//   const requiredRoles = to.meta.roles;
 
-  // Route publique
-  if (!requiredRoles) {
-    return next();
-  }
+//   // Route publique
+//   if (!requiredRoles) {
+//     return next();
+//   }
 
-  // Pas connecté
-  if (!window.APP_DATA?.isLoggedIn) {
-    return next("/");
-  }
+//   // Pas connecté
+//   if (!window.APP_DATA?.isLoggedIn) {
+//     return next("/");
+//   }
 
-  // Vérification des rôles
-  if (!hasAnyRole(requiredRoles)) {
-    console.warn("Accès refusé", to.path);
-    return next("/"); // ou page 403
-  }
+//   // Vérification des rôles
+//   if (!hasAnyRole(requiredRoles)) {
+//     console.warn("Accès refusé", to.path);
+//     return next("/"); // ou page 403
+//   }
 
-  next();
-});
+//   next();
+// });
 
 const pinia = createPinia();
 

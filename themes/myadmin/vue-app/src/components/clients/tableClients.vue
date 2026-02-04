@@ -138,7 +138,7 @@
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dernière
                 Consultation</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Prochaine consulatation</th>
+                Prochaine consultation</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions
               </th>
             </tr>
@@ -161,7 +161,7 @@
                     <p class="text-sm font-medium text-gray-900 capitalize">{{ client.title }}</p>
                     <p class="text-xs text-gray-500"
                       v-if="client.field_consultation && client.field_consultation.field_consultation_status == 'draft' && client.field_last_consultation_status && client.field_last_consultation_status == 0">
-                      <span class="text-orange-600 cursor-pointer">Finaliser consultation</span>
+                      <span class="text-orange-600 cursor-pointer">Consultation non achevée</span>
                     </p>
                     <div>
                       <div class="flex items-center space-x-1"
