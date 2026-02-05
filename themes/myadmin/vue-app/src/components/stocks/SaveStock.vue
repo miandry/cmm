@@ -61,29 +61,38 @@
                             </p>
                         </div>
                         <div>
-                            <p class="text-xs font-medium text-blue-900">Nom par pack: <span
+                            <p class="text-xs font-medium text-blue-900">Quantité par pack: <span
                                     class="text-xs text-blue-600">{{ selectedArticle.field_nombre_par_unite }}</span>
                             </p>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Combien de pack?<span
                                     class="text-red-500">
                                     *</span></label>
                             <input type="number" min="1" v-model="form.field_quantite"
                                 class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
-                            <p v-if="errors.field_quantite" class="text-red-500 text-xs">Veuillez ajouter une quantité
+                            <p v-if="errors.field_quantite" class="text-red-500 text-xs">Veuillez ajouter une valeur
                                 supérieure à 0</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Quantité untaire<span
                                     class="text-red-500">
                                     *</span></label>
-                            <input type="number" min="1" v-model="form.field_quantite"
+                            <input type="number" min="1" v-model="form.field_quantite_unitaire"
                                 class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
-                            <p v-if="errors.field_quantite" class="text-red-500 text-xs">Veuillez ajouter une quantité
-                                supérieure à 0</p>
+                            <p v-if="errors.field_quantite_unitaire" class="text-red-500 text-xs">Veuillez ajouter une
+                                valeur supérieure à 0</p>
+                        </div>
+                    </div>
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-2 gap-6 p-3 bg-green-50 rounded-lg border border-green-200 mb-2">
+                        <div>
+                            <p class="text-xs font-medium text-green-900">Quantité unitaire en stock: <span
+                                    class="text-xs text-green-600">{{ form.field_quantite * form.field_quantite_unitaire
+                                    }}</span>
+                            </p>
                         </div>
                     </div>
                     <div class="mb-2">
@@ -192,7 +201,8 @@ export default {
             field_peremption: 1,
             field_prix_d_achat: "",
             field_prix_unitaire: "",
-            field_quantite: 1,
+            field_quantite: 0,
+            field_quantite_unitaire: 0,
             field_date: "",
         })
 
@@ -209,6 +219,7 @@ export default {
             field_prix_d_achat: false,
             field_quantite: false,
             field_article: false,
+            field_quantite_unitaire: false,
         });
 
 
@@ -221,6 +232,7 @@ export default {
             errors.field_peremption = false;
             errors.field_prix_d_achat = false;
             errors.field_quantite = false;
+            errors.field_quantite_unitaire = false;
             errors.field_article = false;
 
             // Nom requis
@@ -256,6 +268,14 @@ export default {
                 Number(form.field_quantite) <= 0
             ) {
                 errors.field_quantite = true;
+                isValid = false;
+            }
+
+            if (
+                !form.field_quantite_unitaire ||
+                Number(form.field_quantite_unitaire) <= 0
+            ) {
+                errors.field_quantite_unitaire = true;
                 isValid = false;
             }
 
