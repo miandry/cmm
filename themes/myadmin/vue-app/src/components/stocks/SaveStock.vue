@@ -57,7 +57,8 @@
                         class="grid grid-cols-1 md:grid-cols-2 gap-6 p-3 bg-blue-50 rounded-lg border border-blue-200 mb-2">
                         <div>
                             <p class="text-xs font-medium text-blue-900">Type pack: <span
-                                    class="text-xs text-blue-600">{{ selectedArticle.field_type_pack?.title }}</span>
+                                    class="text-xs text-blue-600">{{ selectedArticle.field_type_pack ?
+                                        selectedArticle.field_type_pack.title : "Non renseigner" }}</span>
                             </p>
                         </div>
                         <div>
@@ -80,8 +81,8 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Quantité untaire<span
                                     class="text-red-500">
                                     *</span></label>
-                            <input type="number" min="1" v-model="form.field_quantite_unitaire"
-                                class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                            <input type="number" min="1" v-model="form.field_quantite_unitaire" readonly
+                                class="w-full px-3 py-2 border bg-gray-100 border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
                             <p v-if="errors.field_quantite_unitaire" class="text-red-500 text-xs">Veuillez ajouter une
                                 valeur supérieure à 0</p>
                         </div>
@@ -89,9 +90,8 @@
                     <div
                         class="grid grid-cols-1 md:grid-cols-2 gap-6 p-3 bg-green-50 rounded-lg border border-green-200 mb-2">
                         <div>
-                            <p class="text-xs font-medium text-green-900">Quantité unitaire en stock: <span
-                                    class="text-xs text-green-600">{{ form.field_quantite * form.field_quantite_unitaire
-                                    }}</span>
+                            <p class="text-xs font-medium text-green-900">Quantité en stock actuelle: <span
+                                    class="text-xs text-green-600">{{ selectedArticle.field_quantite_stock }}</span>
                             </p>
                         </div>
                     </div>
@@ -271,13 +271,13 @@ export default {
                 isValid = false;
             }
 
-            if (
+            /*if (
                 !form.field_quantite_unitaire ||
                 Number(form.field_quantite_unitaire) <= 0
             ) {
                 errors.field_quantite_unitaire = true;
                 isValid = false;
-            }
+            }*/
 
             return isValid;
         };
@@ -350,6 +350,7 @@ export default {
                 'title',
                 'field_type_pack',
                 'field_nombre_par_unite',
+                'field_quantite_stock',
             ],
             sort: { val: 'nid', op: 'desc' },
             filters: {},
@@ -417,6 +418,21 @@ export default {
                 form.field_prix_unitaire = stock.field_prix_unitaire;
                 form.field_date = stock.field_date;
                 form.field_peremption = stock.field_peremption;
+            },
+            { immediate: true }
+        );
+
+        watch(
+            [
+                () => form.field_quantite,
+                () => selectedArticle.value?.field_nombre_par_unite
+            ],
+            ([quantite, nombreParUnite]) => {
+                if (quantite > 0 && nombreParUnite > 0) {
+                    form.field_quantite_unitaire = quantite * nombreParUnite;
+                } else {
+                    form.field_quantite_unitaire = 0;
+                }
             },
             { immediate: true }
         );
