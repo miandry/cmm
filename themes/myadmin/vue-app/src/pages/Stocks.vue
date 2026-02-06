@@ -8,6 +8,19 @@
                 <p class="text-gray-600">Gérez l'inventaire des produits médicaux de votre clinique</p>
             </div>
             <div class="flex flex-wrap gap-3 mt-4 lg:mt-0">
+                <button @click="updateRapport"
+                    class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors !rounded-button whitespace-nowrap">
+                    <div v-if="isloading" class="w-5 h-5 flex items-center justify-center">
+                        <div class="w-5 h-5 border-2 border-white-500 border-t-orange-600 rounded-full animate-spin">
+                        </div>
+                    </div>
+                    <div v-else class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-file-text-line"></i>
+                    </div>
+
+                    <span v-if="isloading">Chargement</span>
+                    <span v-else >Rapport Inventaire</span>
+                </button>
                 <button @click="openAddModal"
                     class="px-4 py-2 bg-primary text-white !rounded-button font-medium text-sm whitespace-nowrap flex items-center space-x-2">
                     <div class="w-5 h-5 flex items-center justify-center">
@@ -22,24 +35,11 @@
                     </div>
                     <span>Ajouter Article</span>
                 </button>
-                <button
-                    class="hidden bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors !rounded-button whitespace-nowrap">
-                    <div class="w-5 h-5 flex items-center justify-center">
-                        <i class="ri-file-text-line"></i>
-                    </div>
-                    <span>Rapport Inventaire</span>
-                </button>
-                <button
-                    class="hidden bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors !rounded-button whitespace-nowrap">
-                    <div class="w-5 h-5 flex items-center justify-center">
-                        <i class="ri-truck-line"></i>
-                    </div>
-                    <span>Approvisionnements</span>
-                </button>
             </div>
         </div>
         <!-- Alertes de Stock -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+        <div v-if="stockStore.stockRapport.rows.length"
+            class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div class="flex items-center justify-between">
                     <div>
@@ -94,13 +94,16 @@
         </div>
         <!-- Recherche, Filtres et Tableau Principal -->
         <Articles :openModal="openSaveArticleModal" @openModal="openEditModal" @close="openSaveArticleModal = false"
-            :selectedStock="selectedStock" :openArticleModal="openArticleModal" @closeArticleModal="openArticleModal = false"/>
+            :selectedStock="selectedStock" :openArticleModal="openArticleModal"
+            @closeArticleModal="openArticleModal = false" />
     </main>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { reactive, ref } from 'vue';
 import Articles from '../components/stocks/Articles.vue';
+import { useStockStore } from '../stores/index.js';
+import { toast } from 'vue-sonner';
 
 export default {
     name: "Stocks",
@@ -111,6 +114,47 @@ export default {
         const openSaveArticleModal = ref(false);
         const openArticleModal = ref(false);
         const selectedStock = ref(null);
+        const stockStore = useStockStore();
+        const isloading = ref(false);
+
+        const queryOptions = ref({ //stock
+            fields: [
+                'nid',
+                'title',
+                'field_article_expirant',
+                'field_article_rupture',
+                'field_article_stock_faible',
+                'field_total_stock',
+            ],
+            sort: { val: 'nid', op: 'desc' },
+            filters: {},
+            pager: 0,
+            offset: 1
+        })
+
+        const form = reactive({
+            entity_type: "node",
+            bundle: "stock_rapport",
+            title: "stock-rapport-" + Date.now()
+        })
+
+        const updateRapport = async () => {
+            try {
+                isloading.value = true
+                await stockStore.createStockRapport(form)
+
+                if (stockStore.error) {
+                    toast.error("Une erreur est survenue lors de la mise à jour.")
+                    return
+                }
+
+                toast.success("Rapport mise à jour!");
+            } catch (error) {
+                console.error("Une erreur est survenue lors de la mise à jour.")
+            } finally {
+                isloading.value = false
+            }
+        }
 
         const openEditModal = (stock) => {
             selectedStock.value = stock;
@@ -131,7 +175,10 @@ export default {
             openEditModal,
             openAddModal,
             openAddArticleModal,
-            openArticleModal
+            openArticleModal,
+            updateRapport,
+            isloading,
+            stockStore
         }
     }
 }

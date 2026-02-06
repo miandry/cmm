@@ -1,10 +1,11 @@
 import { defineStore } from "pinia";
 import { buildQueryParams } from "../../utils/queryBuilder.js";
-import { getStocks, getsuppliers, saveStock } from "../../services/stock.js";
+import { getStockRapport, getStocks, getsuppliers, saveStock, saveStockRapport } from "../../services/stock.js";
 import { ref } from "vue";
 
 export const useStockStore = defineStore("stock", () => {
   const stocks = ref({ rows: [], total: 0 });
+  const stockRapport = ref({ rows: [], total: 0 });
   const suppliers = ref({ rows: [], total: 0 });
   const loading = ref(false);
   const error = ref(null);
@@ -39,11 +40,11 @@ export const useStockStore = defineStore("stock", () => {
       if (response.data.status) {
         data.nid = response.data.item;
       }
-      await saveStock(data)
+      await saveStock(data);
       return response;
     } catch (err) {
       error.value = err;
-      console.error(err)
+      console.error(err);
     } finally {
       loading.value = false;
     }
@@ -64,6 +65,32 @@ export const useStockStore = defineStore("stock", () => {
     }
   }
 
+  async function fetchStockRapport(options) {
+    loading.value = true;
+    try {
+      const query = buildQueryParams(options);
+      const response = await getStockRapport(query);
+      const data = response.data;
+      stockRapport.value = data;
+    } catch (err) {
+      error.value = err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function createStockRapport(data) {
+    try {
+      const response = await saveStockRapport(data);
+      return response.data;
+    } catch (err) {
+      error.value = err;
+      console.error(err);
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     stocks,
     fetchStocks,
@@ -72,5 +99,8 @@ export const useStockStore = defineStore("stock", () => {
     suppliers,
     error,
     loading,
+    fetchStockRapport,
+    stockRapport,
+    createStockRapport,
   };
 });
