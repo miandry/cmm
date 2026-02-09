@@ -40,8 +40,8 @@ function stock_management_node_presave(\Drupal\node\NodeInterface $entity) {
     $nid = $entity->id();
     //insert node
     if($entity->bundle() == 'stock' && $nid == null ){
-        $service = \Drupal::service('stock_management.manager');
-        $entity = $service->executeStockInsert($entity);
+       // $service = \Drupal::service('stock_management.manager');
+       // $entity = $service->executeStockInsert($entity);
     }
 
 }  
@@ -84,4 +84,22 @@ function stock_management_node_update(\Drupal\node\Entity\Node $entity) {
 
     }
 }
+//rapport stock
+function computed_field_field_article_rupture_compute($entity_type_manager, $entity, $fields, $delta){
+    $service = \Drupal::service('stock_management.manager');
+    return $service->countArticleRuptureDeStock(5,10);
+}
+function computed_field_field_article_stock_faible_compute($entity_type_manager, $entity, $fields, $delta){
+    $service = \Drupal::service('stock_management.manager');
+    return $service->countArticleRuptureDeStock(0,1);
+}
 
+function computed_field_field_article_expirant_compute($entity_type_manager, $entity, $fields, $delta){
+    $service = \Drupal::service('stock_management.manager');
+    return $service->countArticleExpirant(30);
+}
+
+function computed_field_field_total_stock_compute($entity_type_manager, $entity, $fields, $delta){
+    $service = \Drupal::service('stock_management.manager');
+    return $service->totalArticleStock();
+}

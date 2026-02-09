@@ -8,6 +8,7 @@
  */
 
 namespace Drupal\stock_management;
+use Drupal\Core\Database\Database;
 
 
 
@@ -98,8 +99,6 @@ class StockManagement
 
         // prix achat par pieces
 
- 
-
         $achat_but = $entity->field_prix_achat_brut->value;
 
         $achat =  (floatval($achat_but)/$qte_stock_par_boite)/$nombre_par_unite ;
@@ -129,7 +128,46 @@ class StockManagement
          //   return $pv - $achat ; 
          return false ;
      }
+     function countArticleRuptureDeStock($start , $limit ){
+         return   \Drupal::entityQuery('node')
+         ->condition('type', 'article')
+         ->condition('status', 1)
+         ->condition('field_quantite_stock', $start, '>=')
+         ->condition('field_quantite_stock', $limit, '<')
+         ->accessCheck(TRUE)
+         ->count()
+         ->execute();
+      }    
+      function countArticleExpirant($days){
+         $limit_date = (new \DateTime('+'.$days.' days'))->format('Y-m-d');
+         $count = \Drupal::entityQuery('node')
+            ->condition('type', 'stock')
+            ->condition('status', 1)
+            ->condition('field_peremption', $limit_date, '<=')
+            ->accessCheck(TRUE)
+            ->count()
+            ->execute();
 
-     
-      
+      }
+      function totalArticleStock(){
+            $connection = Database::getConnection();
+
+            $query = $connection->select('node__field_quantite_stock', 'qs');
+            $query->join('node__field_prix_unitaire', 'pu', 'qs.entity_id = pu.entity_id');
+            $query->join('node_field_data', 'n', 'n.nid = qs.entity_id');
+
+            $query->condition('n.type', 'article');
+            $query->condition('n.status', 1);
+
+            // SUM(quantity * price)
+            $query->addExpression(
+            'SUM(qs.field_quantite_stock_value * pu.field_prix_unitaire_value)',
+            'total_stock_price'
+            );
+
+            $total = $query->execute()->fetchField();
+
+            $total = $total ?? 0;
+            return $total ;
+      }
 }
