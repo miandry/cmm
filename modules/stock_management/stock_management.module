@@ -69,6 +69,11 @@ function stock_management_node_insert(\Drupal\node\Entity\Node $entity) {
         $service = \Drupal::service('stock_management.manager');
         $service->addStockNumberOnInsertDefecteux($entity);
     }
+
+    if ($entity->bundle() === 'stock') {
+        $service = \Drupal::service('stock_management.manager');
+        $service->updateArticleQuantityOnInsertStock($entity);
+    }
 }
 function stock_management_node_update(\Drupal\node\Entity\Node $entity) {
     if($entity->bundle() == 'commande'){
@@ -87,11 +92,11 @@ function stock_management_node_update(\Drupal\node\Entity\Node $entity) {
 //rapport stock
 function computed_field_field_article_rupture_compute($entity_type_manager, $entity, $fields, $delta){
     $service = \Drupal::service('stock_management.manager');
-    return $service->countArticleRuptureDeStock(5,10);
+    return $service->countArticleRuptureDeStock(0,5);
 }
 function computed_field_field_article_stock_faible_compute($entity_type_manager, $entity, $fields, $delta){
     $service = \Drupal::service('stock_management.manager');
-    return $service->countArticleRuptureDeStock(0,1);
+    return $service->countArticleRuptureDeStock(5,10);
 }
 
 function computed_field_field_article_expirant_compute($entity_type_manager, $entity, $fields, $delta){
