@@ -1,6 +1,12 @@
 import { defineStore } from "pinia";
 import { buildQueryParams } from "../../utils/queryBuilder.js";
-import { getStockRapport, getStocks, getsuppliers, saveStock, saveStockRapport } from "../../services/stock.js";
+import {
+  getStockRapport,
+  getStocks,
+  getsuppliers,
+  saveStock,
+  saveStockRapport,
+} from "../../services/stock.js";
 import { ref } from "vue";
 
 export const useStockStore = defineStore("stock", () => {
@@ -37,10 +43,6 @@ export const useStockStore = defineStore("stock", () => {
   async function createStock(data) {
     try {
       const response = await saveStock(data);
-      if (response.data.status) {
-        data.nid = response.data.item;
-      }
-      await saveStock(data);
       return response;
     } catch (err) {
       error.value = err;
@@ -82,6 +84,24 @@ export const useStockStore = defineStore("stock", () => {
   async function createStockRapport(data) {
     try {
       const response = await saveStockRapport(data);
+      if (response.data.status) {
+        const queryOptions = {
+          //stock
+          fields: [
+            "nid",
+            "title",
+            "field_article_expirant",
+            "field_article_rupture",
+            "field_article_stock_faible",
+            "field_total_stock",
+          ],
+          sort: { val: "nid", op: "desc" },
+          filters: {},
+          pager: 0,
+          offset: 1,
+        };
+        await fetchStockRapport(queryOptions);
+      }
       return response.data;
     } catch (err) {
       error.value = err;

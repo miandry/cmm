@@ -179,7 +179,7 @@ export default {
             title: "",
             field_categorie: "",
             field_prix_unitaire: "",
-            field_quantite_stock: 1,
+            field_quantite_stock: 0,
             field_posologie: "",
             field_type_pack: "",
             status: 1,
