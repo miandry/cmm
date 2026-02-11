@@ -8,6 +8,7 @@ import Caisse from "./pages/Caisse.vue";
 import Clients from "./pages/Clients.vue";
 import Order from "./pages/Order.vue";
 import Consultations from "./pages/Consultations.vue";
+import Assist from "./pages/Assist.vue";
 import Facture from "./pages/Facture.vue";
 import Ordonnance from "./pages/Ordonnance.vue";
 import Stocks from "./pages/Stocks.vue";
@@ -30,6 +31,12 @@ const routes = [
     path: "/consultations",
     name: "consultations",
     component: Consultations,
+    meta: { roles: ["docteur", "administrator"] },
+  },
+  {
+    path: "/assist",
+    name: "assist",
+    component: Assist,
     meta: { roles: ["docteur", "administrator"] },
   },
   {
