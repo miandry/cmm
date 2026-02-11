@@ -199,6 +199,7 @@ export default {
             field_article: "",
             field_fournisseur: "",
             field_peremption: 1,
+            status: 1,
             field_prix_d_achat: "",
             field_prix_unitaire: "",
             field_quantite: 0,
