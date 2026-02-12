@@ -239,10 +239,6 @@ class StockManagement
          $article->field_prix_unitaire->value = (float) $stock['field_prix_unitaire'];
       }
 
-      if (!empty($stock['field_prix_d_achat'])) {
-         $article->field_prix_unitaire->value = (float) $stock['field_prix_d_achat'];
-      }
-
       $article->save();
    }
 }
