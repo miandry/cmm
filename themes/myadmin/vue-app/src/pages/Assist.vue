@@ -90,6 +90,16 @@
                                         <div class="text-[13px] font-medium text-gray-700">Historique des ventes</div>
                                     </div>
                                 </button>
+
+                                <button @click="selectPrompt('Montre-moi l\'évolution des ventes par semaine et par jour sous forme de graphique')" 
+                                    class="text-left p-3 rounded-xl border border-gray-100 bg-white hover:border-primary/30 hover:bg-primary/5 transition-all group">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+                                            <i class="ri-bar-chart-groupped-line text-indigo-500"></i>
+                                        </div>
+                                        <div class="text-[13px] font-medium text-gray-700">Évolution Ventes (Sem/Jour)</div>
+                                    </div>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -98,8 +108,9 @@
                     <div v-for="(message, index) in messages" :key="index">
                         <!-- Message utilisateur -->
                         <div v-if="message.type === 'user'" class="flex items-start space-x-3 justify-end">
-                            <div class="message-bubble bg-primary text-white rounded-2xl rounded-tr-sm px-3 md:px-4 py-2 md:py-3">
-                                <p class="text-[13px] md:text-sm">{{ message.content }}</p>
+                            <div class="message-bubble bg-primary text-white rounded-2xl rounded-tr-sm px-3 md:px-4 py-2 md:py-3 max-w-[80%]">
+                                <img v-if="message.image" :src="message.image" class="w-full h-auto rounded-lg mb-2 border-2 border-white/20" alt="Image analysée">
+                                <p v-if="message.content" class="text-[13px] md:text-sm">{{ message.content }}</p>
                                 <p class="text-[10px] text-blue-100 mt-1">{{ message.time }}</p>
                             </div>
                             <div
@@ -115,6 +126,7 @@
                             </div>
                             <div class="message-bubble bg-gray-100 rounded-2xl rounded-tl-sm px-3 md:px-4 py-2 md:py-3">
                                 <div class="prose prose-sm max-w-none text-[13px] md:text-sm" v-html="message.content"></div>
+                                <SalesChart v-if="message.hasChart" />
                                 <p class="text-[10px] text-gray-500 mt-1">{{ message.time }}</p>
                             </div>
                         </div>
@@ -201,6 +213,22 @@
                                 <i class="ri-capsule-line text-sm"></i>
                                 <span>Médicament</span>
                             </button>
+                            <input type="file" ref="fileInput" accept="image/*" class="hidden" @change="handleFileSelect">
+                            <button @click="triggerFileUpload"
+                                class="flex items-center justify-center bg-gray-50 text-gray-700 w-10 h-10 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                                title="Ajouter une image (Radio, Echo, etc.)"
+                                :disabled="isProcessingImage">
+                                <i v-if="isProcessingImage" class="ri-loader-4-line animate-spin"></i>
+                                <i v-else class="ri-attachment-2 active:scale-95 transition-transform"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Image Preview -->
+                        <div v-if="selectedImage" class="relative group inline-block">
+                            <img :src="selectedImage" class="h-20 w-auto rounded-lg border border-gray-200 object-cover" alt="Preview">
+                            <button @click="removeImage" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:bg-red-600">
+                                <i class="ri-close-line text-xs"></i>
+                            </button>
                         </div>
                         
                         <!-- Textarea and Send Row -->
@@ -236,13 +264,15 @@
 import { ref, computed, nextTick, onMounted } from 'vue'
 import PatientModal from '../components/assists/PatientModal.vue';
 import MedicationModal from '../components/assists/MedicationModal.vue';
+import SalesChart from '../components/charts/SalesChart.vue';
 import { useArticleStore, useClientStore, useConsultationStore, useExamenStore, useOrderStore } from '../stores/index.js';
 
 export default {
     name: "Assist",
     components: {
         PatientModal,
-        MedicationModal
+        MedicationModal,
+        SalesChart
     },
     setup() {
         const store = useArticleStore();
@@ -253,11 +283,14 @@ export default {
         // Refs pour les éléments DOM
         const chatContainer = ref(null)
         const messageInput = ref(null)
+        const fileInput = ref(null)
 
         // État des messages
         const messages = ref([])
         const currentMessage = ref('')
         const isTyping = ref(false)
+        const selectedImage = ref(null)
+        const isProcessingImage = ref(false)
 
         // État patient
         const patientCardVisible = ref(false)
@@ -338,7 +371,9 @@ export default {
 
         // Computed
         const canSend = computed(() => {
-            return currentMessage.value.trim().length > 0 && currentMessage.value.length <= 1000
+            return (currentMessage.value.trim().length > 0 || selectedImage.value) && 
+                   currentMessage.value.length <= 1000 && 
+                   !isProcessingImage.value
         })
 
         // Gestion du texte
@@ -362,17 +397,24 @@ export default {
 
         // Messages
         const sendMessage = async () => {
+            if (isProcessingImage.value) return;
+            
             const message = currentMessage.value.trim()
-            if (!message) return
+            if (!message && !selectedImage.value) return
 
             // Ajouter le message utilisateur
             messages.value.push({
                 type: 'user',
                 content: message,
+                image: selectedImage.value,
                 time: new Date().toLocaleTimeString()
             })
 
+            // Sauvegarder l'image pour l'envoi API puis reset
+            const imageToSend = selectedImage.value
             currentMessage.value = ''
+            selectedImage.value = null
+            
             nextTick(() => {
                 if (messageInput.value) {
                     messageInput.value.style.height = 'auto'
@@ -384,11 +426,22 @@ export default {
             scrollToBottom()
 
             try {
-                const response = await generateAIResponse(message)
+                const response = await generateAIResponse(message, imageToSend)
+                
+                // Vérifier si la réponse contient la commande pour afficher le graphique
+                let content = response;
+                let hasChart = false;
+                
+                if (content.includes('<SHOW_SALES_CHART>')) {
+                    hasChart = true;
+                    content = content.replace('<SHOW_SALES_CHART>', '');
+                }
+
                 messages.value.push({
                     type: 'ai',
-                    content: response,
-                    time: new Date().toLocaleTimeString()
+                    content: content,
+                    time: new Date().toLocaleTimeString(),
+                    hasChart: hasChart
                 })
             } catch (error) {
                 console.error("OpenAI API Error:", error)
@@ -408,7 +461,7 @@ export default {
             }
         }
 
-        const generateAIResponse = async (userMessage) => {
+        const generateAIResponse = async (userMessage, imageBase64 = null) => {
             const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
             const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
@@ -450,10 +503,15 @@ export default {
             }).join('\n');
 
             const systemPrompt = `Tu es un Assistant Clinique IA aidant un médecin dans une pharmacie. Ta tâche est de suggérer des médicaments et des soins appropriés basés sur l'inventaire RÉEL, les dossiers patients, les consultations récentes, les examens disponibles et l'historique des ventes.
+            Tu as aussi la capacité d'analyser des images médicales (radiographies, écographies, ordonnances, photos de plaies, etc.).
+            Si une image est fournie, analyse-la soigneusement, décris ce que tu vois (anomalies, structures, texte visible) et suggère des pistes cliniques ou thérapeutiques basées sur cette observation visuelle.
             Tu as accès à une base de données clinique et commerciale riche comprenant le stock de médicaments, les patients enregistrés, l'historique des consultations, le catalogue des examens médicaux et l'historique des ventes (commandes).
             Sois professionnel, concis et indique toujours que tes suggestions doivent être validées par un professionnel de santé.
             Réponds toujours en français.
             Réponds en format HTML simple (utilisant uniquement des balises <p>, <ul>, <li>, <strong>, <div>).
+            
+            IMPORTANT : Si l'utilisateur demande explicitement un graphique, un tableau de bord, une visualisation des ventes ou des statistiques visuelles, inclus la balise <SHOW_SALES_CHART> à la fin de ta réponse. Ne dis pas que tu ne peux pas créer de graphique, dis plutôt "Voici le graphique de l'évolution des ventes récents :" et ajoute la balise.
+            Exemple : "Voici les données visuelles des ventes. <SHOW_SALES_CHART>"
             
             CONTEXTE PATIENT ACTUEL : ${patientContext || 'Aucun patient spécifique attaché.'} 
             CONTEXTE MÉDICAMENT ACTUEL : ${medicationContext || 'Aucun médicament spécifique sélectionné.'}
@@ -475,6 +533,20 @@ export default {
             
             S'il te plaît, utilise prioritairement ces données réelles pour tes recommandations. Réfère-toi aux patients, aux consultations passées ou aux tendances de vente si cela est pertinent pour aider le médecin.`;
 
+            let userContent = userMessage;
+
+            if (imageBase64) {
+                userContent = [
+                    { type: "text", text: userMessage || "Analyse cette image médicale." },
+                    {
+                        type: "image_url",
+                        image_url: {
+                            "url": imageBase64
+                        }
+                    }
+                ];
+            }
+
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -485,8 +557,9 @@ export default {
                     model: 'gpt-4o-mini',
                     messages: [
                         { role: 'system', content: systemPrompt },
-                        { role: 'user', content: userMessage }
+                        { role: 'user', content: userContent }
                     ],
+                    max_tokens: 1000,
                     temperature: 0.7
                 })
             });
@@ -503,6 +576,40 @@ export default {
         const selectPrompt = (promptText) => {
             currentMessage.value = promptText;
             sendMessage();
+        }
+
+        const handleFileSelect = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Check size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert("L'image est trop volumineuse (max 5MB).");
+                return;
+            }
+
+            isProcessingImage.value = true;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                selectedImage.value = e.target.result;
+                isProcessingImage.value = false;
+            };
+            reader.onerror = () => {
+                isProcessingImage.value = false;
+                alert("Erreur lors de la lecture de l'image.");
+            };
+            reader.readAsDataURL(file);
+            
+            // Reset input value to allow re-selecting same file
+            event.target.value = '';
+        }
+
+        const triggerFileUpload = () => {
+            fileInput.value.click();
+        }
+
+        const removeImage = () => {
+            selectedImage.value = null;
         }
 
 
@@ -565,11 +672,13 @@ export default {
             // Refs DOM
             chatContainer,
             messageInput,
+            fileInput,
 
             // État
             messages,
             currentMessage,
             isTyping,
+            selectedImage,
             patientCardVisible,
             patientInfo,
             selectedMedications,
@@ -588,10 +697,12 @@ export default {
             savePatient,
             removePatientCard,
             openMedicationModal,
-            closeMedicationModal,
             addMedication,
             removeSelectedMedication,
-            selectPrompt
+            selectPrompt,
+            handleFileSelect,
+            triggerFileUpload,
+            removeImage
         }
     }
 }
