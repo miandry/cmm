@@ -1,9 +1,8 @@
 <template>
     <!-- Medication Selection Modal -->
-    <div v-show="show" class="fixed inset-0 bg-black bg-opacity-50 z-50">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-                <div class="p-6">
+    <div v-show="show" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 md:p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div class="p-4 md:p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-900">Sélectionner un médicament</h3>
                         <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
@@ -83,7 +82,6 @@
                         </button>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
 </template>
