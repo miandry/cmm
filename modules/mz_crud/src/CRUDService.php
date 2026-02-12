@@ -13,10 +13,7 @@ class CRUDService extends CRUDBaseService
     /**
      * Constructs a new CRUDService object.
      */
-    public function __construct()
-    {
-
-    }
+    public function __construct() {}
     public function paragraph($type, $fields, $reference_object = null)
     {
         return $this->save('paragraph', $type, $fields, $reference_object);
@@ -70,7 +67,8 @@ class CRUDService extends CRUDBaseService
         }
         return $entity_parent;
     }
-    public function file_file($entity_parent, $field_name, $field_value){
+    public function file_file($entity_parent, $field_name, $field_value)
+    {
         $field_result = null;
         $field_array = explode('/', $field_value);
         $filename = end($field_array);
@@ -102,41 +100,72 @@ class CRUDService extends CRUDBaseService
             $entity_parent->set($field_name, $field_result);
         }
         return $entity_parent;
-
     }
+
     public function saveImgFile($entity_parent, $field_image, $field_value, $array = [])
     {
         $field_image_result = null;
-        $field_array = explode('/', $field_value);
-        $filename = end($field_array);
-        $data = file_get_contents($field_value);
-        if ($data) {
-            $setting = $entity_parent->get($field_image)->getSettings();
-            $file_directory = ($setting['file_directory']);
-            $path_root = 'public://' . $file_directory . '/';
-            // Replace the token.
-            $token_service = \Drupal::token();
-            $path_root = $token_service->replace($path_root);
-            $file_system = \Drupal::service('file_system');
-            if ($file_system->prepareDirectory($path_root, FileSystemInterface::CREATE_DIRECTORY)) {
-                $file = file_save_data($data, $path_root . "/" . $filename, FileSystemInterface::EXISTS_RENAME);
-                if ($file) {
-                    $field_image_result = array(
-                        'target_id' => $file->id(),
-                        'alt' => isset($array["alt"]) ? $array["alt"] : "",
-                        'title' => isset($array["title"]) ? $array["title"] : "",
-                    );
-                }
-            } else {
-                $message = "Directory not found  " . $path_root;
-                \Drupal::logger("mz_crud")->error($message);
+        $file_system = \Drupal::service('file_system');
+
+        // CAS BASE64
+        if (is_string($field_value) && str_starts_with($field_value, 'data:image/')) {
+
+            if (!preg_match('/^data:image\/(\w+);base64,/', $field_value, $matches)) {
+                \Drupal::logger('mz_crud')->error('Image base64 invalide');
+                return null;
+            }
+
+            $extension = $matches[1]; // jpeg, png, jpg
+            $data = base64_decode(substr($field_value, strpos($field_value, ',') + 1));
+
+            $filename = 'image_' . time() . '.' . $extension;
+        }
+        // CAS URL / fichier distant
+        else {
+            $field_array = explode('/', $field_value);
+            $filename = end($field_array);
+            $data = @file_get_contents($field_value);
+        }
+
+        if (!$data) {
+            \Drupal::logger('mz_crud')->error('Image non trouvée');
+            return null;
+        }
+
+        // Répertoire configuré dans le champ
+        $setting = $entity_parent->get($field_image)->getSettings();
+        $file_directory = $setting['file_directory'];
+        $path_root = 'public://' . $file_directory . '/';
+
+        // Tokens
+        $token_service = \Drupal::token();
+        $path_root = $token_service->replace($path_root);
+
+        if ($file_system->prepareDirectory($path_root, FileSystemInterface::CREATE_DIRECTORY)) {
+
+            $file = file_save_data(
+                $data,
+                $path_root . $filename,
+                FileSystemInterface::EXISTS_RENAME
+            );
+
+            if ($file) {
+                $file->setPermanent();
+                $file->save();
+
+                $field_image_result = [
+                    'target_id' => $file->id(),
+                    'alt' => $array['alt'] ?? '',
+                    'title' => $array['title'] ?? '',
+                ];
             }
         } else {
-            $message = "Image not found ";
-            \Drupal::logger("mz_crud")->error($message);
+            \Drupal::logger('mz_crud')->error('Directory not found ' . $path_root);
         }
+
         return $field_image_result;
     }
+
 
     // paragraph
     public function entity_reference_revisions($entity_parent, $field_name, $field_value)
@@ -190,8 +219,11 @@ class CRUDService extends CRUDBaseService
                 case 'image':
                     $array = explode('/', $field_value);
                     $filename = end($array);
-                    $media = $this->save('media', $bundle,
-                        ['field_media_image' => $field_value,
+                    $media = $this->save(
+                        'media',
+                        $bundle,
+                        [
+                            'field_media_image' => $field_value,
                             $key_label => $filename,
                         ]
                     );
@@ -200,15 +232,17 @@ class CRUDService extends CRUDBaseService
                 case 'document':
                     $array = explode('/', $field_value);
                     $filename = end($array);
-                    $media = $this->save('media', $bundle,
-                        ['field_media_document' => $field_value,
+                    $media = $this->save(
+                        'media',
+                        $bundle,
+                        [
+                            'field_media_document' => $field_value,
                             $key_label => $filename,
                         ]
                     );
                     $entity_parent->{$field_name}->entity = $media;
                     break;
             }
-
         }
         if (is_numeric($field_value)) {
             $entity_parent->{$field_name}->target_id = $field_value;
@@ -240,7 +274,9 @@ class CRUDService extends CRUDBaseService
                         if (is_string($item) && !is_numeric($item)) {
                             $filename = end(explode('/', $item));
                             $filename = end($filename);
-                            $media = $this->save('media', $bundle,
+                            $media = $this->save(
+                                'media',
+                                $bundle,
                                 [
                                     'field_media_image' => $item,
                                     $key_label => $filename,
@@ -253,7 +289,6 @@ class CRUDService extends CRUDBaseService
 
                         break;
                 }
-
             }
             $entity_parent->set($field_name, $field_items);
         }
@@ -281,7 +316,8 @@ class CRUDService extends CRUDBaseService
     {
         return $this->entity_reference($entity_parent, $field_name, $field_value);
     }
-    public function entity_reference_comment_type($entity_parent, $field_name, $field_value){
+    public function entity_reference_comment_type($entity_parent, $field_name, $field_value)
+    {
         return $this->item_default($entity_parent, $field_name, $field_value);
     }
     public function entity_reference($entity_parent, $field_name, $field_value)
@@ -297,7 +333,9 @@ class CRUDService extends CRUDBaseService
 
             $term_exist = $this->is_exits($entity_type, $bundle, $field_value);
             if (sizeof($term_exist) == 0) {
-                $term = $this->save($entity_type, $bundle,
+                $term = $this->save(
+                    $entity_type,
+                    $bundle,
                     [
                         $key_label => $field_value,
                     ]
@@ -348,7 +386,9 @@ class CRUDService extends CRUDBaseService
 
                         $term_exist = $this->is_exits($entity_type, $bundle, $item);
                         if (sizeof($term_exist) == 0) {
-                            $term = $this->save($entity_type, $bundle,
+                            $term = $this->save(
+                                $entity_type,
+                                $bundle,
                                 [
                                     $key_label => $item,
                                 ]
@@ -356,7 +396,6 @@ class CRUDService extends CRUDBaseService
                             $field_items[] = array(
                                 'target_id' => $term->id(),
                             );
-
                         } else {
                             $field_items[] = array(
                                 'target_id' => end($term_exist),
@@ -426,5 +465,4 @@ class CRUDService extends CRUDBaseService
             return $this->entity_reference($entity_parent, $field_name, $field_value);
         }
     }
-
 }
