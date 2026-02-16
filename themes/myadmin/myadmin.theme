@@ -27,6 +27,7 @@ function myadmin_preprocess_page(&$variables)
   // }
   // // Injecter dans drupalSettings
   // $variables['#attached']['drupalSettings']['vueArticles'] = $articles;
+  
   $current_user = \Drupal::currentUser();
   $data = [
     'isLoggedIn' => $current_user->isAuthenticated(), // TRUE ou FALSE
