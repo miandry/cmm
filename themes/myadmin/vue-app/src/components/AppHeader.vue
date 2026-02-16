@@ -45,7 +45,7 @@
     </div>
 
     <!-- Menu Toggle Button -->
-    <button class="menu-toggle" @click="emitToggleMenu" aria-label="Toggle navigation menu">
+    <button class="menu-toggle" @click="emitToggleMenu" aria-label="Toggle navigation menu" v-if="authStore.isAuthenticated">
       <i class="fas fa-bars"></i>
     </button>
   </div>

@@ -30,7 +30,7 @@
       </nav>
 
       <!-- Status Footer -->
-      <div class="menu-footer">
+      <div class="menu-footer" v-if="authStore.isAuthenticated">
         <div class="status-indicator">
           <div class="online-dot" />
           <span class="status-text capitalize">
