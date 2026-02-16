@@ -101,8 +101,13 @@ router.beforeEach(async (to, from, next) => {
       // return next("/"); 
     }
   }
+  if (to.matched.length === 0) {
+    // Route non trouvée
+    next('/caisse');
+  }
 
   next();
+
 });
 
 const pinia = createPinia();
