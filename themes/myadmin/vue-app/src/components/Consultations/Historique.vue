@@ -3,7 +3,7 @@
         <div class="flex justify-between">
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Historique médical</h3>
             <span class="text-xs text-primary" v-if="consultationsStore.consultations.rows.length > 5"
-                @click="showAllHistory(consultationsStore.consultations.rows[0].field_client.nid)">voir plus</span> 
+                @click="showAllHistory(consultationsStore.consultations.rows[0].field_client.nid)">voir plus</span>
         </div>
         <div class="space-y-1 max-h-48 overflow-y-auto" v-if="consultationsStore.consultations.rows.length">
             <div v-for="cons in consultationsStore.consultations.rows" :key="cons.nid" @click="editConsultation(cons)"
@@ -20,7 +20,12 @@
                         <span>{{ cons.field_temperature }}°C </span>
                         <span> - {{ cons.field_tension_arterielle }} mmHg</span>
                     </p>
-                    <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short') }}</span>
+                    <p>
+                        <span @click.stop="print(cons.nid)"
+                            title="Imprimer ordonnance" class="cursor-pointer mr-2 text-green-600"><i
+                                class="ri-printer-line"></i></span>
+                        <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short') }}</span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -107,6 +112,15 @@ export default {
             }
         };
 
+        const print = (nid) => {
+            router.push({
+                name: 'ordonnance',
+                query: {
+                    key: nid,
+                }
+            })
+        }
+
         const showAllHistory = (clientId) => {
             emit('openHistory', clientId);
         }
@@ -115,7 +129,8 @@ export default {
             consultationsStore,
             formatDate,
             editConsultation,
-            showAllHistory
+            showAllHistory,
+            print
         }
     },
 }

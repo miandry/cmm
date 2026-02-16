@@ -108,7 +108,7 @@
         <div class="block sm:hidden fixed bottom-0 left-0 right-0 mx-auto bg-white border-t border-gray-200 z-30">
             <div class="px-4 py-3">
                 <div class="flex items-center justify-between mb-3 cursor-pointer" @click="isCartOpen = !isCartOpen">
-                    <h2 class="text-sm font-semibold text-gray-900">Voir commande actuelle</h2>
+                    <h2 class="text-sm font-semibold text-gray-900">Placer commande actuelle</h2>
                     <div class="flex items-center space-x-2">
                         <span class="text-xs text-primary font-medium">
                             {{ articleStore.cardItems.length }} articles

@@ -78,7 +78,7 @@
                                 supérieure à 0</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Quantité untaire<span
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quantité unitaire<span
                                     class="text-red-500">
                                     *</span></label>
                             <input type="number" min="1" v-model="form.field_quantite_unitaire" readonly

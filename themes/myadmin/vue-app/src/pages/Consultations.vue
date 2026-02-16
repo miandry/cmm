@@ -5,7 +5,7 @@
             <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-4">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Consultation en cours</h3>
                 <!-- consulatation form -->
-                <GeneralForm ref="generalFormRef" />
+                <GeneralForm ref="generalFormRef" :canChange="canChange" />
             </div>
             <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-4 hidden">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Examen clinique</h3>
@@ -17,17 +17,8 @@
                 <!-- Prescription et suivi -->
                 <PrescriptionEtSuivi ref="prescriptionEtSuivi" />
             </div>
-        </div>
-        <!-- patient & historique -->
-        <div
-            class="w-full lg:w-80 bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col order-1 lg:order-2 h-full">
-            <!-- Patient actuelle -->
-            <Patient :canChange="canChange" />
-            <Historique @openHistory="openHistory" />
-            <!-- History modal -->
-            <AllHistory v-if="isHistoryModalOpen" @closeHistory="closeHistory" :clientId="clientId" />
-
-            <div class="flex-1 p-3 flex flex-col justify-end">
+            <!-- For mobile device -->
+            <div class="flex-1 p-3 flex flex-col justify-end lg:hidden">
                 <div class="space-y-2">
                     <button @click="handleConsultationSubmit(false, 'ordonnance')"
                         class="w-full py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 !rounded-button font-medium whitespace-nowrap flex items-center justify-center space-x-2 text-sm cursor-pointer">
@@ -44,7 +35,46 @@
                         <span>Sauvegarder en brouillon</span>
                     </button>
                     <!--  v-if="canFinalizeConsultation" -->
-                    <button @click="handleConsultationSubmit(true)" 
+                    <button @click="handleConsultationSubmit(true)"
+                        class="w-full py-2 bg-secondary hover:bg-green-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap cursor-pointer">
+                        Finaliser la consultation
+                    </button>
+                    <router-link v-if="isEditMode" :to="{ name: 'consultations' }"
+                        class="w-full py-2 bg-primary hover:bg-bleu-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap cursor-pointer inline-block text-center">
+                        Nouvelle consultation
+                    </router-link>
+                </div>
+            </div>
+
+            <Historique @openHistory="openHistory" class="block lg:hidden"/>
+        </div>
+        <!-- patient & historique -->
+        <div
+            class="w-full lg:w-80 bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col order-1 lg:order-2 h-full">
+            <!-- Patient actuelle -->
+            <Patient :canChange="canChange" class="hidden lg:block"/>
+            <Historique @openHistory="openHistory" class="hidden lg:block"/>
+            <!-- History modal -->
+            <AllHistory v-if="isHistoryModalOpen" @closeHistory="closeHistory" :clientId="clientId" />
+
+            <div class="hidden flex-1 p-3 lg:flex flex-col justify-end">
+                <div class="space-y-2">
+                    <button @click="handleConsultationSubmit(false, 'ordonnance')"
+                        class="w-full py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 !rounded-button font-medium whitespace-nowrap flex items-center justify-center space-x-2 text-sm cursor-pointer">
+                        <div class="w-4 h-4 flex items-center justify-center">
+                            <i class="ri-printer-line"></i>
+                        </div>
+                        <span>Imprimer ordonnance</span>
+                    </button>
+                    <button @click="handleConsultationSubmit(false)"
+                        class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 !rounded-button font-medium whitespace-nowrap flex items-center justify-center space-x-2 text-sm cursor-pointer">
+                        <div class="w-4 h-4 flex items-center justify-center">
+                            <i class="ri-save-line"></i>
+                        </div>
+                        <span>Sauvegarder en brouillon</span>
+                    </button>
+                    <!--  v-if="canFinalizeConsultation" -->
+                    <button @click="handleConsultationSubmit(true)"
                         class="w-full py-2 bg-secondary hover:bg-green-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap cursor-pointer">
                         Finaliser la consultation
                     </button>
