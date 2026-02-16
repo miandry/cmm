@@ -51,29 +51,36 @@
 </template>
 
 <script>
+import { useAuthStore } from '../stores/auth';
+
 export default {
   name: "AppHeader",
   emits: ["toggle-menu"],
 
   data() {
     return {
-      user: window.APP_DATA || {},
       showUserMenu: false,
     };
   },
 
+  setup() {
+    const authStore = useAuthStore();
+    return { authStore };
+  },
+
   computed: {
     username() {
-      return this.user.username || "";
+      return this.authStore.user?.name || this.authStore.user?.username || window.APP_DATA?.username || "";
     },
 
     roles() {
-      return this.user.roles || [];
+      return this.authStore.user?.roles || window.APP_DATA?.roles || [];
     },
 
     // MENU FILTRÉ SELON LES RÔLES
     menuItems() {
-      return (this.user.menu || []).filter(item => {
+      const menu = this.authStore.user?.menu || window.APP_DATA?.menu || [];
+      return menu.filter(item => {
         // menu public
         if (!item.roles || item.roles.length === 0) {
           return true;

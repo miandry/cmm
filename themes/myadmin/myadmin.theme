@@ -39,6 +39,7 @@ function myadmin_preprocess_page(&$variables)
       ["name" => "Commandes", "path" => "/commandes", "icon" => "fas fa-shopping-cart", "paths" => ["/commandes", "/fr/commandes"], 'roles' => ['caissier', 'docteur', 'administrator']],
       ["name" => "Patients", "path" => "/patients", "icon" => "fas fa-users", "paths" => ["/patients", "/fr/patients"], 'roles' => ['docteur', 'administrator']],
       ["name" => "Consulter", "path" => "/consultations", "icon" => "fas fa-stethoscope", "paths" => ["/consultations", "/consultations/edit", "/fr/consultations", "/fr/consultations/edit"], 'roles' => ['docteur', 'administrator']],
+      ["name" => "Assistant IA", "path" => "/assist", "icon" => "fas fa-robot", "paths" => ["/assist", "/fr/assist"], 'roles' => ['docteur', 'administrator']],
       ["name" => "Stocks", "path" => "/stocks", "icon" => "fas fa-boxes", "paths" => ["/stocks", "/fr/stocks"], 'roles' => ['caissier', 'docteur', 'administrator']],
     ]
   ];
