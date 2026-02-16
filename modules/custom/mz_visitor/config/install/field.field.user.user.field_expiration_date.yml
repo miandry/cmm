@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_expiration_date
+  module:
+    - datetime
+id: user.user.field_expiration_date
+field_name: field_expiration_date
+entity_type: user
+bundle: user
+label: 'Expiration Date'
+description: 'The date when this user account should be blocked.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: datetime

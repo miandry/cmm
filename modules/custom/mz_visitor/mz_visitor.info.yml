@@ -1,0 +1,8 @@
+name: 'MZ Visitor'
+type: module
+description: 'Manage temporary visitor users with automatic expiration.'
+package: Custom
+core_version_requirement: ^9 || ^10 || ^11
+dependencies:
+  - drupal:user
+  - drupal:datetime

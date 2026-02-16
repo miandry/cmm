@@ -1,0 +1,250 @@
+/**
+ * Modern styling for the Visitor Request form with Animation and Branding.
+ */
+
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --glass-bg: rgba(255, 255, 255, 0.95);
+}
+
+/* Base styles to ensure centering even if theme templates are minimal */
+html,
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Background for animation */
+body {
+    background: #0f172a !important;
+    /* Deep dark fallback for Three.js */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow-x: hidden;
+}
+
+/* Ensure the canvas is always visible and full screen */
+#mz-visitor-canvas {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 0 !important;
+    pointer-events: none !important;
+}
+
+.mz-visitor-request-wrapper {
+    max-width: 450px;
+    width: 85%;
+    margin: auto !important;
+    padding: 2.5rem 1.5rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 25px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    font-family: 'Outfit', 'Inter', sans-serif;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    position: relative;
+    z-index: 10;
+}
+
+@media (min-width: 640px) {
+    .mz-visitor-request-wrapper {
+        padding: 3.5rem 2.5rem;
+        width: 95%;
+    }
+}
+
+/* Company Branding Footer */
+.mz-visitor-request-wrapper::after {
+    content: 'Propulsé par Mizara Technologie';
+    display: block;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #4a5568;
+    margin-top: 2.5rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.mz-visitor-request-wrapper h2 {
+    color: #1a202c;
+    font-size: 1.75rem;
+    font-weight: 900;
+    margin-bottom: 2rem;
+    text-align: center;
+    letter-spacing: -0.05em;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+@media (min-width: 640px) {
+    .mz-visitor-request-wrapper h2 {
+        font-size: 2.25rem;
+    }
+}
+
+/* Styled Drupal Messages */
+[data-drupal-messages],
+.mz-visitor-request-wrapper .messages,
+[role="alert"] {
+    max-width: 450px;
+    width: 95%;
+    margin: 0 auto 1.5rem auto !important;
+    position: relative;
+    z-index: 100;
+}
+
+.messages--status,
+.mz-visitor-request-wrapper .messages--status {
+    background: rgba(240, 255, 244, 0.95) !important;
+    border-left: 6px solid #48bb78 !important;
+    color: #22543d !important;
+    padding: 1.25rem 1.5rem !important;
+    border-radius: 20px !important;
+    font-weight: 600;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important;
+    backdrop-filter: blur(10px);
+    margin-bottom: 1rem !important;
+}
+
+.messages--error,
+[role="alert"] {
+    background: rgba(255, 245, 245, 0.95) !important;
+    border-left: 6px solid #f56565 !important;
+    color: #c53030 !important;
+    padding: 1.25rem 1.5rem !important;
+    border-radius: 20px !important;
+    font-weight: 700;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important;
+    backdrop-filter: blur(10px);
+    margin-bottom: 1rem !important;
+    text-align: left;
+}
+
+/* Visibility fix for screen reader headers */
+[role="alert"] .visually-hidden {
+    position: absolute !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    height: 1px !important;
+    width: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+}
+
+.mz-visitor-request-wrapper .form-item {
+    margin-bottom: 1.75rem;
+    width: 100%;
+}
+
+.mz-visitor-request-wrapper label {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 0.75rem;
+    margin-left: 0.25rem;
+}
+
+.mz-visitor-request-wrapper input[type="email"],
+.mz-visitor-request-wrapper input[type="text"],
+.mz-visitor-request-wrapper input[type="password"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1rem 1.25rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #fff;
+    color: #1a202c;
+}
+
+.mz-visitor-request-wrapper input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+    transform: scale(1.01);
+}
+
+.mz-visitor-request-wrapper .form-submit {
+    width: 100%;
+    padding: 1.125rem;
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin-top: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(102, 126, 234, 0.4);
+}
+
+.mz-visitor-request-wrapper .form-submit:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 20px 25px -5px rgba(102, 126, 234, 0.5);
+}
+
+.mz-visitor-request-wrapper details {
+    background: rgba(237, 242, 247, 0.8);
+    border-radius: 18px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.mz-visitor-request-wrapper details summary {
+    font-weight: 800;
+    color: #1a202c;
+    cursor: pointer;
+    outline: none;
+    font-size: 1.1rem;
+}
+
+.mz-visitor-request-wrapper .button--primary {
+    display: block;
+    text-align: center;
+    padding: 1.125rem;
+    background: #1a202c;
+    color: white !important;
+    border-radius: 16px;
+    text-decoration: none;
+    font-weight: 750;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+}
+
+.mz-visitor-request-wrapper .button--primary:hover {
+    background: #000;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.mz-visitor-request-wrapper strong {
+    color: #4c51bf;
+    font-size: 1.25rem;
+}
+
+.mz-visitor-request-wrapper code {
+    background: #fff;
+    padding: 0.4rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid #cbd5e0;
+    color: #e53e3e;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
