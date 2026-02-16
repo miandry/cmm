@@ -2,12 +2,26 @@ import { defineStore } from 'pinia';
 import axios from 'axios';
 
 export const useAuthStore = defineStore('auth', {
-    state: () => ({
-        user: window.APP_DATA?.user || null,
-        isAuthenticated: !!window.APP_DATA?.user,
-        loading: false,
-        error: null,
-    }),
+    state: () => {
+        // Try to recover user from localStorage
+        const savedUser = localStorage.getItem('user_data');
+        const user = savedUser ? JSON.parse(savedUser) : (window.APP_DATA?.user || null);
+
+        // Sync to window.APP_DATA for legacy global access if needed
+        if (user && window.APP_DATA) {
+            window.APP_DATA.user = user;
+            window.APP_DATA.isLoggedIn = true;
+            window.APP_DATA.username = user.name || user.username;
+            window.APP_DATA.roles = user.roles || [];
+        }
+
+        return {
+            user: user,
+            isAuthenticated: !!user,
+            loading: false,
+            error: null,
+        }
+    },
 
     actions: {
         async login(username, password) {
@@ -15,7 +29,6 @@ export const useAuthStore = defineStore('auth', {
             this.error = null;
 
             try {
-                // En Drupal, le login standard est POST /user/login?_format=json
                 const response = await axios.post('/user/login?_format=json', {
                     name: username,
                     pass: password
@@ -23,16 +36,18 @@ export const useAuthStore = defineStore('auth', {
 
                 if (response.status === 200) {
                     const userData = response.data;
-                    // Store the complete user data (including menu, roles, etc.)
-                    this.user = userData.current_user || userData;
+                    this.user = userData.current_user;
                     this.isAuthenticated = true;
 
-                    // Mettre à jour window.APP_DATA pour la compatibilité
+                    // Persist for page reloads
+                    localStorage.setItem('user_data', JSON.stringify(this.user));
+
+                    // Sync to window.APP_DATA
                     if (!window.APP_DATA) window.APP_DATA = {};
-                    // Merge the complete user data into APP_DATA
-                    Object.assign(window.APP_DATA, userData);
                     window.APP_DATA.user = this.user;
                     window.APP_DATA.isLoggedIn = true;
+                    window.APP_DATA.username = this.user.name || this.user.username;
+                    window.APP_DATA.roles = this.user.roles || [];
 
                     return true;
                 }
@@ -57,29 +72,28 @@ export const useAuthStore = defineStore('auth', {
             } finally {
                 this.user = null;
                 this.isAuthenticated = false;
+                localStorage.removeItem('user_data');
+
                 if (window.APP_DATA) {
                     window.APP_DATA.user = null;
                     window.APP_DATA.isLoggedIn = false;
                 }
-                // Force reload to clear all states
                 window.location.href = '/user/login';
             }
         },
 
-        // Vérifier si l'utilisateur est connecté au chargement (si session cookie existe)
         async checkAuth() {
             if (this.isAuthenticated) return true;
 
             try {
                 const response = await axios.get('/user/login_status?_format=json');
                 if (response.data === 1) {
-                    // Si connecté, on pourrait avoir besoin de fetcher le user profile
-                    // Mais pour l'instant on suppose que window.APP_DATA est la source de vérité au chargement initial
                     this.isAuthenticated = true;
                     return true;
                 }
             } catch (e) {
                 this.isAuthenticated = false;
+                localStorage.removeItem('user_data');
             }
             return false;
         }
