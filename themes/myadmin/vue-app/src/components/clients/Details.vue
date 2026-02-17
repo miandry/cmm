@@ -95,17 +95,18 @@
                     <div class="p-3 border-b border-gray-200">
                         <div class="flex justify-between">
                             <h3 class="text-sm font-semibold text-gray-900 mb-3">Historique médical</h3>
-                            <span class="text-xs text-primary cursor-pointer" v-if="consultationsStore.consultations.rows.length > 5"
+                            <span class="text-xs text-primary cursor-pointer"
+                                v-if="consultationsStore.consultations.rows.length > 5"
                                 @click="showAllHistory(client.nid)">voir plus</span>
                         </div>
                         <div class="space-y-1 max-h-48 overflow-y-auto"
                             v-if="consultationsStore.consultations.rows.length">
-                            <div v-for="cons in consultationsStore.consultations.rows" :key="cons.nid"
-                                @click="editConsultation(cons)" class="p-2 rounded-lg cursor-pointer"
+                            <div v-for="(cons, index) in consultationsStore.consultations.rows" :key="cons.nid"
+                                @click="editConsultation(cons, index)" class="p-2 rounded-lg cursor-pointer"
                                 :class="[cons.field_consultation_status == 'draft' ? 'bg-orange-100 hover:bg-orange-200' : 'bg-green-100 hover:bg-green-200']">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs flex-1 two-lines font-medium text-gray-900">{{ cons.field_motif
-                                    }}</span>
+                                        }}</span>
                                     <p class="text-xs text-green-500"
                                         v-if="cons.field_consultation_status == 'completed'"><i
                                             class="ri-checkbox-circle-line"></i> Payé</p>
@@ -117,7 +118,7 @@
                                         <span> - {{ cons.field_tension_arterielle }} mmHg</span>
                                     </p>
                                     <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>
@@ -186,7 +187,9 @@ export default {
                 'field_tension_arterielle',
                 'field_client',
                 'created',
-                'field_consultation_status'
+                'field_consultation_status',
+                'field_poids',
+                'field_montant',
             ],
             sort: { val: 'nid', op: 'desc' },
             filters: {},
@@ -230,7 +233,17 @@ export default {
         }
 
         // edit consulatation
-        const editConsultation = (consultation) => {
+        const editConsultation = (consultation, index) => {
+            if (index == 0 && consultation.field_consultation_status != "draft") {
+                localStorage.setItem(
+                    'currentConsultation',
+                    JSON.stringify(consultation)
+                );
+                router.push({
+                    name: 'consultations'
+                });
+                return;
+            }
             if (consultation.field_consultation_status == "draft") {
                 router.push({
                     name: 'consultation.edit',

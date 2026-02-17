@@ -46,14 +46,16 @@
                 </div>
             </div>
 
-            <Historique @openHistory="openHistory" class="block lg:hidden"/>
+            <Historique @openHistory="openHistory" @loadLastconsultation="loadLastconsultation"
+                class="block lg:hidden" />
         </div>
         <!-- patient & historique -->
         <div
             class="w-full lg:w-80 bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col order-1 lg:order-2 h-full">
             <!-- Patient actuelle -->
-            <Patient :canChange="canChange" class="hidden lg:block"/>
-            <Historique @openHistory="openHistory" class="hidden lg:block"/>
+            <Patient :canChange="canChange" class="hidden lg:block" />
+            <Historique @openHistory="openHistory" @loadLastconsultation="loadLastconsultation"
+                class="hidden lg:block" />
             <!-- History modal -->
             <AllHistory v-if="isHistoryModalOpen" @closeHistory="closeHistory" :clientId="clientId" />
 
@@ -119,7 +121,7 @@ import PrescriptionEtSuivi from '../components/Consultations/PrescriptionEtSuivi
 import Historique from '../components/Consultations/Historique.vue'
 import { useClientStore, useConsultationStore, useExamenStore, useOrderStore } from '../stores/index.js';
 import PageLoader from '../components/PageLoader.vue'
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, computed, nextTick, onBeforeUnmount } from 'vue'
 import { toast } from 'vue-sonner'
 import { useRouter, useRoute } from 'vue-router'
 import { watch } from 'vue'
@@ -137,10 +139,10 @@ export default {
         AllHistory
     },
     setup() {
-        // const clientStore = useClientStore();
         const prescriptionEtSuivi = ref(null);
         const consultationsStore = useConsultationStore();
         const examenStore = useExamenStore();
+        const orderStore = useOrderStore();
         const generalFormRef = ref(null);
         const examenCliniqueRef = ref(null);
         const patienStore = useClientStore();
@@ -153,9 +155,9 @@ export default {
         const continueToNextStep = ref(() => { });
         const clientId = ref(null)
         const isHistoryModalOpen = ref(false)
+        const consultationReference = ref(null);
 
         const handleConsultationSubmit = async (withOrder, ordonnance = null) => {
-            // confirmSaveModal.value = true;
             try {
                 loader.value = true
                 if (
@@ -226,14 +228,14 @@ export default {
 
                 const hasExamens = allExamens?.length > 0;
                 const hasMedications = allMedications?.length > 0;
-                if (withOrder && (hasExamens || hasMedications)) {
-                    loader.value = false;
-                    const proceed = await askConfirm();
-                    if (!proceed) {
-                        return; // utilisateur a annulé
-                    }
-                    loader.value = true;
-                }
+                // if (withOrder && (hasExamens || hasMedications)) {
+                //     loader.value = false;
+                //     const proceed = await askConfirm();
+                //     if (!proceed) {
+                //         return; // utilisateur a annulé
+                //     }
+                //     loader.value = true;
+                // }
 
                 const consulatationGlobalData = {
                     entity_type: "node",
@@ -324,7 +326,8 @@ export default {
                         field_examens_order: [],
                         field_date: formatDateUS(),
                         status: 1,
-                        field_status: "payed"
+                        field_status: "payed",
+                        field_consultation_nid: response.data.item,
                     };
                     if (allMedications && allMedications.length > 0) {
                         const allArticles = allMedications.map(item => ({
@@ -364,6 +367,26 @@ export default {
                     })
                 } else {
                     router.push({ name: 'patients' });
+                }
+
+                if (consultationReference.value) {
+                    await orderStore.fetchOrders({
+                        fields: [
+                            'nid',
+                            'title',
+                            'field_consultation_nid'
+                        ],
+                        filters: {
+                            field_consultation_nid: {
+                                val: consultationReference.value,
+                                op: '=',
+                            }
+                        }
+                    })
+                    if (orderStore.orders.rows[0].nid) {
+                        await consultationsStore.destroyOrder(orderStore.orders.rows[0].nid)
+                    }
+                    await consultationsStore.destroyConsultation(consultationReference.value);
                 }
 
             } catch (error) {
@@ -421,6 +444,14 @@ export default {
         );
 
         onMounted(async () => {
+            // Charger les données depuis localStorage
+            const localConsultation = localStorage.getItem('currentConsultation');
+
+            if (localConsultation) {
+                const consultationToLoad = JSON.parse(localConsultation);
+                loadLastconsultation(consultationToLoad);
+            }
+
             // patient preselectionner et edit
             const clientId = route.query.client;
             if (clientId) {
@@ -454,9 +485,20 @@ export default {
             isHistoryModalOpen.value = true
         }
 
+        const loadLastconsultation = async (consultation) => {
+            await patienStore.fetchClient(consultation.field_client.nid);
+            generalFormRef.value?.setFormData(consultation);
+            canChange.value = false;
+            consultationReference.value = consultation.nid
+        }
+
         const closeHistory = () => {
             isHistoryModalOpen.value = false
         }
+
+        onBeforeUnmount(() => {
+            localStorage.removeItem('currentConsultation');
+        });
 
         return {
             patienStore,
@@ -473,6 +515,7 @@ export default {
             confirmSaveModal,
             continueToNextStep,
             openHistory,
+            loadLastconsultation,
             closeHistory,
             isHistoryModalOpen
         };

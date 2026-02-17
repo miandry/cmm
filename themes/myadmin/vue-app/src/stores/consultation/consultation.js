@@ -2,6 +2,8 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { buildQueryParams } from "../../utils/queryBuilder.js";
 import {
+  deleteConsultation,
+  deleteOrder,
   getConsultations,
   saveConsultation,
 } from "../../services/consultation.js";
@@ -81,7 +83,7 @@ export const useConsultationStore = defineStore("consultation", () => {
     // Retirer tous les items avec ce nid
     medications.value = medications.value.filter((item) => item.nid !== nid);
     savedMedication.value.items = savedMedication.value.items.filter(
-      (item) => item.nid !== nid
+      (item) => item.nid !== nid,
     );
     savedMedication.value.total -= parseFloat(prix * quantity);
   }
@@ -98,6 +100,28 @@ export const useConsultationStore = defineStore("consultation", () => {
     consultations.value = { rows: [], total: 0 };
   }
 
+  async function destroyConsultation(id) {
+    error.value = null;
+    try {
+      const res = await deleteConsultation(id);
+    } catch (err) {
+      error.value = err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+    async function destroyOrder(id) {
+    error.value = null;
+    try {
+      const res = await deleteOrder(id);
+    } catch (err) {
+      error.value = err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     consultations,
     consultation,
@@ -112,5 +136,7 @@ export const useConsultationStore = defineStore("consultation", () => {
     removeFromList,
     resetMedication,
     consultationsReset,
+    destroyOrder,
+    destroyConsultation,
   };
 });
