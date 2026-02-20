@@ -339,12 +339,12 @@ export default {
             // Charger l'inventaire au montage
             await store.fetchArticles({
                 fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
-                filters: {
-                    status: {
-                        val: 1,
-                        op: "="
-                    }
-                },
+                // filters: {
+                //     status: {
+                //         val: 1,
+                //         op: "="
+                //     }
+                // },
                 pager: 0,
                 offset: 50,
                 sort: { val: 'title', op: 'asc' }
@@ -510,7 +510,7 @@ export default {
 
             // Fonction de parsing simple pour extraire les médicaments
             const extractMedicationNames = (query) => {
-                // Liste des mots à ignorer (déterminants, prépositions, verbes, etc.)
+                // Liste des mots à ignorer
                 const stopWords = [
                     'le', 'la', 'les', 'du', 'de', 'des', 'un', 'une', 'dans', 'pour', 'avec',
                     'est', 'sont', 'et', 'ou', 'mais', 'donc', 'car', 'ni', 'hier', 'aujourd',
@@ -518,118 +518,79 @@ export default {
                     'je', 'tu', 'nous', 'vous', 'ils', 'elles', 'me', 'te', 'se', 'lui',
                     'moi', 'toi', 'soi', 'stp', 'svp', 's\'il', 'vous', 'plait', 'plaît',
                     'peux', 'peut', 'pouvez', 'pouvoir', 'avoir', 'être', 'faire', 'voir',
-                    'donne', 'donner', 'donnez', 'donnes', 's\'il', 'te', 'please', 'please',
+                    'donne', 'donner', 'donnez', 'donnes', 'please',
                     'stock', 'quantité', 'quantite', 'disponible', 'reste', 'restant',
-                    'combien', 'nombre', 'unites', 'unités', 'boites', 'boîtes', 'comprimes',
-                    'comprimés', 'ampoules', 'flacons', 'sachets', 'gellules', 'gélules',
-                    'sirop', 'pommade', 'creme', 'crème', 'solution', 'suspension', 'susp'
+                    'combien', 'nombre', 'unites', 'unités', 'boites', 'boîtes'
                 ];
 
-                // Nettoyer la requête
+                // Normaliser la requête
                 let cleanQuery = query.toLowerCase()
                     .normalize('NFD')
                     .replace(/[\u0300-\u036f]/g, '') // Enlever les accents
-                    .replace(/[?!,;:.]/g, ' ') // Remplacer la ponctuation par des espaces
-                    .replace(/\s+/g, ' ') // Normaliser les espaces
                     .trim();
 
                 console.log('Requête nettoyée:', cleanQuery);
 
-                // Supprimer les phrases d'introduction courantes
+                // Étape 1: Supprimer la partie introductive
                 const introPatterns = [
-                    /^(?:verifie|vérifie|peux-tu|peux tu|pourrais-tu|pourrais tu|est-ce que|est ce que|je voudrais|je veux|donne-moi|donne moi)\s+/i,
-                    /^(?:la quantite|la quantité|le stock|le nombre|les infos|information sur)\s+(?:d[' e]|de|des)?\s*/i,
-                    /^(?:s'il te plait|svp|stp)\s*/i,
+                    /^(?:combien|quel est|quelle est|verifie|vérifie).*?(?:de|d'|du|des|les?)\s+/i,
+                    /^.*?(?:dans le stock|en stock).*?(?:de|d'|du|des|les?)\s+/i,
                 ];
 
                 introPatterns.forEach(pattern => {
                     cleanQuery = cleanQuery.replace(pattern, '');
                 });
 
+                // Si l'intro n'a pas été supprimée, chercher après "de" ou "des"
+                if (cleanQuery === query.toLowerCase()) {
+                    const deMatch = cleanQuery.match(/(?:de|d'|du|des|les?)\s+(.+)$/i);
+                    if (deMatch) {
+                        cleanQuery = deMatch[1];
+                    }
+                }
+
+                // Enlever "dans le stock" à la fin
+                cleanQuery = cleanQuery.replace(/\s+dans le stock$/, '');
+
                 console.log('Après suppression intro:', cleanQuery);
 
-                // Extraire les mots significatifs (min 3 caractères, pas dans stopWords)
-                const words = cleanQuery.split(/\s+/)
-                    .filter(word => word.length > 2 && !stopWords.includes(word))
-                    .map(word => word.replace(/[0-9]+/g, '').trim()) // Enlever les chiffres seuls
-                    .filter(word => word.length > 0);
+                // Étape 2: Détecter les groupes liés par "et", "+", "&" (à préserver)
+                // Remplacer temporairement ces connecteurs par un marqueur spécial
+                let processedQuery = cleanQuery
+                    .replace(/\s+et\s+/g, '###ET###')
+                    .replace(/\s*\+\s*/g, '###ET###')
+                    .replace(/\s*&\s*/g, '###ET###');
 
-                console.log('Mots filtrés:', words);
+                console.log('Après marquage des connecteurs:', processedQuery);
 
-                // Détecter les noms composés (ex: "amoxicilline acide clavulanique")
-                const compoundNames = [];
-                let i = 0;
-                while (i < words.length) {
-                    // Si un mot peut faire partie d'un nom composé (lettres + possiblement chiffres)
-                    if (/^[a-z]+(?:[0-9]+)?$/.test(words[i])) {
-                        let compound = words[i];
-                        let j = i + 1;
+                // Étape 3: Splitter d'abord par les virgules (séparateurs de groupes)
+                let groups = processedQuery.split(/\s*,\s*/)
+                    .map(group => group.trim())
+                    .filter(group => group.length > 0);
 
-                        // Regrouper avec les mots suivants si ça forme un nom composé probable
-                        while (j < words.length &&
-                            (words[j].length > 2 || /^[0-9]+(?:mg|g|ml|ui)?$/.test(words[j]))) {
-                            compound += ' ' + words[j];
-                            j++;
-                        }
+                console.log('Groupes détectés:', groups);
 
-                        if (j > i + 1) {
-                            // C'est un nom composé
-                            compoundNames.push(compound);
-                            i = j;
-                        } else {
-                            // Mot seul
-                            compoundNames.push(words[i]);
-                            i++;
-                        }
-                    } else {
-                        i++;
+                // Étape 4: Restaurer les "et" dans chaque groupe et nettoyer
+                const medications = [];
+
+                groups.forEach(group => {
+                    // Restaurer les "et" dans le groupe
+                    let restoredGroup = group.replace(/###ET###/g, ' et ');
+
+                    // Nettoyer le groupe (enlever mots indésirables au début/fin)
+                    restoredGroup = restoredGroup
+                        .replace(/^(?:de|d'|du|des|le|la|les)\s+/, '')
+                        .replace(/\s+(?:stp|svp|please|disponible|restant)$/, '')
+                        .trim();
+
+                    if (restoredGroup.length > 2) {
+                        medications.push(restoredGroup);
                     }
-                }
+                });
 
-                console.log('Noms composés détectés:', compoundNames);
+                console.log('Médicaments finaux (groupes préservés):', medications);
 
-                // Dernier nettoyage : enlever les terminaisons comme "disponible", "stp", etc.
-                const finalMedications = compoundNames
-                    .map(name => {
-                        // Enlever les mots de fin non désirés
-                        const unwantedEndings = ['disponible', 'stp', 'svp', 'please', 'restant', 'restante'];
-                        let cleanName = name;
-                        unwantedEndings.forEach(end => {
-                            if (cleanName.endsWith(' ' + end)) {
-                                cleanName = cleanName.substring(0, cleanName.length - end.length - 1);
-                            }
-                        });
-                        return cleanName;
-                    })
-                    .filter(name => {
-                        // Garder seulement si ça ressemble à un nom de médicament
-                        return name.length > 2 &&
-                            !stopWords.includes(name) &&
-                            !/^\d+$/.test(name); // Pas que des chiffres
-                    });
-
-                console.log('Médicaments finaux:', finalMedications);
-
-                // Si on n'a rien trouvé, essayer une approche plus simple
-                if (finalMedications.length === 0) {
-                    // Chercher des patterns comme "de X" ou "du X"
-                    const patterns = [
-                        /(?:de|du|des|d')\s+([a-z]+(?: [a-z]+)*)/g,
-                        /(?:pour|avec|sans)\s+([a-z]+(?: [a-z]+)*)/g,
-                    ];
-
-                    for (const pattern of patterns) {
-                        const matches = cleanQuery.matchAll(pattern);
-                        for (const match of matches) {
-                            if (match[1] && match[1].length > 3) {
-                                finalMedications.push(match[1]);
-                            }
-                        }
-                    }
-                }
-
-                // Dédupliquer
-                return [...new Set(finalMedications)];
+                return medications;
             };
 
             // Détecter si la question concerne le stock
