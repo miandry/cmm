@@ -339,6 +339,12 @@ export default {
             // Charger l'inventaire au montage
             await store.fetchArticles({
                 fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
+                filters: {
+                    status: {
+                        val: 1,
+                        op: "="
+                    }
+                },
                 pager: 0,
                 offset: 50,
                 sort: { val: 'title', op: 'asc' }
