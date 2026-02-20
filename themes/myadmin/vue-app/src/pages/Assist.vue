@@ -594,44 +594,104 @@ export default {
             };
 
             // Détecter si la question concerne le stock
-            if (userMessage.toLowerCase().match(/stock|quantité|reste|disponible/i)) {
+            // Détecter si la question concerne le stock
+            if (userMessage.toLowerCase().match(/stock|quantité|reste|disponible|combien/i)) {
                 const possibleMedications = extractMedicationNames(userMessage);
-                console.log("Médicaments potentiels détectés dans la question:", possibleMedications);
+
                 if (possibleMedications.length > 0) {
-                    dynamicInventorySummary = '\n\n🔍 **RECHERCHE SPÉCIFIQUE DEMANDÉE:**\n';
+                    dynamicInventorySummary = '\n\n🔍 **RÉSULTATS DE LA RECHERCHE DE STOCKS:**\n';
 
                     // Rechercher chaque médicament potentiel
                     for (const medTerm of possibleMedications) {
+                        dynamicInventorySummary += `\n**${medTerm}:**\n`;
+
                         try {
+                            // Nettoyer le terme de recherche pour l'API
+                            let searchTerm = medTerm
+                                .replace(/ et /g, ' ')  // Remplacer "et" par espace
+                                .replace(/[+&]/g, ' ')    // Remplacer + et & par espace
+                                .replace(/\s+/g, ' ')     // Normaliser les espaces
+                                .trim();
+
+                            console.log(`Recherche API pour: "${searchTerm}"`);
+
                             // Recherche dynamique dans l'API
                             await store.fetchArticles({
                                 fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
                                 filters: {
                                     title: {
-                                        val: medTerm,
+                                        val: searchTerm,
                                         op: 'CONTAINS',
                                     }
                                 },
                                 pager: 0,
-                                offset: 5
+                                offset: 10
                             });
 
                             const results = store.articles.rows;
 
                             if (results.length > 0) {
-                                dynamicInventorySummary += `\nPour "${medTerm}":\n`;
-                                results.slice(0, 3).forEach(article => {
-                                    dynamicInventorySummary += `  - ${article.title}: ${article.field_quantite_stock || 0} ${article.field_unite || 'unités'}\n`;
+                                // Trier par pertinence (correspondance exacte d'abord)
+                                const sortedResults = results.sort((a, b) => {
+                                    const aTitle = a.title.toLowerCase();
+                                    const bTitle = b.title.toLowerCase();
+                                    const searchLower = searchTerm.toLowerCase();
+
+                                    // Priorité à la correspondance exacte
+                                    if (aTitle === searchLower) return -1;
+                                    if (bTitle === searchLower) return 1;
+
+                                    // Puis à ceux qui commencent par le terme
+                                    if (aTitle.startsWith(searchLower) && !bTitle.startsWith(searchLower)) return -1;
+                                    if (!aTitle.startsWith(searchLower) && bTitle.startsWith(searchLower)) return 1;
+
+                                    return 0;
+                                });
+
+                                // Prendre les 5 meilleurs résultats
+                                sortedResults.slice(0, 5).forEach(article => {
+                                    const stock = article.field_quantite_stock || 0;
+                                    const unite = article.field_unite || 'unités';
+                                    dynamicInventorySummary += `  - ${article.title}: **${stock} ${unite}**\n`;
                                 });
                             } else {
-                                dynamicInventorySummary += `\nAucun résultat pour "${medTerm}"\n`;
+                                dynamicInventorySummary += `  ⚠️ Aucun résultat trouvé pour "${medTerm}"\n`;
+
+                                // Essayer avec une recherche plus large (premier mot seulement)
+                                const firstWord = medTerm.split(/\s+/)[0];
+                                if (firstWord.length > 3 && firstWord !== medTerm) {
+                                    dynamicInventorySummary += `  Recherche élargie avec "${firstWord}":\n`;
+
+                                    await store.fetchArticles({
+                                        fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
+                                        filters: {
+                                            title: {
+                                                val: firstWord,
+                                                op: 'CONTAINS',
+                                            }
+                                        },
+                                        pager: 0,
+                                        offset: 5
+                                    });
+
+                                    const broadResults = store.articles.rows;
+                                    if (broadResults.length > 0) {
+                                        broadResults.slice(0, 3).forEach(article => {
+                                            const stock = article.field_quantite_stock || 0;
+                                            const unite = article.field_unite || 'unités';
+                                            dynamicInventorySummary += `    • ${article.title}: **${stock} ${unite}**\n`;
+                                        });
+                                    }
+                                }
                             }
                         } catch (error) {
                             console.error(`Erreur recherche ${medTerm}:`, error);
+                            dynamicInventorySummary += `  ❌ Erreur lors de la recherche\n`;
                         }
                     }
                 }
             }
+
             // === FIN DE L'AJOUT ===
 
             // Préparer un résumé de l'inventaire réel
