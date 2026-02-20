@@ -489,16 +489,6 @@ export default {
             const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
             const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
-            // Vérifier si les données sont chargées, sinon les recharger
-            if (!store.articles.rows || store.articles.rows.length === 0) {
-                await store.fetchArticles({
-                    fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
-                    pager: 0,
-                    offset: 50,
-                    sort: { val: 'title', op: 'asc' }
-                });
-            }
-
             let patientContext = '';
             if (patientCardVisible.value) {
                 patientContext = `Information sur le patient : Nom: ${patientInfo.value.name}, Âge: ${patientInfo.value.age}, Sexe: ${patientInfo.value.gender}, Allergies: ${patientInfo.value.allergies || 'Aucune'}.`;
@@ -508,6 +498,73 @@ export default {
             if (selectedMedications.value.nid) {
                 medicationContext = `Médicament sélectionné pour discussion : ${selectedMedications.value.name}.`;
             }
+
+            // === AJOUT: Recherche dynamique des médicaments demandés ===
+            let dynamicInventorySummary = '';
+
+            // Fonction de parsing simple pour extraire les médicaments
+            const extractMedicationNames = (query) => {
+                // Normaliser et nettoyer
+                let cleanQuery = query.toLowerCase().trim();
+
+                // Patterns pour identifier les médicaments (mots avec traits d'union, chiffres, etc.)
+                const medicationPattern = /[a-zéèêàôûïç0-9]+(?:[-\s][a-zéèêàôûïç0-9]+)*/gi;
+
+                // Mots à ignorer (déterminants, prépositions, etc.)
+                const stopWords = ['le', 'la', 'les', 'du', 'de', 'des', 'un', 'une', 'et', 'ou', 'pour',
+                    'avec', 'dans', 'par', 'sur', 'est', 'sont', 'quel', 'quelle', 'quels',
+                    'quelles', 'combien', 'stock', 'quantité', 'reste', 'moi', 'avoir', 'peux'];
+
+                // Extraire tous les mots potentiels
+                const matches = cleanQuery.match(medicationPattern) || [];
+
+                // Filtrer les stop words et garder les mots significatifs
+                return matches.filter(word =>
+                    word.length > 2 &&
+                    !stopWords.includes(word) &&
+                    !/^\d+$/.test(word) // Ignorer les nombres seuls
+                );
+            };
+
+            // Détecter si la question concerne le stock
+            if (userMessage.toLowerCase().match(/stock|quantité|reste|disponible/i)) {
+                const possibleMedications = extractMedicationNames(userMessage);
+
+                if (possibleMedications.length > 0) {
+                    dynamicInventorySummary = '\n\n🔍 **RECHERCHE SPÉCIFIQUE DEMANDÉE:**\n';
+
+                    // Rechercher chaque médicament potentiel
+                    for (const medTerm of possibleMedications) {
+                        try {
+                            // Recherche dynamique dans l'API
+                            await store.fetchArticles({
+                                fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
+                                filter: {
+                                    op: 'CONTAINS',
+                                    val: medTerm,
+                                    field: 'title'
+                                },
+                                pager: 0,
+                                offset: 5
+                            });
+
+                            const results = store.articles.rows;
+
+                            if (results.length > 0) {
+                                dynamicInventorySummary += `\nPour "${medTerm}":\n`;
+                                results.slice(0, 3).forEach(article => {
+                                    dynamicInventorySummary += `  - ${article.title}: ${article.field_quantite_stock || 0} ${article.field_unite || 'unités'}\n`;
+                                });
+                            } else {
+                                dynamicInventorySummary += `\nAucun résultat pour "${medTerm}"\n`;
+                            }
+                        } catch (error) {
+                            console.error(`Erreur recherche ${medTerm}:`, error);
+                        }
+                    }
+                }
+            }
+            // === FIN DE L'AJOUT ===
 
             // Préparer un résumé de l'inventaire réel
             const inventorySummary = store.articles.rows.map(item =>
