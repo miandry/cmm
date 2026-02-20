@@ -504,26 +504,126 @@ export default {
 
             // Fonction de parsing simple pour extraire les médicaments
             const extractMedicationNames = (query) => {
-                // Normaliser et nettoyer
-                let cleanQuery = query.toLowerCase().trim();
+                // Liste des mots à ignorer (déterminants, prépositions, verbes, etc.)
+                const stopWords = [
+                    'le', 'la', 'les', 'du', 'de', 'des', 'un', 'une', 'dans', 'pour', 'avec',
+                    'est', 'sont', 'et', 'ou', 'mais', 'donc', 'car', 'ni', 'hier', 'aujourd',
+                    'verifie', 'vérifie', 'vérifier', 'verifier', 's', 'il', 'elle', 'on',
+                    'je', 'tu', 'nous', 'vous', 'ils', 'elles', 'me', 'te', 'se', 'lui',
+                    'moi', 'toi', 'soi', 'stp', 'svp', 's\'il', 'vous', 'plait', 'plaît',
+                    'peux', 'peut', 'pouvez', 'pouvoir', 'avoir', 'être', 'faire', 'voir',
+                    'donne', 'donner', 'donnez', 'donnes', 's\'il', 'te', 'please', 'please',
+                    'stock', 'quantité', 'quantite', 'disponible', 'reste', 'restant',
+                    'combien', 'nombre', 'unites', 'unités', 'boites', 'boîtes', 'comprimes',
+                    'comprimés', 'ampoules', 'flacons', 'sachets', 'gellules', 'gélules',
+                    'sirop', 'pommade', 'creme', 'crème', 'solution', 'suspension', 'susp'
+                ];
 
-                // Patterns pour identifier les médicaments (mots avec traits d'union, chiffres, etc.)
-                const medicationPattern = /[a-zéèêàôûïç0-9]+(?:[-\s][a-zéèêàôûïç0-9]+)*/gi;
+                // Nettoyer la requête
+                let cleanQuery = query.toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '') // Enlever les accents
+                    .replace(/[?!,;:.]/g, ' ') // Remplacer la ponctuation par des espaces
+                    .replace(/\s+/g, ' ') // Normaliser les espaces
+                    .trim();
 
-                // Mots à ignorer (déterminants, prépositions, etc.)
-                const stopWords = ['le', 'la', 'les', 'du', 'de', 'des', 'un', 'une', 'et', 'ou', 'pour',
-                    'avec', 'dans', 'par', 'sur', 'est', 'sont', 'quel', 'quelle', 'quels',
-                    'quelles', 'combien', 'stock', 'quantité', 'reste', 'moi', 'avoir', 'peux'];
+                console.log('Requête nettoyée:', cleanQuery);
 
-                // Extraire tous les mots potentiels
-                const matches = cleanQuery.match(medicationPattern) || [];
+                // Supprimer les phrases d'introduction courantes
+                const introPatterns = [
+                    /^(?:verifie|vérifie|peux-tu|peux tu|pourrais-tu|pourrais tu|est-ce que|est ce que|je voudrais|je veux|donne-moi|donne moi)\s+/i,
+                    /^(?:la quantite|la quantité|le stock|le nombre|les infos|information sur)\s+(?:d[' e]|de|des)?\s*/i,
+                    /^(?:s'il te plait|svp|stp)\s*/i,
+                ];
 
-                // Filtrer les stop words et garder les mots significatifs
-                return matches.filter(word =>
-                    word.length > 2 &&
-                    !stopWords.includes(word) &&
-                    !/^\d+$/.test(word) // Ignorer les nombres seuls
-                );
+                introPatterns.forEach(pattern => {
+                    cleanQuery = cleanQuery.replace(pattern, '');
+                });
+
+                console.log('Après suppression intro:', cleanQuery);
+
+                // Extraire les mots significatifs (min 3 caractères, pas dans stopWords)
+                const words = cleanQuery.split(/\s+/)
+                    .filter(word => word.length > 2 && !stopWords.includes(word))
+                    .map(word => word.replace(/[0-9]+/g, '').trim()) // Enlever les chiffres seuls
+                    .filter(word => word.length > 0);
+
+                console.log('Mots filtrés:', words);
+
+                // Détecter les noms composés (ex: "amoxicilline acide clavulanique")
+                const compoundNames = [];
+                let i = 0;
+                while (i < words.length) {
+                    // Si un mot peut faire partie d'un nom composé (lettres + possiblement chiffres)
+                    if (/^[a-z]+(?:[0-9]+)?$/.test(words[i])) {
+                        let compound = words[i];
+                        let j = i + 1;
+
+                        // Regrouper avec les mots suivants si ça forme un nom composé probable
+                        while (j < words.length &&
+                            (words[j].length > 2 || /^[0-9]+(?:mg|g|ml|ui)?$/.test(words[j]))) {
+                            compound += ' ' + words[j];
+                            j++;
+                        }
+
+                        if (j > i + 1) {
+                            // C'est un nom composé
+                            compoundNames.push(compound);
+                            i = j;
+                        } else {
+                            // Mot seul
+                            compoundNames.push(words[i]);
+                            i++;
+                        }
+                    } else {
+                        i++;
+                    }
+                }
+
+                console.log('Noms composés détectés:', compoundNames);
+
+                // Dernier nettoyage : enlever les terminaisons comme "disponible", "stp", etc.
+                const finalMedications = compoundNames
+                    .map(name => {
+                        // Enlever les mots de fin non désirés
+                        const unwantedEndings = ['disponible', 'stp', 'svp', 'please', 'restant', 'restante'];
+                        let cleanName = name;
+                        unwantedEndings.forEach(end => {
+                            if (cleanName.endsWith(' ' + end)) {
+                                cleanName = cleanName.substring(0, cleanName.length - end.length - 1);
+                            }
+                        });
+                        return cleanName;
+                    })
+                    .filter(name => {
+                        // Garder seulement si ça ressemble à un nom de médicament
+                        return name.length > 2 &&
+                            !stopWords.includes(name) &&
+                            !/^\d+$/.test(name); // Pas que des chiffres
+                    });
+
+                console.log('Médicaments finaux:', finalMedications);
+
+                // Si on n'a rien trouvé, essayer une approche plus simple
+                if (finalMedications.length === 0) {
+                    // Chercher des patterns comme "de X" ou "du X"
+                    const patterns = [
+                        /(?:de|du|des|d')\s+([a-z]+(?: [a-z]+)*)/g,
+                        /(?:pour|avec|sans)\s+([a-z]+(?: [a-z]+)*)/g,
+                    ];
+
+                    for (const pattern of patterns) {
+                        const matches = cleanQuery.matchAll(pattern);
+                        for (const match of matches) {
+                            if (match[1] && match[1].length > 3) {
+                                finalMedications.push(match[1]);
+                            }
+                        }
+                    }
+                }
+
+                // Dédupliquer
+                return [...new Set(finalMedications)];
             };
 
             // Détecter si la question concerne le stock
