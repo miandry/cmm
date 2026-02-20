@@ -7,8 +7,10 @@
                         <i class="ri-capsule-line text-white text-lg md:text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="text-lg md:text-xl font-semibold text-gray-900 leading-tight">Assistant Clinique IA</h1>
-                        <p class="text-[10px] md:text-sm text-gray-500 line-clamp-1 md:line-clamp-none">Basé sur l'inventaire clinique</p>
+                        <h1 class="text-lg md:text-xl font-semibold text-gray-900 leading-tight">Assistant Clinique IA
+                        </h1>
+                        <p class="text-[10px] md:text-sm text-gray-500 line-clamp-1 md:line-clamp-none">Basé sur
+                            l'inventaire clinique</p>
                     </div>
                 </div>
                 <div class="hidden sm:flex items-center text-sm text-gray-500">
@@ -31,16 +33,21 @@
         <main class="max-w-4xl mx-auto px-1 md:px-6 py-2 md:py-6">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <!-- Chat Container -->
-                <div ref="chatContainer" class="chat-container overflow-y-auto px-2 md:px-6 py-3 md:py-6 space-y-3 md:space-y-6">
+                <div ref="chatContainer"
+                    class="chat-container overflow-y-auto px-2 md:px-6 py-3 md:py-6 space-y-3 md:space-y-6">
                     <!-- Message de bienvenue -->
                     <div class="flex items-start space-x-3 mb-4">
-                        <div class="w-8 h-8 md:w-10 md:h-10 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+                        <div
+                            class="w-8 h-8 md:w-10 md:h-10 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
                             <i class="ri-robot-2-line text-white text-lg"></i>
                         </div>
                         <div class="flex-1">
-                            <div class="message-bubble bg-gray-100 rounded-2xl rounded-tl-sm px-3 md:px-4 py-2 md:py-3 mb-4">
+                            <div
+                                class="message-bubble bg-gray-100 rounded-2xl rounded-tl-sm px-3 md:px-4 py-2 md:py-3 mb-4">
                                 <p class="text-sm md:text-base font-medium text-gray-900 mb-1">Bonjour Docteur !</p>
-                                <p class="text-sm md:text-base text-gray-700">Je suis votre Assistant Clinique. Je peux vous aider à analyser les stocks, consulter l'historique des patients ou préparer des recommandations basées sur les données réelles de la clinique.</p>
+                                <p class="text-sm md:text-base text-gray-700">Je suis votre Assistant Clinique. Je peux
+                                    vous aider à analyser les stocks, consulter l'historique des patients ou préparer
+                                    des recommandations basées sur les données réelles de la clinique.</p>
                                 <p class="text-[11px] text-gray-500 mt-2 font-medium italic flex items-center">
                                     <i class="ri-radio-button-line text-green-500 mr-1 animate-pulse"></i>
                                     Connecté à l'inventaire en temps réel
@@ -49,55 +56,66 @@
 
                             <!-- Aide Idéale / Suggestions -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
-                                <div class="col-span-1 sm:col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1 ml-1">Suggestions rapides</div>
-                                
-                                <button @click="selectPrompt('Fais-moi un résumé des stocks critiques (faible quantité)')" 
+                                <div
+                                    class="col-span-1 sm:col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1 ml-1">
+                                    Suggestions rapides</div>
+
+                                <button
+                                    @click="selectPrompt('Fais-moi un résumé des stocks critiques (faible quantité)')"
                                     class="text-left p-3 rounded-xl border border-gray-100 bg-white hover:border-primary/30 hover:bg-primary/5 transition-all group">
                                     <div class="flex items-center space-x-3">
-                                        <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center group-hover:bg-red-100 transition-colors">
                                             <i class="ri-error-warning-line text-red-500"></i>
                                         </div>
                                         <div class="text-[13px] font-medium text-gray-700">Stocks critiques</div>
                                     </div>
                                 </button>
 
-                                <button @click="selectPrompt('Quelles sont les dernières consultations enregistrées ?')" 
+                                <button @click="selectPrompt('Quelles sont les dernières consultations enregistrées ?')"
                                     class="text-left p-3 rounded-xl border border-gray-100 bg-white hover:border-primary/30 hover:bg-primary/5 transition-all group">
                                     <div class="flex items-center space-x-3">
-                                        <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                                             <i class="ri-stethoscope-line text-blue-500"></i>
                                         </div>
                                         <div class="text-[13px] font-medium text-gray-700">Dernières consultations</div>
                                     </div>
                                 </button>
 
-                                <button @click="selectPrompt('Donne-moi la liste des examens disponibles avec leurs prix')" 
+                                <button
+                                    @click="selectPrompt('Donne-moi la liste des examens disponibles avec leurs prix')"
                                     class="text-left p-3 rounded-xl border border-gray-100 bg-white hover:border-primary/30 hover:bg-primary/5 transition-all group">
                                     <div class="flex items-center space-x-3">
-                                        <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center group-hover:bg-green-100 transition-colors">
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center group-hover:bg-green-100 transition-colors">
                                             <i class="ri-test-tube-line text-green-500"></i>
                                         </div>
                                         <div class="text-[13px] font-medium text-gray-700">Examens & Tarifs</div>
                                     </div>
                                 </button>
 
-                                <button @click="selectPrompt('Quelles ont été les dernières ventes réalisées ?')" 
+                                <button @click="selectPrompt('Quelles ont été les dernières ventes réalisées ?')"
                                     class="text-left p-3 rounded-xl border border-gray-100 bg-white hover:border-primary/30 hover:bg-primary/5 transition-all group">
                                     <div class="flex items-center space-x-3">
-                                        <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                                             <i class="ri-shopping-bag-2-line text-purple-500"></i>
                                         </div>
                                         <div class="text-[13px] font-medium text-gray-700">Historique des ventes</div>
                                     </div>
                                 </button>
 
-                                <button @click="selectPrompt('Montre-moi l\'évolution des ventes par semaine et par jour sous forme de graphique')" 
+                                <button
+                                    @click="selectPrompt('Montre-moi l\'évolution des ventes par semaine et par jour sous forme de graphique')"
                                     class="text-left p-3 rounded-xl border border-gray-100 bg-white hover:border-primary/30 hover:bg-primary/5 transition-all group">
                                     <div class="flex items-center space-x-3">
-                                        <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
                                             <i class="ri-bar-chart-groupped-line text-indigo-500"></i>
                                         </div>
-                                        <div class="text-[13px] font-medium text-gray-700">Évolution Ventes (Sem/Jour)</div>
+                                        <div class="text-[13px] font-medium text-gray-700">Évolution Ventes (Sem/Jour)
+                                        </div>
                                     </div>
                                 </button>
                             </div>
@@ -108,8 +126,10 @@
                     <div v-for="(message, index) in messages" :key="index">
                         <!-- Message utilisateur -->
                         <div v-if="message.type === 'user'" class="flex items-start space-x-3 justify-end">
-                            <div class="message-bubble bg-primary text-white rounded-2xl rounded-tr-sm px-3 md:px-4 py-2 md:py-3 max-w-[80%]">
-                                <img v-if="message.image" :src="message.image" class="w-full h-auto rounded-lg mb-2 border-2 border-white/20" alt="Image analysée">
+                            <div
+                                class="message-bubble bg-primary text-white rounded-2xl rounded-tr-sm px-3 md:px-4 py-2 md:py-3 max-w-[80%]">
+                                <img v-if="message.image" :src="message.image"
+                                    class="w-full h-auto rounded-lg mb-2 border-2 border-white/20" alt="Image analysée">
                                 <p v-if="message.content" class="text-[13px] md:text-sm">{{ message.content }}</p>
                                 <p class="text-[10px] text-blue-100 mt-1">{{ message.time }}</p>
                             </div>
@@ -125,7 +145,8 @@
                                 <i class="ri-robot-line text-white text-sm"></i>
                             </div>
                             <div class="message-bubble bg-gray-100 rounded-2xl rounded-tl-sm px-3 md:px-4 py-2 md:py-3">
-                                <div class="prose prose-sm max-w-none text-[13px] md:text-sm" v-html="message.content"></div>
+                                <div class="prose prose-sm max-w-none text-[13px] md:text-sm" v-html="message.content">
+                                </div>
                                 <SalesChart v-if="message.hasChart" />
                                 <p class="text-[10px] text-gray-500 mt-1">{{ message.time }}</p>
                             </div>
@@ -159,16 +180,19 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <p class="text-[10px] text-gray-500 mb-0.5">Nom du Patient</p>
-                                <p class="text-xs font-semibold text-gray-900 truncate">{{ patientInfo.name || '-' }}</p>
+                                <p class="text-xs font-semibold text-gray-900 truncate">{{ patientInfo.name || '-' }}
+                                </p>
                             </div>
                             <div class="grid grid-cols-3 sm:block gap-2 sm:gap-0">
                                 <div>
                                     <p class="text-[10px] text-gray-500 mb-0.5">Âge</p>
-                                    <p class="text-xs font-semibold text-gray-900">{{ patientInfo.age ? `${patientInfo.age} ans` : '-' }}</p>
+                                    <p class="text-xs font-semibold text-gray-900">{{ patientInfo.age ?
+                                        `${patientInfo.age} ans` : '-' }}</p>
                                 </div>
                                 <div>
                                     <p class="text-[10px] text-gray-500 mb-0.5">Sexe</p>
-                                    <p class="text-xs font-semibold text-gray-900 capitalize">{{ patientInfo.gender || '-' }}</p>
+                                    <p class="text-xs font-semibold text-gray-900 capitalize">{{ patientInfo.gender ||
+                                        '-' }}</p>
                                 </div>
                             </div>
                             <div class="sm:col-span-2">
@@ -188,8 +212,7 @@
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-900">{{ selectedMedications.name }}</p>
                             </div>
-                            <button @click="removeSelectedMedication"
-                                class="text-gray-500 hover:text-red-500 ml-2">
+                            <button @click="removeSelectedMedication" class="text-gray-500 hover:text-red-500 ml-2">
                                 <i class="ri-close-line text-lg"></i>
                             </button>
                         </div>
@@ -213,31 +236,32 @@
                                 <i class="ri-capsule-line text-sm"></i>
                                 <span>Médicament</span>
                             </button>
-                            <input type="file" ref="fileInput" accept="image/*" class="hidden" @change="handleFileSelect">
+                            <input type="file" ref="fileInput" accept="image/*" class="hidden"
+                                @change="handleFileSelect">
                             <button @click="triggerFileUpload"
                                 class="flex items-center justify-center bg-gray-50 text-gray-700 w-10 h-10 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
-                                title="Ajouter une image (Radio, Echo, etc.)"
-                                :disabled="isProcessingImage">
+                                title="Ajouter une image (Radio, Echo, etc.)" :disabled="isProcessingImage">
                                 <i v-if="isProcessingImage" class="ri-loader-4-line animate-spin"></i>
                                 <i v-else class="ri-attachment-2 active:scale-95 transition-transform"></i>
                             </button>
                         </div>
-                        
+
                         <!-- Image Preview -->
                         <div v-if="selectedImage" class="relative group inline-block">
-                            <img :src="selectedImage" class="h-20 w-auto rounded-lg border border-gray-200 object-cover" alt="Preview">
-                            <button @click="removeImage" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:bg-red-600">
+                            <img :src="selectedImage" class="h-20 w-auto rounded-lg border border-gray-200 object-cover"
+                                alt="Preview">
+                            <button @click="removeImage"
+                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:bg-red-600">
                                 <i class="ri-close-line text-xs"></i>
                             </button>
                         </div>
-                        
+
                         <!-- Textarea and Send Row -->
                         <div class="flex space-x-2">
-                             <textarea ref="messageInput" v-model="currentMessage" @input="handleInput"
-                            @keydown="handleKeyDown"
-                            placeholder="Écrivez votre message..."
-                            class="flex-1 resize-none border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm min-h-[48px]"
-                            rows="1" maxlength="1000"></textarea>
+                            <textarea ref="messageInput" v-model="currentMessage" @input="handleInput"
+                                @keydown="handleKeyDown" placeholder="Écrivez votre message..."
+                                class="flex-1 resize-none border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm min-h-[48px]"
+                                rows="1" maxlength="1000"></textarea>
                             <button @click="sendMessage" :disabled="!canSend"
                                 class="bg-primary text-white w-12 h-12 flex items-center justify-center rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                 <i class="ri-send-plane-line text-xl"></i>
@@ -371,9 +395,9 @@ export default {
 
         // Computed
         const canSend = computed(() => {
-            return (currentMessage.value.trim().length > 0 || selectedImage.value) && 
-                   currentMessage.value.length <= 1000 && 
-                   !isProcessingImage.value
+            return (currentMessage.value.trim().length > 0 || selectedImage.value) &&
+                currentMessage.value.length <= 1000 &&
+                !isProcessingImage.value
         })
 
         // Gestion du texte
@@ -398,7 +422,7 @@ export default {
         // Messages
         const sendMessage = async () => {
             if (isProcessingImage.value) return;
-            
+
             const message = currentMessage.value.trim()
             if (!message && !selectedImage.value) return
 
@@ -414,7 +438,7 @@ export default {
             const imageToSend = selectedImage.value
             currentMessage.value = ''
             selectedImage.value = null
-            
+
             nextTick(() => {
                 if (messageInput.value) {
                     messageInput.value.style.height = 'auto'
@@ -427,11 +451,11 @@ export default {
 
             try {
                 const response = await generateAIResponse(message, imageToSend)
-                
+
                 // Vérifier si la réponse contient la commande pour afficher le graphique
                 let content = response;
                 let hasChart = false;
-                
+
                 if (content.includes('<SHOW_SALES_CHART>')) {
                     hasChart = true;
                     content = content.replace('<SHOW_SALES_CHART>', '');
@@ -465,6 +489,16 @@ export default {
             const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
             const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
+            // Vérifier si les données sont chargées, sinon les recharger
+            if (!store.articles.rows || store.articles.rows.length === 0) {
+                await store.fetchArticles({
+                    fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
+                    pager: 0,
+                    offset: 50,
+                    sort: { val: 'title', op: 'asc' }
+                });
+            }
+
             let patientContext = '';
             if (patientCardVisible.value) {
                 patientContext = `Information sur le patient : Nom: ${patientInfo.value.name}, Âge: ${patientInfo.value.age}, Sexe: ${patientInfo.value.gender}, Allergies: ${patientInfo.value.allergies || 'Aucune'}.`;
@@ -476,22 +510,22 @@ export default {
             }
 
             // Préparer un résumé de l'inventaire réel
-            const inventorySummary = store.articles.rows.map(item => 
+            const inventorySummary = store.articles.rows.map(item =>
                 `- ${item.title}: ${item.field_quantite_stock} ${item.field_unite || 'unités'}`
             ).join('\n');
 
             // Préparer un résumé de la liste des patients
-            const patientListSummary = clientStore.allClients.rows.map(p => 
+            const patientListSummary = clientStore.allClients.rows.map(p =>
                 `- ${p.title} (${p.field_age ? p.field_age + ' ans' : 'âge inconnu'}, ${p.field_sexe || 'sexe inconnu'})`
             ).join('\n');
 
             // Préparer un résumé des dernières consultations avec détails cliniques
-            const consultationSummary = consultationStore.consultations.rows.map(c => 
+            const consultationSummary = consultationStore.consultations.rows.map(c =>
                 `- Patient: ${c.field_client?.title || 'Anonyme'}, Motif: ${c.field_motif || 'N/A'}, Constantes: [Temp: ${c.field_temperature || '-'}°C, Tension: ${c.field_tension_arterielle || '-'}, Poids: ${c.field_poids || '-'}kg]`
             ).join('\n');
 
             // Préparer un résumé des examens disponibles
-            const examSummary = examenStore.examens.rows.map(e => 
+            const examSummary = examenStore.examens.rows.map(e =>
                 `- ${e.title} (${e.field_prix || '0'} Ar)`
             ).join('\n');
 
@@ -592,7 +626,7 @@ export default {
                 alert("Erreur lors de la lecture de l'image.");
             };
             reader.readAsDataURL(file);
-            
+
             // Reset input value to allow re-selecting same file
             event.target.value = '';
         }
