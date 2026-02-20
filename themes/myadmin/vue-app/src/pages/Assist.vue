@@ -639,7 +639,7 @@ export default {
                             // Recherche dynamique dans l'API
                             await store.fetchArticles({
                                 fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
-                                filter: {
+                                filters: {
                                     title: {
                                         val: medTerm,
                                         op: 'CONTAINS',
