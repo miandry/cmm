@@ -594,7 +594,6 @@ export default {
             };
 
             // Détecter si la question concerne le stock
-            // Détecter si la question concerne le stock
             if (userMessage.toLowerCase().match(/stock|quantité|reste|disponible|combien/i)) {
                 const possibleMedications = extractMedicationNames(userMessage);
 
@@ -736,6 +735,7 @@ export default {
             
             CONTEXTE ET DONNÉES DE LA CLINIQUE :
             - Stock actuel: ${inventorySummary}
+            ${dynamicInventorySummary} 
             - Patients: ${patientListSummary}
             - Consultations récentes: ${consultationSummary}
             - Examens disponibles: ${examSummary}
