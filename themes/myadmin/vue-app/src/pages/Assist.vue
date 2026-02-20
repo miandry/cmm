@@ -529,7 +529,7 @@ export default {
             // Détecter si la question concerne le stock
             if (userMessage.toLowerCase().match(/stock|quantité|reste|disponible/i)) {
                 const possibleMedications = extractMedicationNames(userMessage);
-
+                console.log("Médicaments potentiels détectés dans la question:", possibleMedications);
                 if (possibleMedications.length > 0) {
                     dynamicInventorySummary = '\n\n🔍 **RECHERCHE SPÉCIFIQUE DEMANDÉE:**\n';
 
@@ -540,9 +540,10 @@ export default {
                             await store.fetchArticles({
                                 fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
                                 filter: {
-                                    op: 'CONTAINS',
-                                    val: medTerm,
-                                    field: 'title'
+                                    title: {
+                                        val: medTerm,
+                                        op: 'CONTAINS',
+                                    }
                                 },
                                 pager: 0,
                                 offset: 5
