@@ -519,8 +519,9 @@ export default {
                 scrollToBottom()
             }
         }
+        
         // =============================================
-        // FONCTION EXTRACT MEDICATION NAMES - VERSION SIMPLIFIÉE
+        // FONCTION EXTRACT MEDICATION NAMES - CORRIGÉE POUR APOSTROPHES
         // =============================================
         const extractMedicationNames = (query) => {
             // Normaliser la requête
@@ -537,39 +538,43 @@ export default {
 
             if (!hasStockContext) return [];
 
-            // Supprimer les mots de contexte de la requête
-            let cleanQuery = normalizedQuery;
+            // Étape 1: Gérer les apostrophes (transforme "d'ibuprofene" en "ibuprofene")
+            let cleanQuery = normalizedQuery
+                .replace(/([a-z])'([a-z])/g, '$1 $2')  // Remplace "d'ibuprofene" par "d ibuprofene"
+                .replace(/[^a-z0-9\s]/g, ' ')          // Remplace tous les autres caractères spéciaux par des espaces
+                .replace(/\s+/g, ' ')
+                .trim();
 
-            // Remplacer les mots de contexte par des espaces
-            const contextWords = ['stock', 'inventaire', 'quantite', 'reste', 'disponible', 'combien',
+            console.log('Requête après nettoyage apostrophes:', cleanQuery);
+
+            // Étape 2: Supprimer les mots de contexte de la requête
+            const contextWords = [
+                'stock', 'inventaire', 'quantite', 'reste', 'disponible', 'combien',
                 'de', 'du', 'des', 'd', 'le', 'la', 'les', 'et', 'ou', 'dans', 'pour',
-                'verifie', 'vérifie', 'stp', 'svp', 'please'];
+                'verifie', 'vérifie', 'stp', 'svp', 'please', 'peux', 'peut', 'pouvez',
+                'me', 'te', 'lui', 'moi', 'toi', 'nous', 'vous', 'ils', 'elles',
+                'pourrais', 'pourrait', 'pourriez', 'dire', 'donner', 'avoir', 'être',
+                'faire', 'voir', 'check', 'checker', 'voir', 'savoir', 'connaitre'
+            ];
 
-            contextWords.forEach(word => {
-                cleanQuery = cleanQuery.replace(new RegExp(`\\b${word}\\b`, 'g'), ' ');
-            });
+            // Créer une liste des mots après split
+            let words = cleanQuery.split(' ');
 
-            // Nettoyer les espaces multiples
-            cleanQuery = cleanQuery.replace(/\s+/g, ' ').trim();
+            // Filtrer pour ne garder que les mots qui ne sont pas dans contextWords
+            const filteredWords = words.filter(word =>
+                word.length >= 2 && !contextWords.includes(word)
+            );
 
-            console.log('Requête nettoyée:', cleanQuery);
+            console.log('Mots après filtrage:', filteredWords);
 
-            if (cleanQuery.length === 0) return [];
+            if (filteredWords.length === 0) return [];
 
-            // Splitter en mots
-            const words = cleanQuery.split(' ');
-
-            // Regrouper les mots pour former des noms de médicaments
+            // Étape 3: Regrouper les mots pour former des noms de médicaments
             const searchTerms = [];
             let i = 0;
 
-            while (i < words.length) {
-                const currentWord = words[i];
-                if (currentWord.length < 2) {
-                    i++;
-                    continue;
-                }
-
+            while (i < filteredWords.length) {
+                const currentWord = filteredWords[i];
                 let term = currentWord;
                 let j = i + 1;
 
@@ -577,8 +582,8 @@ export default {
                 // - C'est un nombre (dosage)
                 // - C'est une unité (mg, g, ml, cp)
                 // - C'est une lettre simple (c, b6, b12)
-                while (j < words.length) {
-                    const nextWord = words[j];
+                while (j < filteredWords.length) {
+                    const nextWord = filteredWords[j];
 
                     // Si c'est un nombre, toujours le regrouper
                     if (nextWord.match(/^\d+$/)) {
@@ -605,8 +610,6 @@ export default {
             }
 
             console.log('Termes de recherche:', searchTerms);
-
-            // Si on a plusieurs termes, on les garde tous
             return searchTerms;
         };
 
