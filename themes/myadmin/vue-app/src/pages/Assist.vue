@@ -536,39 +536,77 @@ export default {
             console.log('Tokens:', queryTokens);
 
             // Détecter le contexte
-            const wantsStock = containsAny(queryTokens, ['stock', 'inventaire', 'quantite', 'reste', 'disponible']);
+            const wantsStock = containsAny(queryTokens, ['stock', 'inventaire', 'quantite', 'reste', 'disponible', 'combien']);
 
             if (!wantsStock) return [];
 
-            // Récupérer tous les articles de la base pour scoring
-            const allArticles = store.articles?.rows || [];
+            // Étape 1: Supprimer les mots de contexte des tokens
+            const contextWords = ['stock', 'inventaire', 'quantite', 'reste', 'disponible', 'combien', 'de', 'du', 'des', 'd'];
+            const searchTokens = queryTokens.filter(token => !contextWords.includes(token));
 
-            if (allArticles.length === 0) return [];
+            console.log('Tokens de recherche:', searchTokens);
 
-            // Créer un scoreur basé sur les tokens de la requête
-            const scorer = makeTextScorer(queryTokens, []);
+            if (searchTokens.length === 0) return [];
 
-            // Calculer le score pour chaque article
-            const scoredArticles = allArticles.map(article => ({
-                article,
-                score: scorer(article.title)
-            }));
+            // Étape 2: Regrouper les tokens pour former des termes de recherche
+            // Ex: ["vitamine", "c"] -> "vitamine c"
+            // Ex: ["paracetamol"] -> "paracetamol"
+            // Ex: ["artemether", "et", "lumefantrine"] -> "artemether et lumefantrine"
 
-            // Filtrer les articles avec un score significatif (>= 2)
-            const relevantArticles = scoredArticles
-                .filter(item => item.score >= 2)
-                .sort((a, b) => b.score - a.score)
-                .slice(0, 5); // Garder les 5 meilleurs
+            const searchTerms = [];
+            let i = 0;
 
-            console.log('Articles pertinents:', relevantArticles.map(a => ({
-                titre: a.article.title,
-                score: a.score
-            })));
+            while (i < searchTokens.length) {
+                let term = searchTokens[i];
+                let j = i + 1;
 
-            // Extraire les noms des médicaments pertinents
-            const medicationNames = relevantArticles.map(item => item.article.title);
+                // Regrouper avec les mots suivants si:
+                // - C'est un nombre (dosage)
+                // - C'est "et", "+", "&"
+                // - Le mot suivant est court (comme "c", "b6")
+                while (j < searchTokens.length) {
+                    const nextToken = searchTokens[j];
 
-            return medicationNames;
+                    // Arrêter si on a déjà 3 mots (pour éviter des termes trop longs)
+                    if (j - i >= 3) break;
+
+                    // Toujours regrouper avec les nombres
+                    if (nextToken.match(/^\d+$/)) {
+                        term += ' ' + nextToken;
+                        j++;
+                    }
+                    // Regrouper avec "et" et le mot suivant
+                    else if (nextToken === 'et' && j + 1 < searchTokens.length) {
+                        term += ' et ' + searchTokens[j + 1];
+                        j += 2;
+                    }
+                    // Regrouper avec les lettres simples (c, b6, b12)
+                    else if (nextToken.match(/^[a-z]\d*$/)) {
+                        term += ' ' + nextToken;
+                        j++;
+                    }
+                    // Regrouper avec les mots de 2-3 lettres (mg, g, ml)
+                    else if (nextToken.match(/^(mg|g|ml|ui|cp|amp)$/)) {
+                        term += ' ' + nextToken;
+                        j++;
+                    }
+                    else {
+                        break;
+                    }
+                }
+
+                searchTerms.push(term);
+                i = j;
+            }
+
+            console.log('Termes de recherche générés:', searchTerms);
+
+            // Étape 3: Si aucun terme généré, utiliser les tokens bruts
+            if (searchTerms.length === 0) {
+                return searchTokens;
+            }
+
+            return searchTerms;
         };
 
         // -----------------------------------------------------------------------------
