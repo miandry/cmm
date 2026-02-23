@@ -91,7 +91,7 @@ export default {
 
     // Charger les articles (append=true pour "Voir plus")
     const fetchArticles = async (append = false) => {
-      await store.fetchArticles(queryOptions.value, append)
+      await store.fetchArticles(queryOptions.value, append, "caisse")
     }
 
     // Sauvegarde l’historique (max 5)

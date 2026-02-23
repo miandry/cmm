@@ -24,17 +24,15 @@ export const useArticleStore = defineStore("article", () => {
   // Mettre à jour les stocks des articles affichés en fonction du panier
   function updateDisplayedStocks() {
     articles.value.rows.forEach((article) => {
-      const numericStock = Number(article.field_quantite_stock) || 0;
-
+      // Sauvegarder le stock original si pas déjà fait
       if (!originalStocks.value.has(article.nid)) {
-        originalStocks.value.set(article.nid, numericStock);
+        originalStocks.value.set(article.nid, article.field_quantite_stock);
       }
-
+      // Calculer la quantité totale dans le panier pour cet article
       const cartItem = cardItems.value.find((item) => item.nid === article.nid);
-      const quantityInCart = cartItem ? item.quantity : 0;
-
-      const originalStock = Number(originalStocks.value.get(article.nid)) || 0;
-
+      const quantityInCart = cartItem ? cartItem.quantity : 0;
+      // Le stock affiché = stock original - quantité dans le panier
+      const originalStock = originalStocks.value.get(article.nid);
       article.field_quantite_stock = Math.max(
         0,
         originalStock - quantityInCart,
@@ -42,7 +40,7 @@ export const useArticleStore = defineStore("article", () => {
     });
   }
 
-  async function fetchArticles(options, append = false) {
+  async function fetchArticles(options, append = false, page = null) {
     loading.value = true;
     try {
       const query = buildQueryParams(options);
@@ -56,7 +54,9 @@ export const useArticleStore = defineStore("article", () => {
       }
 
       // Après avoir chargé les articles, mettre à jour les stocks affichés
-      updateDisplayedStocks();
+      if (page == "caisse") {
+        updateDisplayedStocks();
+      }
     } catch (err) {
       error.value = err;
     } finally {
