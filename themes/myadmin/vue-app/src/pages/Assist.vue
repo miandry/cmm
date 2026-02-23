@@ -290,6 +290,7 @@ import PatientModal from '../components/assists/PatientModal.vue';
 import MedicationModal from '../components/assists/MedicationModal.vue';
 import SalesChart from '../components/charts/SalesChart.vue';
 import { useArticleStore, useClientStore, useConsultationStore, useExamenStore, useOrderStore } from '../stores/index.js';
+import { formatDate } from '../utils/formateDate';
 
 export default {
     name: "Assist",
@@ -347,7 +348,7 @@ export default {
                 // },
                 pager: 0,
                 offset: 20,
-                sort: { val: 'title', op: 'asc' }
+                sort: { val: 'created', op: 'asc' }
             });
 
             // Charger les patients au montage
@@ -817,13 +818,6 @@ export default {
                             }
                         },
                         values: {
-                            // field_articles: [
-                            //     'field_article',
-                            //     'field_quantite'
-                            // ],
-                            // field_examens_order: [
-                            //     'field_examen'
-                            // ],
                             field_client: ['nid', 'title']
                         },
                         pager: 0,
@@ -1072,14 +1066,14 @@ export default {
                     if (patientFullInfo.consultations.length > 0) {
                         infoMessage += `
                             <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                <h4 class="font-bold text-gray-800 mb-2">🩺 Consultations (${patientFullInfo.consultations.length})</h4>
+                                <h4 class="font-bold text-gray-800 mb-2">- Consultations (${patientFullInfo.consultations.length})</h4>
                                 <div class="space-y-2 max-h-60 overflow-y-auto">
                         `;
                         patientFullInfo.consultations.forEach(cons => {
                             infoMessage += `
                                 <div class="bg-white p-3 rounded border border-gray-100 text-sm">
                                     <div class="flex justify-between">
-                                        <span class="font-semibold">${new Date(cons.date).toLocaleDateString()}</span>
+                                        <span class="font-semibold">${ formatDate(cons.date, "short") }</span>
                                         <span class="text-gray-500">${cons.titre}</span>
                                     </div>
                                     <p class="text-gray-700 mt-1"><span class="font-semibold">Motif:</span> ${cons.motif || 'N/A'}</p>
@@ -1098,7 +1092,7 @@ export default {
                     if (patientFullInfo.prescriptions.medicaments.length > 0) {
                         infoMessage += `
                             <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-                                <h4 class="font-bold text-green-800 mb-2">Médicaments Prescrits (${patientFullInfo.prescriptions.medicaments.length})</h4>
+                                <h4 class="font-bold text-green-800 mb-2">- Médicaments Prescrits (${patientFullInfo.prescriptions.medicaments.length})</h4>
                                 <div class="space-y-2 max-h-60 overflow-y-auto">
                         `;
                         patientFullInfo.prescriptions.medicaments.forEach(med => {
@@ -1123,7 +1117,7 @@ export default {
                     if (patientFullInfo.prescriptions.examens.length > 0) {
                         infoMessage += `
                             <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                                <h4 class="font-bold text-purple-800 mb-2">🔬 Examens Prescrits (${patientFullInfo.prescriptions.examens.length})</h4>
+                                <h4 class="font-bold text-purple-800 mb-2">- Examens Prescrits (${patientFullInfo.prescriptions.examens.length})</h4>
                                 <ul class="list-disc list-inside text-sm space-y-1">
                         `;
                         patientFullInfo.prescriptions.examens.forEach(exam => {
