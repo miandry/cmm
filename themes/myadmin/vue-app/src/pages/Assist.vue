@@ -368,7 +368,9 @@ export default {
                     'field_temperature',
                     'field_tension_arterielle',
                     'field_poids',
-                    'created'
+                    'created',
+                    'field_examens',
+                    'field_medicaments'
                 ],
                 pager: 0,
                 values: {
