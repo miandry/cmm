@@ -1182,7 +1182,7 @@ export default {
                 try {
                     // Chercher d'abord dans la liste existante
                     medication = currentArticles.find(a => a.nid === medicationData.nid);
-
+                    console.log("ato ivelany:", medicationData.nid);
                     // Si pas trouvé, faire un appel API spécifique
                     if (!medication) {
                         console.log("ato:", medicationData.nid);
@@ -1361,12 +1361,6 @@ export default {
                 isTyping.value = false;
             }
         };
-
-        // const addMedication = (medicationData) => {
-        //     selectedMedications.value = medicationData;
-        //     closeMedicationModal()
-        // }
-
 
         const addMedication = async (medicationData) => {
             selectedMedications.value = medicationData;
