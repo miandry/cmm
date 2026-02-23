@@ -825,7 +825,6 @@ export default {
                     });
 
                     patientOrders = orderStore.orders?.rows || [];
-                    console.log("Commandes du patient récupérées:", patientOrders);
 
                     // Restaurer les commandes originales
                     orderStore.orders = { ...orderStore.orders, rows: currentOrders };
@@ -871,7 +870,7 @@ export default {
                                         unite: medInfo?.field_unite || 'unités',
                                         nid: article.field_article?.nid
                                     });
-                                    console.log("Médicament ajouté à la liste des prescrits:", prescribedMedications[prescribedMedications.length - 1]);
+
                                 } catch (error) {
                                     console.error("Erreur récupération médicament:", error);
                                 }
@@ -918,7 +917,7 @@ export default {
                                         date: order.field_date || order.created || new Date().toISOString(),
                                         nid: exam.field_examen?.nid
                                     });
-                                    console.log("Examen ajouté à la liste des prescrits:", prescribedExams[prescribedExams.length - 1]);
+
                                 } catch (error) {
                                     console.error("Erreur récupération examen:", error);
                                 }
@@ -1005,14 +1004,12 @@ export default {
         }
 
         const savePatient = async (patientData) => {
-            console.log("Patient sélectionné:", patientData.nid);
             patientInfo.value = patientData;
             patientCardVisible.value = true;
             closePatientModal();
 
             try {
                 const patientFullInfo = await getPatientFullInfo(patientData.nid);
-                console.log("Informations complètes du patient:", patientFullInfo);
                 if (patientFullInfo) {
                     // Créer un message avec toutes les informations
                     let infoMessage = `
@@ -1116,7 +1113,7 @@ export default {
                             infoMessage += `
                                 <li class="flex justify-between">
                                     <span class="font-semibold">${exam.name}</span>
-                                    <span class="text-gray-500">${formatDate(null, exam.date, "short")} - ${exam.prix} Ar</span>
+                                    <span class="text-gray-500">${exam.prix} Ar</span>
                                 </li>
                             `;
                         });
@@ -1193,7 +1190,6 @@ export default {
                 if (!medication) {
                     throw new Error("Médicament non trouvé dans l'inventaire");
                 }
-                console.log("Informations du médicament récupérées:", medication);
                 // 2. Récupérer l'historique des prescriptions de ce médicament
                 const currentOrders = [...(orderStore.orders?.rows || [])];
                 const medicationPrescriptions = [];
@@ -1218,7 +1214,6 @@ export default {
                     });
 
                     const allOrders = orderStore.orders?.rows || [];
-                    console.log("Toutes les commandes récupérées pour analyse des prescriptions:", allOrders);
                     // Filtrer les commandes contenant ce médicament
                     allOrders.forEach(order => {
                         if (order.field_articles && Array.isArray(order.field_articles)) {
@@ -1350,163 +1345,260 @@ export default {
             }
         };
 
+
         const addMedication = async (medicationData) => {
             selectedMedications.value = medicationData;
-            closeMedicationModal(); 
-            console.log("Médicament sélectionné:", medicationData);
+            closeMedicationModal();
+
             try {
                 const medicationFullInfo = await getMedicationFullInfo(medicationData);
-                console.log("Informations complètes du médicament:", medicationFullInfo);
 
-                if (medicationFullInfo) {
-                    // Déterminer le statut du stock
-                    const stockStatus = medicationFullInfo.medication.stock < 10 ? 'critique' :
-                        medicationFullInfo.medication.stock < 20 ? 'faible' : 'normal';
+                if (!medicationFullInfo) return;
 
-                    const stockColor = stockStatus === 'critique' ? 'text-red-600' :
-                        stockStatus === 'faible' ? 'text-orange-600' : 'text-green-600';
+                const stock = Number(medicationFullInfo.medication.stock) || 0;
+                const prix = Number(medicationFullInfo.medication.prix) || 0;
 
-                    // Créer le message HTML
-                    let infoMessage = `
-                <div class="space-y-4">
-                    <!-- En-tête médicament -->
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <h3 class="font-bold text-blue-800 mb-2">💊 ${medicationFullInfo.medication.nom}</h3>
-                        <div class="grid grid-cols-2 gap-3 text-sm">
-                            <div>
-                                <span class="font-semibold">Stock actuel:</span> 
-                                <span class="${stockColor} font-bold">${medicationFullInfo.medication.stock} ${medicationFullInfo.medication.unite}</span>
-                                <span class="text-xs ml-1">(${stockStatus})</span>
-                            </div>
-                            <div>
-                                <span class="font-semibold">Prix:</span> ${medicationFullInfo.medication.prix} Ar
-                            </div>
-                        </div>
+                // Déterminer le statut du stock
+                const stockStatus =
+                    stock === 0 ? 'rupture' :
+                        stock < 10 ? 'critique' :
+                            stock < 20 ? 'faible' :
+                                'normal';
+
+                const stockColor =
+                    stockStatus === 'rupture' ? 'text-red-700' :
+                        stockStatus === 'critique' ? 'text-red-600' :
+                            stockStatus === 'faible' ? 'text-orange-600' :
+                                'text-green-600';
+
+                let infoMessage = `
+        <div class="space-y-4">
+
+            <!-- En-tête médicament -->
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h3 class="font-bold text-blue-800 mb-2">
+                    💊 ${medicationFullInfo.medication.nom}
+                </h3>
+
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <span class="font-semibold">Stock actuel:</span> 
+                        <span class="${stockColor} font-bold">
+                            ${stock} ${medicationFullInfo.medication.unite}
+                        </span>
+                        <span class="text-xs ml-1">(${stockStatus})</span>
                     </div>
+                    <div>
+                        <span class="font-semibold">Prix:</span> 
+                        ${prix} Ar
+                    </div>
+                </div>
+
+                ${stock === 0 ? `
+                    <div class="mt-3 bg-red-100 border border-red-300 p-2 rounded text-red-700 font-semibold text-sm">
+                        🚨 Médicament en rupture de stock
+                    </div>
+                ` : ''}
+            </div>
+        `;
+
+                /* ============================
+                   SECTION ALLERGIES
+                ============================ */
+
+                if (medicationFullInfo.allergies.totalAllergiques > 0) {
+
+                    infoMessage += `
+            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                <h4 class="font-bold text-red-800 mb-2">
+                    ⚠️ Alertes Allergies (${medicationFullInfo.allergies.totalAllergiques})
+                </h4>
+                <div class="space-y-2 max-h-60 overflow-y-auto">
             `;
 
-                    // Alertes allergies
-                    if (medicationFullInfo.allergies.totalAllergiques > 0) {
+                    medicationFullInfo.allergies.patientsAllergiques.forEach(patient => {
+
+                        const alertClass = patient.hasPrescription
+                            ? 'bg-orange-50 border-orange-200'
+                            : 'bg-red-50 border-red-200';
+
+                        const alertIcon = patient.hasPrescription
+                            ? '⚠️ Déjà prescrit'
+                            : '🚫 Jamais prescrit';
+
                         infoMessage += `
-                    <div class="bg-red-50 p-4 rounded-lg border border-red-200">
-                        <h4 class="font-bold text-red-800 mb-2">⚠️ Alertes Allergies (${medicationFullInfo.allergies.totalAllergiques} patients)</h4>
-                        <div class="space-y-2 max-h-60 overflow-y-auto">
-                `;
-
-                        medicationFullInfo.allergies.patientsAllergiques.forEach(patient => {
-                            const alertClass = patient.hasPrescription ? 'bg-orange-50 border-orange-200' : 'bg-red-50 border-red-200';
-                            const alertIcon = patient.hasPrescription ? '⚠️ Déjà prescrit' : '🚫 Jamais prescrit';
-
-                            infoMessage += `
-                        <div class="p-3 rounded border ${alertClass} text-sm">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <span class="font-semibold">${patient.nom}</span>
-                                    ${patient.age ? ` - ${patient.age} ans` : ''}
-                                    ${patient.sexe ? ` - ${patient.sexe}` : ''}
-                                </div>
-                                <span class="text-xs font-semibold ${patient.hasPrescription ? 'text-orange-600' : 'text-red-600'}">${alertIcon}</span>
+                    <div class="p-3 rounded border ${alertClass} text-sm">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="font-semibold">${patient.nom}</span>
+                                ${patient.age ? ` - ${patient.age} ans` : ''}
+                                ${patient.sexe ? ` - ${patient.sexe}` : ''}
                             </div>
-                            <div class="mt-1">
-                                <span class="font-semibold">Allergies:</span> 
-                                <span class="text-red-600">${patient.allergies}</span>
-                            </div>
-                            <div class="mt-1 text-xs">
-                                <span class="font-semibold">Allergènes détectés:</span> 
-                                ${patient.allergiesMatch.map(a => `<span class="bg-red-100 px-1 rounded">${a}</span>`).join(' ')}
-                            </div>
-                            ${patient.hasPrescription && patient.prescriptions.length > 0 ? `
-                            <div class="mt-1 text-xs">
-                                <span class="font-semibold">Dernière prescription:</span> 
-                                ${formatDate(null, patient.prescriptions[0].date)}
-                            </div>
-                            ` : ''}
+                            <span class="text-xs font-semibold">
+                                ${alertIcon}
+                            </span>
                         </div>
-                    `;
-                        });
 
-                        infoMessage += `</div></div>`;
-                    }
-
-                    // Statistiques des prescriptions
-                    if (medicationFullInfo.prescriptions.total > 0) {
-                        infoMessage += `
-                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-                        <h4 class="font-bold text-green-800 mb-2">📊 Historique des Prescriptions</h4>
-                        <div class="grid grid-cols-3 gap-2 mb-3 text-center">
-                            <div class="bg-white p-2 rounded">
-                                <div class="text-xl font-bold text-green-600">${medicationFullInfo.prescriptions.total}</div>
-                                <div class="text-xs">Prescriptions</div>
-                            </div>
-                            <div class="bg-white p-2 rounded">
-                                <div class="text-xl font-bold text-blue-600">${medicationFullInfo.prescriptions.patientsUniques}</div>
-                                <div class="text-xs">Patients</div>
-                            </div>
-                            <div class="bg-white p-2 rounded">
-                                <div class="text-xl font-bold text-orange-600">${medicationFullInfo.allergies.patientsRisque}</div>
-                                <div class="text-xs">À risque</div>
-                            </div>
+                        <div class="mt-1">
+                            <span class="font-semibold">Allergies:</span> 
+                            <span class="text-red-600">${patient.allergies}</span>
                         </div>
-                        <div class="space-y-2 max-h-40 overflow-y-auto">
+                    </div>
                 `;
+                    });
 
-                        medicationFullInfo.prescriptions.historique.slice(0, 5).forEach(p => {
+                    infoMessage += `</div></div>`;
+
+                } else {
+
+                    infoMessage += `
+            <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
+                <h4 class="font-bold text-emerald-800 mb-2">✅ Allergies</h4>
+                <p class="text-sm text-emerald-700">
+                    Aucun patient enregistré avec une allergie liée à ce médicament.
+                </p>
+            </div>
+            `;
+                }
+
+                /* ============================
+                   SECTION PRESCRIPTIONS
+                ============================ */
+
+                if (medicationFullInfo.prescriptions.total > 0) {
+
+                    infoMessage += `
+            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                <h4 class="font-bold text-green-800 mb-2">
+                    📊 Historique des Prescriptions
+                </h4>
+
+                <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+                    <div class="bg-white p-2 rounded">
+                        <div class="text-xl font-bold text-green-600">
+                            ${medicationFullInfo.prescriptions.total}
+                        </div>
+                        <div class="text-xs">Prescriptions</div>
+                    </div>
+                    <div class="bg-white p-2 rounded">
+                        <div class="text-xl font-bold text-blue-600">
+                            ${medicationFullInfo.prescriptions.patientsUniques}
+                        </div>
+                        <div class="text-xs">Patients</div>
+                    </div>
+                    <div class="bg-white p-2 rounded">
+                        <div class="text-xl font-bold text-orange-600">
+                            ${medicationFullInfo.allergies.patientsRisque}
+                        </div>
+                        <div class="text-xs">À risque</div>
+                    </div>
+                </div>
+
+                <div class="space-y-2 max-h-40 overflow-y-auto">
+            `;
+
+                    medicationFullInfo.prescriptions.historique
+                        .slice(0, 5)
+                        .forEach(p => {
+
+                            const totalMontant = (Number(p.prix) || 0) * (Number(p.quantite) || 0);
+
                             infoMessage += `
                         <div class="bg-white p-2 rounded border border-green-100 text-sm">
                             <div class="flex justify-between">
                                 <span class="font-semibold">${p.client}</span>
                             </div>
                             <div class="flex justify-between text-xs">
-                                <span>Quantité: ${p.quantite} ${medicationFullInfo.medication.unite}</span>
-                                <span>Montant: ${p.prix * p.quantite} Ar</span>
+                                <span>
+                                    Quantité: ${p.quantite} ${medicationFullInfo.medication.unite}
+                                </span>
+                                <span>
+                                    Montant: ${totalMontant} Ar
+                                </span>
                             </div>
                         </div>
                     `;
                         });
 
-                        infoMessage += `</div></div>`;
-                    }
+                    infoMessage += `</div></div>`;
 
-                    // Informations IA
-                    if (medicationFullInfo.aiInfo) {
-                        infoMessage += `
-                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                        <h4 class="font-bold text-purple-800 mb-2">🤖 Informations complémentaires</h4>
-                        <div class="prose prose-sm max-w-none text-sm">
-                            ${medicationFullInfo.aiInfo}
-                        </div>
-                        <p class="text-[10px] text-gray-500 mt-2 italic">Source: IA - À titre informatif</p>
-                    </div>
-                `;
-                    }
+                } else {
 
-                    infoMessage += `</div>`;
-
-                    // Ajouter le message dans le chat
-                    messages.value.push({
-                        type: 'ai',
-                        content: infoMessage,
-                        time: new Date().toLocaleTimeString()
-                    });
+                    infoMessage += `
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h4 class="font-bold text-gray-800 mb-2">
+                    📊 Historique des Prescriptions
+                </h4>
+                <p class="text-sm text-gray-600">
+                    Aucune prescription enregistrée pour ce médicament.
+                </p>
+            </div>
+            `;
                 }
+
+                /* ============================
+                   SECTION IA
+                ============================ */
+
+                if (medicationFullInfo.aiInfo) {
+
+                    infoMessage += `
+            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <h4 class="font-bold text-purple-800 mb-2">
+                    🤖 Informations complémentaires
+                </h4>
+                <div class="prose prose-sm max-w-none text-sm">
+                    ${medicationFullInfo.aiInfo}
+                </div>
+                <p class="text-[10px] text-gray-500 mt-2 italic">
+                    Source: IA - À titre informatif
+                </p>
+            </div>
+            `;
+
+                } else {
+
+                    infoMessage += `
+            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <h4 class="font-bold text-purple-800 mb-2">
+                    🤖 Informations complémentaires
+                </h4>
+                <p class="text-sm text-purple-700">
+                    Aucune information complémentaire disponible.
+                </p>
+            </div>
+            `;
+                }
+
+                infoMessage += `</div>`;
+
+                messages.value.push({
+                    type: 'ai',
+                    content: infoMessage,
+                    time: new Date().toLocaleTimeString()
+                });
+
             } catch (error) {
-                console.error("Erreur:", error);
+
                 messages.value.push({
                     type: 'ai',
                     content: `
-                <div class="bg-red-50 border-l-4 border-red-400 p-3 text-red-700">
-                    <p class="font-medium">Erreur lors du chargement des informations du médicament</p>
-                    <p class="text-sm">${error.message}</p>
-                </div>
+            <div class="bg-red-50 border-l-4 border-red-400 p-3 text-red-700">
+                <p class="font-medium">
+                    Erreur lors du chargement des informations du médicament
+                </p>
+                <p class="text-sm">
+                    ${error.message || 'Erreur inconnue'}
+                </p>
+            </div>
             `,
                     time: new Date().toLocaleTimeString()
                 });
+
             } finally {
                 scrollToBottom();
             }
         };
-
-
 
         const removeSelectedMedication = () => {
             selectedMedications.value = {
