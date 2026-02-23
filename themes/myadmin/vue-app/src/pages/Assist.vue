@@ -1173,7 +1173,6 @@ export default {
         // Fonction pour récupérer toutes les informations d'un médicament
         const getMedicationFullInfo = async (medicationData) => {
             try {
-                console.log("Médicament sélectionné:", medicationData.nid);
                 isTyping.value = true;
 
                 // 1. Récupérer les infos de base du médicament depuis le store
@@ -1186,6 +1185,7 @@ export default {
 
                     // Si pas trouvé, faire un appel API spécifique
                     if (!medication) {
+                        console.log("ato:", medicationData.nid);
                         await store.fetchArticles({
                             fields: ['nid', 'title', 'field_quantite_stock', 'created', 'field_prix_unitaire'],
                             filters: {
