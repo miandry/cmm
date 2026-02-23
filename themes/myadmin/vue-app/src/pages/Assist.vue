@@ -340,12 +340,6 @@ export default {
             // Charger l'inventaire au montage
             await store.fetchArticles({
                 fields: ['nid', 'title', 'field_quantite_stock', 'field_unite', 'created'],
-                // filters: {
-                //     status: {
-                //         val: 1,
-                //         op: "="
-                //     }
-                // },
                 pager: 0,
                 offset: 20,
                 sort: { val: 'created', op: 'asc' }
@@ -526,6 +520,9 @@ export default {
             }
         }
 
+        // =============================================
+        // FONCTION EXTRACT MEDICATION NAMES CORRIGÉE AVEC STOPWORDS
+        // =============================================
         const extractMedicationNames = (query) => {
             // Liste des mots à ignorer
             const stopWords = [
@@ -562,8 +559,17 @@ export default {
                 let medication = simpleMatch[1].trim();
                 // Nettoyer la fin
                 medication = medication.replace(/\s+(?:dans|en|au|aux|pour|et|ou|stp|svp|please)$/, '');
-                console.log('Médicament détecté (pattern simple):', medication);
-                return [medication];
+
+                // Vérifier que le médicament contient au moins un mot significatif
+                const words = medication.split(/\s+/);
+                const hasMeaningfulWord = words.some(word =>
+                    word.length > 2 && !stopWords.includes(word) && !contextKeywords.includes(word)
+                );
+
+                if (hasMeaningfulWord) {
+                    console.log('Médicament détecté (pattern simple):', medication);
+                    return [medication];
+                }
             }
 
             // Étape 3: Pattern avec "dans le stock" à la fin
@@ -571,12 +577,20 @@ export default {
 
             if (stockMatch && stockMatch[1]) {
                 let medication = stockMatch[1].trim();
-                console.log('Médicament détecté (pattern stock):', medication);
-                return [medication];
+
+                // Vérifier que le médicament contient au moins un mot significatif
+                const words = medication.split(/\s+/);
+                const hasMeaningfulWord = words.some(word =>
+                    word.length > 2 && !stopWords.includes(word) && !contextKeywords.includes(word)
+                );
+
+                if (hasMeaningfulWord) {
+                    console.log('Médicament détecté (pattern stock):', medication);
+                    return [medication];
+                }
             }
 
             // Étape 4: Si aucun pattern simple, utiliser la méthode complexe (pour les listes)
-            // Mais en préservant les mots comme "stock" dans le contexte, pas comme médicament
 
             // Supprimer la partie introductive mais GARDER le contenu
             const introPatterns = [
@@ -608,8 +622,16 @@ export default {
                 if (originalMatch && originalMatch[1]) {
                     let medication = originalMatch[1].trim();
                     medication = medication.replace(/\s+(?:dans|en|stock)$/, '');
-                    console.log('Médicament récupéré depuis original:', medication);
-                    return [medication];
+
+                    const words = medication.split(/\s+/);
+                    const hasMeaningfulWord = words.some(word =>
+                        word.length > 2 && !stopWords.includes(word) && !contextKeywords.includes(word)
+                    );
+
+                    if (hasMeaningfulWord) {
+                        console.log('Médicament récupéré depuis original:', medication);
+                        return [medication];
+                    }
                 }
                 return [];
             }
@@ -622,12 +644,23 @@ export default {
 
             console.log('Après marquage des connecteurs:', processedQuery);
 
-            // Splitter par les virgules
+            // Splitter par les virgules - AVEC FILTRAGE STOPWORDS
             let groups = processedQuery.split(/\s*,\s*/)
                 .map(group => group.trim())
-                .filter(group => group.length > 0 && !contextKeywords.includes(group));
+                .filter(group => {
+                    if (group.length === 0 || contextKeywords.includes(group)) return false;
 
-            console.log('Groupes détectés:', groups);
+                    // Vérifier si le groupe contient au moins un mot significatif
+                    const words = group.split(/\s+/);
+                    return words.some(word =>
+                        word.length > 2 &&
+                        !stopWords.includes(word) &&
+                        !contextKeywords.includes(word) &&
+                        word !== '###ET###'
+                    );
+                });
+
+            console.log('Groupes détectés après filtrage stopWords:', groups);
 
             // Restaurer les "et" et nettoyer
             const medications = [];
@@ -641,7 +674,17 @@ export default {
                     .replace(/\s+(?:stp|svp|please|disponible|restant)$/, '')
                     .trim();
 
-                if (restoredGroup.length > 2 && !contextKeywords.includes(restoredGroup)) {
+                // Vérification FINALE avec stopWords
+                const words = restoredGroup.split(/\s+/);
+                const hasMeaningfulWord = words.some(word =>
+                    word.length > 2 &&
+                    !stopWords.includes(word) &&
+                    !contextKeywords.includes(word)
+                );
+
+                if (restoredGroup.length > 2 &&
+                    !contextKeywords.includes(restoredGroup) &&
+                    hasMeaningfulWord) {
                     medications.push(restoredGroup);
                 }
             });
@@ -649,7 +692,12 @@ export default {
             // Si aucun médicament trouvé mais qu'il reste des groupes, prendre le premier
             if (medications.length === 0 && groups.length > 0) {
                 const firstGroup = groups[0].replace(/###ET###/g, ' et ');
-                if (firstGroup.length > 2) {
+                const words = firstGroup.split(/\s+/);
+                const hasMeaningfulWord = words.some(word =>
+                    word.length > 2 && !stopWords.includes(word) && !contextKeywords.includes(word)
+                );
+
+                if (firstGroup.length > 2 && hasMeaningfulWord) {
                     medications.push(firstGroup);
                 }
             }
@@ -672,7 +720,6 @@ export default {
             if (selectedMedications.value.nid) {
                 medicationContext = `Médicament sélectionné pour discussion : ${selectedMedications.value.name}.`;
             }
-
 
             // === AJOUT: Recherche dynamique des médicaments demandés ===
             let dynamicInventorySummary = '';
@@ -775,8 +822,6 @@ export default {
                 }
             }
             // === FIN DE L'AJOUT ===
-
-
 
             // Préparer un résumé de l'inventaire réel
             const inventorySummary = store.articles.rows.map(item =>
@@ -948,8 +993,6 @@ export default {
             selectedImage.value = null;
         }
 
-
-
         const scrollToBottom = () => {
             nextTick(() => {
                 if (chatContainer.value) {
@@ -958,12 +1001,9 @@ export default {
             })
         }
 
-
         // =============================================
-        // NOUVELLE FONCTION À AJOUTER ICI
+        // FONCTION POUR RÉCUPÉRER TOUTES LES INFORMATIONS D'UN PATIENT
         // =============================================
-        // Fonction pour récupérer toutes les informations d'un patient
-
         const getPatientFullInfo = async (patientNid) => {
             try {
                 isTyping.value = true;
@@ -1231,7 +1271,6 @@ export default {
                 isTyping.value = false;
             }
         };
-
 
         // Gestion patient
         const openPatientModal = () => {
@@ -1583,7 +1622,6 @@ export default {
                 isTyping.value = false;
             }
         };
-
 
         const addMedication = async (medicationData) => {
             selectedMedications.value = medicationData;
