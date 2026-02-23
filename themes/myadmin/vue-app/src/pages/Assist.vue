@@ -1174,31 +1174,20 @@ export default {
         const getMedicationFullInfo = async (medicationData) => {
             try {
                 isTyping.value = true;
-
-                // 1. Récupérer les infos de base du médicament depuis le store
                 let medication = null;
-                const currentArticles = [...(store.articles?.rows || [])];
-
                 try {
-                    // Chercher d'abord dans la liste existante
-                    medication = currentArticles.find(a => a.nid === medicationData.nid);
-                    console.log("ato ivelany:", medicationData.nid);
-                    // Si pas trouvé, faire un appel API spécifique
-                    if (!medication) {
-                        console.log("ato:", medicationData.nid);
-                        await store.fetchArticles({
-                            fields: ['nid', 'title', 'field_quantite_stock', 'created', 'field_prix_unitaire'],
-                            filters: {
-                                nid: {
-                                    val: medicationData.nid,
-                                    op: '='
-                                }
-                            },
-                            pager: 0,
-                            offset: 1
-                        });
-                        medication = store.articles?.rows?.[0];
-                    }
+                    await store.fetchArticles({
+                        fields: ['nid', 'title', 'field_quantite_stock', 'created', 'field_prix_unitaire'],
+                        filters: {
+                            nid: {
+                                val: medicationData.nid,
+                                op: '='
+                            }
+                        },
+                        pager: 0,
+                        offset: 1
+                    });
+                    medication = store.articles?.rows?.[0];
                 } catch (error) {
                     console.error("Erreur récupération médicament:", error);
                 }
