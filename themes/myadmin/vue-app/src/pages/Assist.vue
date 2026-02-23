@@ -519,147 +519,117 @@ export default {
                 scrollToBottom()
             }
         }
-
         // =============================================
-        // FONCTION EXTRACT MEDICATION NAMES AMÉLIORÉE AVEC SCORING
+        // FONCTION EXTRACT MEDICATION NAMES - VERSION SCORING
         // =============================================
         const extractMedicationNames = (query) => {
-            // Liste minimale des mots à ignorer (seulement les plus évidents)
-            const stopWords = [
-                'le', 'la', 'les', 'du', 'de', 'des', 'un', 'une', 'dans', 'pour', 'avec',
-                'est', 'sont', 'et', 'ou', 'mais', 'donc', 'car', 'verifie', 'vérifie',
-                'vérifier', 'verifier', 'stp', 'svp', 'please', 'peux', 'peut', 'pouvez',
-                'combien', 'nombre', 'reste', 'restant', 'donne', 'donner', 'moi'
-            ];
-
-            // Mots-clés de contexte (à ne pas prendre comme médicaments)
-            const contextKeywords = ['stock', 'inventaire', 'pharmacie', 'quantité', 'disponible'];
-
             // Normaliser la requête
-            let cleanQuery = query.toLowerCase()
+            const normalizedQuery = query.toLowerCase()
                 .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '') // Enlever les accents
+                .replace(/[\u0300-\u036f]/g, '')
                 .trim();
 
-            console.log('Requête nettoyée:', cleanQuery);
+            console.log('Requête:', normalizedQuery);
 
-            // Étape 1: Extraire TOUS les mots qui pourraient être des médicaments
-            // On garde tout ce qui a au moins 2 caractères et n'est pas dans stopWords
-            const words = cleanQuery.split(/\s+/)
-                .filter(word => word.length >= 2 && !stopWords.includes(word))
-                .map(word => word.replace(/[?!,;:.]$/, ''));
+            // Tokenizer la requête
+            const queryTokens = tokenize(normalizedQuery);
+            console.log('Tokens:', queryTokens);
 
-            console.log('Mots candidats:', words);
+            // Détecter le contexte
+            const wantsStock = containsAny(queryTokens, ['stock', 'inventaire', 'quantite', 'reste', 'disponible']);
 
-            // Étape 2: Regrouper les mots qui forment probablement des noms composés
-            const medications = [];
-            let i = 0;
+            if (!wantsStock) return [];
 
-            while (i < words.length) {
-                // Si c'est un mot potentiel de médicament (pas un contexte)
-                if (!contextKeywords.includes(words[i])) {
-                    let compound = words[i];
-                    let j = i + 1;
+            // Récupérer tous les articles de la base pour scoring
+            const allArticles = store.articles?.rows || [];
 
-                    // Regrouper avec les mots suivants si :
-                    // - C'est un nombre (dosage)
-                    // - C'est une unité (mg, g, ml)
-                    // - Le mot suivant est aussi un candidat (nom composé)
-                    while (j < words.length) {
-                        const nextWord = words[j];
+            if (allArticles.length === 0) return [];
 
-                        // Arrêter si on tombe sur un mot-clé de contexte
-                        if (contextKeywords.includes(nextWord)) {
-                            break;
-                        }
+            // Créer un scoreur basé sur les tokens de la requête
+            const scorer = makeTextScorer(queryTokens, []);
 
-                        // Toujours regrouper avec :
-                        // - Les nombres (dosages)
-                        // - Les unités communes
-                        // - Les mots courts (comme "et", "+", "&" mais on les remplace)
-                        // - Les autres mots candidats (pour les noms composés)
-                        if (nextWord.match(/^\d+$/) ||
-                            nextWord.match(/^(mg|g|ml|ui|cp|amp|inj|susp|sirop)$/) ||
-                            !stopWords.includes(nextWord)) {
-                            compound += ' ' + nextWord;
-                            j++;
-                        } else {
-                            break;
-                        }
-                    }
+            // Calculer le score pour chaque article
+            const scoredArticles = allArticles.map(article => ({
+                article,
+                score: scorer(article.title)
+            }));
 
-                    // Nettoyer le composé
-                    compound = compound
-                        .replace(/\s+et\s+/g, ' et ')
-                        .replace(/\s*\+\s*/g, ' + ')
-                        .replace(/\s*&\s*/g, ' & ')
-                        .trim();
+            // Filtrer les articles avec un score significatif (>= 2)
+            const relevantArticles = scoredArticles
+                .filter(item => item.score >= 2)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 5); // Garder les 5 meilleurs
 
-                    // Ajouter si c'est pertinent
-                    if (compound.length >= 3 &&
-                        !contextKeywords.includes(compound) &&
-                        !medications.includes(compound)) {
-                        medications.push(compound);
-                    }
+            console.log('Articles pertinents:', relevantArticles.map(a => ({
+                titre: a.article.title,
+                score: a.score
+            })));
 
-                    i = j;
-                } else {
-                    i++;
-                }
-            }
+            // Extraire les noms des médicaments pertinents
+            const medicationNames = relevantArticles.map(item => item.article.title);
 
-            // Étape 3: Si on n'a rien trouvé, prendre les mots significatifs
-            if (medications.length === 0) {
-                const significantWords = words.filter(word =>
-                    word.length >= 3 &&
-                    !contextKeywords.includes(word) &&
-                    !stopWords.includes(word)
-                );
-
-                if (significantWords.length > 0) {
-                    // Essayer de détecter des paires nom + dosage
-                    for (let k = 0; k < significantWords.length; k++) {
-                        const currentWord = significantWords[k];
-                        const nextWord = significantWords[k + 1];
-
-                        if (nextWord && nextWord.match(/^\d+$/)) {
-                            // C'est probablement un médicament avec dosage
-                            medications.push(currentWord + ' ' + nextWord);
-                            k++; // Skip le prochain
-                        } else {
-                            medications.push(currentWord);
-                        }
-                    }
-                }
-            }
-
-            // Étape 4: Dernier recours - prendre les mots de la requête originale
-            if (medications.length === 0) {
-                // Chercher après "de", "d'", "du", "des"
-                const deMatch = cleanQuery.match(/(?:de|d'|du|des)\s+([a-z0-9\s\-]+?)(?:\s+dans|\s+en|\s+au|\s+pour|\s*$)/i);
-                if (deMatch && deMatch[1]) {
-                    const possibleMed = deMatch[1].trim();
-                    if (possibleMed.length >= 3) {
-                        medications.push(possibleMed);
-                    }
-                }
-            }
-
-            console.log('Médicaments détectés (bruts):', medications);
-
-            // Étape 5: Filtrer les doublons et les trop courts
-            const uniqueMedications = [...new Set(medications)]
-                .filter(med => med.length >= 2)
-                .map(med => {
-                    // Nettoyer les terminaisons indésirables
-                    return med.replace(/\s+(?:dans|en|stock|stp|svp|please)$/, '');
-                });
-
-            console.log('Médicaments finaux:', uniqueMedications);
-
-            return uniqueMedications;
+            return medicationNames;
         };
 
+        // -----------------------------------------------------------------------------
+        // FONCTIONS UTILITAIRES
+        // -----------------------------------------------------------------------------
+
+        function norm(s) {
+            return (s || '')
+                .toString()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim();
+        }
+
+        function tokenize(s) {
+            const t = norm(s).replace(/[^a-z0-9\s]/g, ' ');
+            return t.split(/\s+/).filter(w => w.length >= 2);
+        }
+
+        function containsAny(tokens, keywords) {
+            const set = new Set(tokens);
+            return keywords.some(k => set.has(norm(k)));
+        }
+
+        function makeTextScorer(queryTokens, extraBoostPhrases = []) {
+            const qset = new Set(queryTokens);
+            const qstr = queryTokens.join(' ');
+
+            return (text) => {
+                const tokens = tokenize(text);
+                let score = 0;
+
+                // Score basé sur les tokens individuels
+                for (const w of tokens) {
+                    if (qset.has(w)) score += 2;
+                }
+
+                // Boost si phrase complète correspond
+                const t = norm(text);
+                if (qstr.length > 0 && t.includes(qstr)) score += 6;
+
+                // Boost si plusieurs tokens correspondent
+                const overlap = tokens.filter(w => qset.has(w)).length;
+                if (overlap >= 2) score += 4;
+                if (overlap >= 3) score += 8;
+
+                // Boost pour les mots longs (>=6 caractères)
+                for (const w of queryTokens) {
+                    if (w.length >= 6 && t.includes(w)) score += 5;
+                }
+
+                // Boost pour les phrases dans extraBoostPhrases
+                for (const p of extraBoostPhrases) {
+                    const np = norm(p);
+                    if (np && t.includes(np)) score += 10;
+                }
+
+                return score;
+            };
+        }
         const generateAIResponse = async (userMessage, imageBase64 = null) => {
             const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
             const apiUrl = 'https://api.openai.com/v1/chat/completions';
