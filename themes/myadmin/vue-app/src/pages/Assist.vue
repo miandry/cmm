@@ -1195,7 +1195,7 @@ export default {
                 if (!medication) {
                     throw new Error("Médicament non trouvé dans l'inventaire");
                 }
-                console.log("Informations du médicament récupérées:", medication);
+                console.log("Informations du médicament récupérées:", Number(medication.field_quantite_stock));
                 // 2. Récupérer l'historique des prescriptions de ce médicament
                 const currentOrders = [...(orderStore.orders?.rows || [])];
                 const medicationPrescriptions = [];
@@ -1328,7 +1328,7 @@ export default {
                     medication: {
                         nid: medication.nid,
                         nom: medication.title,
-                        stock: medication.field_quantite_stock || 0,
+                        stock: Number(medication.field_quantite_stock) || 0,
                         unite: 'unités',
                         prix: medication.field_prix_unitaire || 'Non défini',
                     },
