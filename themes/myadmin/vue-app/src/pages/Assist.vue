@@ -821,7 +821,7 @@ export default {
                             field_client: ['nid', 'title']
                         },
                         pager: 0,
-                        sort: { val: 'created', op: 'desc' }
+                        sort: { val: 'nid', op: 'desc' }
                     });
 
                     patientOrders = orderStore.orders?.rows || [];
