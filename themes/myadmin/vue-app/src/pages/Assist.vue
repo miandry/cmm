@@ -577,39 +577,6 @@ export default {
             - Termine tes conseils médicaux en rappelant que la décision finale revient au médecin.
             - Si on demande des statistiques ou graphiques de ventes, ajoute <SHOW_SALES_CHART> à la fin.
 
-            STRUCTURE DES DONNÉES ET RELATIONS ENTRE ENTITÉS :
-
-            1. RELATIONS CLIENT (PATIENT) :
-            - Un CLIENT (patient) est identifié par son 'nid' (ID unique)
-            - Chaque CLIENT possède : title (nom), field_age (âge), field_sexe (sexe), field_allergies (allergies), field_phone (téléphone), field_assurance (assurance), field_adresse (adresse), field_contact_d_urgence (contact urgence), field_email (email), field_notes_medicales (notes médicales)
-
-            2. RELATIONS CONSULTATION :
-            - Une CONSULTATION est liée à un CLIENT via la clé étrangère 'field_client' qui contient le 'nid' du client
-            - Chaque CONSULTATION contient : title (titre/n°), field_motif (motif de consultation), field_temperature (température), field_tension_arterielle (tension), field_poids (poids), created (date)
-            - Les constantes cliniques (température, tension, poids) sont enregistrées par consultation
-
-            3. RELATIONS ARTICLE (MÉDICAMENT/PRODUIT) :
-            - Un ARTICLE est identifié par son 'nid'
-            - Chaque ARTICLE possède : title (nom), field_quantite_stock (quantité en stock), field_unite (unité de mesure)
-            - Les ARTICLES sont utilisés dans les COMMANDES via field_articles
-
-            4. RELATIONS EXAMEN :
-            - Un EXAMEN est identifié par son 'nid'
-            - Chaque EXAMEN possède : title (nom), field_prix (prix)
-            - Les EXAMENS peuvent être prescrits dans les COMMANDES via field_examens_order
-
-            5. RELATIONS COMMANDE (VENTE) :
-            - Une COMMANDE est liée à un CLIENT via la clé étrangère 'field_client' (contient le 'nid' du client)
-            - Une COMMANDE peut contenir plusieurs ARTICLES via 'field_articles' : tableau d'objets contenant {field_article: {nid, title}, field_quantite: nombre}
-            - Une COMMANDE peut contenir plusieurs EXAMENS via 'field_examens_order' : tableau d'objets contenant {field_examen: {nid, title}}
-            - Chaque COMMANDE a : title (n° commande), field_date (date), field_total_vente (montant total)
-
-            6. SCHÉMA DES RELATIONS (Clés étrangères) :
-            - Client (nid) ← field_client → Consultation (field_client)
-            - Client (nid) ← field_client → Commande (field_client)
-            - Article (nid) ← field_article.field_article → field_articles dans Commande
-            - Examen (nid) ← field_examen.field_examen → field_examens_order dans Commande
-            
             CONTEXTE ET DONNÉES DE LA CLINIQUE :
             - Stock actuel: ${inventorySummary}
             - Patients: ${patientListSummary}
@@ -619,13 +586,7 @@ export default {
             
             CONTEXTE DE LA SESSION :
             Patient sélectionné: ${patientContext || 'Aucun'}
-            Médicament sélectionné: ${medicationContext || 'Aucun'}
-            
-            COMMENT UTILISER CES RELATIONS :
-            - Pour obtenir l'historique d'un patient, cherche les CONSULTATIONS et COMMANDES liées à son 'nid'
-            - Pour analyser les prescriptions, regarde les ARTICLES et EXAMENS dans les COMMANDES par client
-            - Pour le suivi clinique, relie les CONSTANTES des CONSULTATIONS aux prescriptions dans les COMMANDES
-            - Pour l'inventaire, croise les sorties de stock (field_quantite dans field_articles) avec les COMMANDES`;
+            Médicament sélectionné: ${medicationContext || 'Aucun'}`;
 
             let userContent = userMessage;
 
