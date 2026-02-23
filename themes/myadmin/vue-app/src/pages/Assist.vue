@@ -1195,7 +1195,7 @@ export default {
                 if (!medication) {
                     throw new Error("Médicament non trouvé dans l'inventaire");
                 }
-                console.log("Informations du médicament récupérées:", parseInt(medication.field_quantite_stock));
+                console.log("Informations du médicament récupérées:", parseInt(medication));
                 // 2. Récupérer l'historique des prescriptions de ce médicament
                 const currentOrders = [...(orderStore.orders?.rows || [])];
                 const medicationPrescriptions = [];
