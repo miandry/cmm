@@ -521,24 +521,19 @@ export default {
         }
 
         // =============================================
-        // FONCTION EXTRACT MEDICATION NAMES CORRIGÉE AVEC STOPWORDS
+        // FONCTION EXTRACT MEDICATION NAMES AMÉLIORÉE AVEC SCORING
         // =============================================
         const extractMedicationNames = (query) => {
-            // Liste des mots à ignorer
+            // Liste minimale des mots à ignorer (seulement les plus évidents)
             const stopWords = [
                 'le', 'la', 'les', 'du', 'de', 'des', 'un', 'une', 'dans', 'pour', 'avec',
-                'est', 'sont', 'et', 'ou', 'mais', 'donc', 'car', 'ni', 'hier', 'aujourd',
-                'verifie', 'vérifie', 'vérifier', 'verifier', 's', 'il', 'elle', 'on',
-                'je', 'tu', 'nous', 'vous', 'ils', 'elles', 'me', 'te', 'se', 'lui',
-                'moi', 'toi', 'soi', 'stp', 'svp', 's\'il', 'vous', 'plait', 'plaît',
-                'peux', 'peut', 'pouvez', 'pouvoir', 'avoir', 'être', 'faire', 'voir',
-                'donne', 'donner', 'donnez', 'donnes', 'please',
-                'quantité', 'quantite', 'disponible', 'reste', 'restant',
-                'combien', 'nombre', 'unites', 'unités', 'boites', 'boîtes'
+                'est', 'sont', 'et', 'ou', 'mais', 'donc', 'car', 'verifie', 'vérifie',
+                'vérifier', 'verifier', 'stp', 'svp', 'please', 'peux', 'peut', 'pouvez',
+                'combien', 'nombre', 'reste', 'restant', 'donne', 'donner', 'moi'
             ];
 
-            // Mots-clés de contexte à préserver
-            const contextKeywords = ['stock', 'inventaire', 'pharmacie', 'reserve', 'réserve'];
+            // Mots-clés de contexte (à ne pas prendre comme médicaments)
+            const contextKeywords = ['stock', 'inventaire', 'pharmacie', 'quantité', 'disponible'];
 
             // Normaliser la requête
             let cleanQuery = query.toLowerCase()
@@ -548,163 +543,121 @@ export default {
 
             console.log('Requête nettoyée:', cleanQuery);
 
-            // Étape 1: DÉTECTION DU CONTEXTE - mais on garde TOUTE la phrase
-            let workingQuery = cleanQuery;
+            // Étape 1: Extraire TOUS les mots qui pourraient être des médicaments
+            // On garde tout ce qui a au moins 2 caractères et n'est pas dans stopWords
+            const words = cleanQuery.split(/\s+/)
+                .filter(word => word.length >= 2 && !stopWords.includes(word))
+                .map(word => word.replace(/[?!,;:.]$/, ''));
 
-            // Étape 2: Pour les requêtes simples (type "verifie quantite de X")
-            // On cherche le médicament après "de", "d'", "du", "des"
-            const simpleMatch = workingQuery.match(/(?:de|d'|du|des)\s+([a-z0-9\s\-]+?)(?:\s+dans|\s+en|\s+au|\s+aux|\s+pour|\s+et|\s*$)/i);
+            console.log('Mots candidats:', words);
 
-            if (simpleMatch && simpleMatch[1]) {
-                let medication = simpleMatch[1].trim();
-                // Nettoyer la fin
-                medication = medication.replace(/\s+(?:dans|en|au|aux|pour|et|ou|stp|svp|please)$/, '');
+            // Étape 2: Regrouper les mots qui forment probablement des noms composés
+            const medications = [];
+            let i = 0;
 
-                // Vérifier que le médicament contient au moins un mot significatif
-                const words = medication.split(/\s+/);
-                const hasMeaningfulWord = words.some(word =>
-                    word.length > 2 && !stopWords.includes(word) && !contextKeywords.includes(word)
-                );
+            while (i < words.length) {
+                // Si c'est un mot potentiel de médicament (pas un contexte)
+                if (!contextKeywords.includes(words[i])) {
+                    let compound = words[i];
+                    let j = i + 1;
 
-                if (hasMeaningfulWord) {
-                    console.log('Médicament détecté (pattern simple):', medication);
-                    return [medication];
+                    // Regrouper avec les mots suivants si :
+                    // - C'est un nombre (dosage)
+                    // - C'est une unité (mg, g, ml)
+                    // - Le mot suivant est aussi un candidat (nom composé)
+                    while (j < words.length) {
+                        const nextWord = words[j];
+
+                        // Arrêter si on tombe sur un mot-clé de contexte
+                        if (contextKeywords.includes(nextWord)) {
+                            break;
+                        }
+
+                        // Toujours regrouper avec :
+                        // - Les nombres (dosages)
+                        // - Les unités communes
+                        // - Les mots courts (comme "et", "+", "&" mais on les remplace)
+                        // - Les autres mots candidats (pour les noms composés)
+                        if (nextWord.match(/^\d+$/) ||
+                            nextWord.match(/^(mg|g|ml|ui|cp|amp|inj|susp|sirop)$/) ||
+                            !stopWords.includes(nextWord)) {
+                            compound += ' ' + nextWord;
+                            j++;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // Nettoyer le composé
+                    compound = compound
+                        .replace(/\s+et\s+/g, ' et ')
+                        .replace(/\s*\+\s*/g, ' + ')
+                        .replace(/\s*&\s*/g, ' & ')
+                        .trim();
+
+                    // Ajouter si c'est pertinent
+                    if (compound.length >= 3 &&
+                        !contextKeywords.includes(compound) &&
+                        !medications.includes(compound)) {
+                        medications.push(compound);
+                    }
+
+                    i = j;
+                } else {
+                    i++;
                 }
             }
 
-            // Étape 3: Pattern avec "dans le stock" à la fin
-            const stockMatch = workingQuery.match(/^.*?(?:de|d'|du|des)\s+([a-z0-9\s\-]+?)(?:\s+dans le stock|\s+en stock|\s*$)/i);
-
-            if (stockMatch && stockMatch[1]) {
-                let medication = stockMatch[1].trim();
-
-                // Vérifier que le médicament contient au moins un mot significatif
-                const words = medication.split(/\s+/);
-                const hasMeaningfulWord = words.some(word =>
-                    word.length > 2 && !stopWords.includes(word) && !contextKeywords.includes(word)
+            // Étape 3: Si on n'a rien trouvé, prendre les mots significatifs
+            if (medications.length === 0) {
+                const significantWords = words.filter(word =>
+                    word.length >= 3 &&
+                    !contextKeywords.includes(word) &&
+                    !stopWords.includes(word)
                 );
 
-                if (hasMeaningfulWord) {
-                    console.log('Médicament détecté (pattern stock):', medication);
-                    return [medication];
-                }
-            }
+                if (significantWords.length > 0) {
+                    // Essayer de détecter des paires nom + dosage
+                    for (let k = 0; k < significantWords.length; k++) {
+                        const currentWord = significantWords[k];
+                        const nextWord = significantWords[k + 1];
 
-            // Étape 4: Si aucun pattern simple, utiliser la méthode complexe (pour les listes)
-
-            // Supprimer la partie introductive mais GARDER le contenu
-            const introPatterns = [
-                /^(?:combien|quel est|quelle est|verifie|vérifie|peux-tu|peux tu).*?(?:de|d'|du|des)\s+/i,
-                /^.*?(?:dans le stock|en stock).*?(?:de|d'|du|des)\s+/i,
-            ];
-
-            introPatterns.forEach(pattern => {
-                workingQuery = workingQuery.replace(pattern, '');
-            });
-
-            // Si le remplacement a tout supprimé, garder la requête originale
-            if (workingQuery.length === 0 || workingQuery === cleanQuery) {
-                workingQuery = cleanQuery;
-            }
-
-            console.log('Après suppression intro:', workingQuery);
-
-            // Supprimer "dans le stock" seulement si c'est à la fin
-            workingQuery = workingQuery.replace(/\s+dans le stock$/, '');
-            workingQuery = workingQuery.replace(/\s+en stock$/, '');
-
-            console.log('Après suppression "dans le stock":', workingQuery);
-
-            // Vérifier si ce qui reste n'est PAS un mot-clé de contexte seul
-            if (contextKeywords.includes(workingQuery) || workingQuery.length < 3) {
-                // Si on a juste "stock", essayer de récupérer depuis la requête originale
-                const originalMatch = cleanQuery.match(/(?:de|d'|du|des)\s+([a-z0-9\s\-]+?)(?:\s+dans|\s+en|\s*$)/i);
-                if (originalMatch && originalMatch[1]) {
-                    let medication = originalMatch[1].trim();
-                    medication = medication.replace(/\s+(?:dans|en|stock)$/, '');
-
-                    const words = medication.split(/\s+/);
-                    const hasMeaningfulWord = words.some(word =>
-                        word.length > 2 && !stopWords.includes(word) && !contextKeywords.includes(word)
-                    );
-
-                    if (hasMeaningfulWord) {
-                        console.log('Médicament récupéré depuis original:', medication);
-                        return [medication];
+                        if (nextWord && nextWord.match(/^\d+$/)) {
+                            // C'est probablement un médicament avec dosage
+                            medications.push(currentWord + ' ' + nextWord);
+                            k++; // Skip le prochain
+                        } else {
+                            medications.push(currentWord);
+                        }
                     }
                 }
-                return [];
             }
 
-            // Étape 5: Détecter les groupes liés par "et", "+", "&"
-            let processedQuery = workingQuery
-                .replace(/\s+et\s+/g, '###ET###')
-                .replace(/\s*\+\s*/g, '###ET###')
-                .replace(/\s*&\s*/g, '###ET###');
+            // Étape 4: Dernier recours - prendre les mots de la requête originale
+            if (medications.length === 0) {
+                // Chercher après "de", "d'", "du", "des"
+                const deMatch = cleanQuery.match(/(?:de|d'|du|des)\s+([a-z0-9\s\-]+?)(?:\s+dans|\s+en|\s+au|\s+pour|\s*$)/i);
+                if (deMatch && deMatch[1]) {
+                    const possibleMed = deMatch[1].trim();
+                    if (possibleMed.length >= 3) {
+                        medications.push(possibleMed);
+                    }
+                }
+            }
 
-            console.log('Après marquage des connecteurs:', processedQuery);
+            console.log('Médicaments détectés (bruts):', medications);
 
-            // Splitter par les virgules - AVEC FILTRAGE STOPWORDS
-            let groups = processedQuery.split(/\s*,\s*/)
-                .map(group => group.trim())
-                .filter(group => {
-                    if (group.length === 0 || contextKeywords.includes(group)) return false;
-
-                    // Vérifier si le groupe contient au moins un mot significatif
-                    const words = group.split(/\s+/);
-                    return words.some(word =>
-                        word.length > 2 &&
-                        !stopWords.includes(word) &&
-                        !contextKeywords.includes(word) &&
-                        word !== '###ET###'
-                    );
+            // Étape 5: Filtrer les doublons et les trop courts
+            const uniqueMedications = [...new Set(medications)]
+                .filter(med => med.length >= 2)
+                .map(med => {
+                    // Nettoyer les terminaisons indésirables
+                    return med.replace(/\s+(?:dans|en|stock|stp|svp|please)$/, '');
                 });
 
-            console.log('Groupes détectés après filtrage stopWords:', groups);
+            console.log('Médicaments finaux:', uniqueMedications);
 
-            // Restaurer les "et" et nettoyer
-            const medications = [];
-
-            groups.forEach(group => {
-                let restoredGroup = group.replace(/###ET###/g, ' et ');
-
-                // Nettoyer
-                restoredGroup = restoredGroup
-                    .replace(/^(?:de|d'|du|des|le|la|les)\s+/, '')
-                    .replace(/\s+(?:stp|svp|please|disponible|restant)$/, '')
-                    .trim();
-
-                // Vérification FINALE avec stopWords
-                const words = restoredGroup.split(/\s+/);
-                const hasMeaningfulWord = words.some(word =>
-                    word.length > 2 &&
-                    !stopWords.includes(word) &&
-                    !contextKeywords.includes(word)
-                );
-
-                if (restoredGroup.length > 2 &&
-                    !contextKeywords.includes(restoredGroup) &&
-                    hasMeaningfulWord) {
-                    medications.push(restoredGroup);
-                }
-            });
-
-            // Si aucun médicament trouvé mais qu'il reste des groupes, prendre le premier
-            if (medications.length === 0 && groups.length > 0) {
-                const firstGroup = groups[0].replace(/###ET###/g, ' et ');
-                const words = firstGroup.split(/\s+/);
-                const hasMeaningfulWord = words.some(word =>
-                    word.length > 2 && !stopWords.includes(word) && !contextKeywords.includes(word)
-                );
-
-                if (firstGroup.length > 2 && hasMeaningfulWord) {
-                    medications.push(firstGroup);
-                }
-            }
-
-            console.log('Médicaments finaux:', medications);
-
-            return medications;
+            return uniqueMedications;
         };
 
         const generateAIResponse = async (userMessage, imageBase64 = null) => {
