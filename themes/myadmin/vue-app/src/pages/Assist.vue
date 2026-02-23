@@ -723,150 +723,226 @@ export default {
         // NOUVELLE FONCTION À AJOUTER ICI
         // =============================================
         // Fonction pour récupérer toutes les informations d'un patient
+
         const getPatientFullInfo = async (patientNid) => {
             try {
                 isTyping.value = true;
 
                 // 1. Récupérer les détails COMPLETS du patient spécifique
-                await clientStore.fetchClient(patientNid);
+                let patient = null;
 
-                // Récupérer le patient depuis le store
-                const patient = clientStore.client;
+                // Sauvegarder la liste actuelle des patients
+                const currentPatients = [...(clientStore.allClients?.rows || [])];
+
+                try {
+                    await clientStore.fetchClient(patientNid);
+                    patient = clientStore.client;
+
+                    // Restaurer la liste des patients
+                    clientStore.allClients = { ...clientStore.allClients, rows: currentPatients };
+                } catch (error) {
+                    console.error("Erreur récupération patient:", error);
+                    patient = currentPatients.find(p => p.nid === patientNid);
+                }
 
                 if (!patient) {
                     throw new Error("Patient non trouvé");
                 }
 
-                // 2. Récupérer TOUTES les consultations de CE patient spécifique
-                await consultationStore.fetchConsultations({
-                    fields: [
-                        'nid',
-                        'title',
-                        'field_motif',
-                        'field_temperature',
-                        'field_tension_arterielle',
-                        'field_poids',
-                        'created',
-                        'field_examens',
-                        'field_medicaments',
-                        'field_client',
-                    ],
-                    filters: {
-                        'field_client': {
-                            val: patientNid,
-                            op: '='
-                        }
-                    },
-                    values: {
-                        field_client: ['nid', 'title']
-                    },
-                    pager: 0,
-                    sort: { val: 'created', op: 'desc' }
-                });
+                // 2. Sauvegarder l'état actuel des consultations
+                const currentConsultations = [...(consultationStore.consultations?.rows || [])];
 
-                // 3. Récupérer TOUTES les commandes/ventes de CE patient
-                await orderStore.fetchOrders({
-                    fields: [
-                        'nid',
-                        'title',
-                        'field_articles',
-                        'field_examens_order',
-                        'field_date',
-                        'field_total_vente',
-                        'created',
-                        'field_client',
-                    ],
-                    filters: {
-                        'field_client': {
-                            val: patientNid,
-                            op: '='
-                        }
-                    },
-                    values: {
-                        field_articles: [
-                            'field_article',
-                            'field_quantite'
+                // Récupérer les consultations du patient
+                let patientConsultations = [];
+                try {
+                    const response = await consultationStore.fetchConsultations({
+                        fields: [
+                            'nid',
+                            'title',
+                            'field_motif',
+                            'field_temperature',
+                            'field_tension_arterielle',
+                            'field_poids',
+                            'created',
+                            'field_examens',
+                            'field_medicaments',
+                            'field_client',
                         ],
-                        field_examens_order: [
-                            'field_examen'
+                        filters: {
+                            'field_client': {
+                                val: patientNid,
+                                op: '='
+                            }
+                        },
+                        values: {
+                            field_client: ['nid', 'title']
+                        },
+                        pager: 0,
+                        sort: { val: 'created', op: 'desc' }
+                    });
+
+                    patientConsultations = consultationStore.consultations?.rows || [];
+
+                    // Restaurer les consultations originales
+                    consultationStore.consultations = {
+                        ...consultationStore.consultations,
+                        rows: currentConsultations
+                    };
+                } catch (error) {
+                    console.error("Erreur récupération consultations:", error);
+                    patientConsultations = [];
+                }
+
+                // 3. Sauvegarder l'état actuel des commandes
+                const currentOrders = [...(orderStore.orders?.rows || [])];
+
+                // Récupérer les commandes du patient
+                let patientOrders = [];
+                try {
+                    await orderStore.fetchOrders({
+                        fields: [
+                            'nid',
+                            'title',
+                            'field_articles',
+                            'field_examens_order',
+                            'field_date',
+                            'field_total_vente',
+                            'created',
+                            'field_client',
                         ],
-                        field_client: ['nid', 'title']
-                    },
-                    pager: 0,
-                    sort: { val: 'created', op: 'desc' }
-                });
+                        filters: {
+                            'field_client': {
+                                val: patientNid,
+                                op: '='
+                            }
+                        },
+                        values: {
+                            field_articles: [
+                                'field_article',
+                                'field_quantite'
+                            ],
+                            field_examens_order: [
+                                'field_examen'
+                            ],
+                            field_client: ['nid', 'title']
+                        },
+                        pager: 0,
+                        sort: { val: 'created', op: 'desc' }
+                    });
 
-                const patientConsultations = consultationStore.consultations.rows;
-                const patientOrders = orderStore.orders.rows;
+                    patientOrders = orderStore.orders?.rows || [];
 
-                // 4. Récupérer les infos des médicaments prescrits
+                    // Restaurer les commandes originales
+                    orderStore.orders = { ...orderStore.orders, rows: currentOrders };
+                } catch (error) {
+                    console.error("Erreur récupération commandes:", error);
+                    patientOrders = [];
+                }
+
+                // 4. Récupérer les infos des médicaments prescrits sans écraser le store
                 const prescribedMedications = [];
+                const currentArticles = [...(store.articles?.rows || [])];
+
                 for (const order of patientOrders) {
                     if (order.field_articles && order.field_articles.length > 0) {
                         for (const article of order.field_articles) {
                             if (article.field_article?.nid) {
-                                // Récupérer les infos à jour du médicament
-                                await store.fetchArticles({
-                                    fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
-                                    filters: {
-                                        nid: {
-                                            val: article.field_article.nid,
-                                            op: '='
-                                        }
-                                    },
-                                });
+                                let medInfo = null;
+                                try {
+                                    // Chercher d'abord dans la liste existante
+                                    medInfo = currentArticles.find(a => a.nid === article.field_article.nid);
 
-                                const medInfo = store.articles.rows[0];
-                                prescribedMedications.push({
-                                    name: article.field_article?.title || 'Inconnu',
-                                    quantite: article.field_quantite,
-                                    date: order.field_date || order.created,
-                                    stockActuel: medInfo?.field_quantite_stock || 0,
-                                    unite: medInfo?.field_unite || 'unités',
-                                    nid: article.field_article?.nid
-                                });
+                                    // Si pas trouvé, faire un appel API spécifique
+                                    if (!medInfo) {
+                                        const response = await store.fetchArticles({
+                                            fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
+                                            filters: {
+                                                nid: {
+                                                    val: article.field_article.nid,
+                                                    op: '='
+                                                }
+                                            },
+                                            pager: 0,
+                                            offset: 1
+                                        });
+                                        medInfo = store.articles?.rows?.[0];
+                                    }
+
+                                    prescribedMedications.push({
+                                        name: article.field_article?.title || 'Inconnu',
+                                        quantite: article.field_quantite || 0,
+                                        date: order.field_date || order.created || new Date().toISOString(),
+                                        stockActuel: medInfo?.field_quantite_stock || 0,
+                                        unite: medInfo?.field_unite || 'unités',
+                                        nid: article.field_article?.nid
+                                    });
+                                } catch (error) {
+                                    console.error("Erreur récupération médicament:", error);
+                                }
                             }
                         }
                     }
                 }
 
-                // 5. Récupérer les infos des examens prescrits
+                // Restaurer les articles
+                store.articles = { ...store.articles, rows: currentArticles };
+
+                // 5. Récupérer les infos des examens prescrits sans écraser le store
                 const prescribedExams = [];
+                const currentExamens = [...(examenStore.examens?.rows || [])];
+
                 for (const order of patientOrders) {
                     if (order.field_examens_order && order.field_examens_order.length > 0) {
                         for (const exam of order.field_examens_order) {
                             if (exam.field_examen?.nid) {
-                                // Récupérer les infos à jour de l'examen
-                                await examenStore.fetchExamens({
-                                    fields: ['nid', 'title', 'field_prix'],
-                                    filters: {
-                                        nid: {
-                                            val: exam.field_examen.nid,
-                                            op: '='
-                                        }
-                                    }
-                                });
+                                let examInfo = null;
+                                try {
+                                    // Chercher d'abord dans la liste existante
+                                    examInfo = currentExamens.find(e => e.nid === exam.field_examen.nid);
 
-                                const examInfo = examenStore.examens.rows[0];
-                                prescribedExams.push({
-                                    name: exam.field_examen?.title || 'Inconnu',
-                                    prix: examInfo?.field_prix || 0,
-                                    date: order.field_date || order.created,
-                                    nid: exam.field_examen?.nid
-                                });
+                                    // Si pas trouvé, faire un appel API spécifique
+                                    if (!examInfo) {
+                                        const response = await examenStore.fetchExamens({
+                                            fields: ['nid', 'title', 'field_prix'],
+                                            filters: {
+                                                nid: {
+                                                    val: exam.field_examen.nid,
+                                                    op: '='
+                                                }
+                                            },
+                                            pager: 0,
+                                            offset: 1
+                                        });
+                                        examInfo = examenStore.examens?.rows?.[0];
+                                    }
+
+                                    prescribedExams.push({
+                                        name: exam.field_examen?.title || 'Inconnu',
+                                        prix: examInfo?.field_prix || 0,
+                                        date: order.field_date || order.created || new Date().toISOString(),
+                                        nid: exam.field_examen?.nid
+                                    });
+                                } catch (error) {
+                                    console.error("Erreur récupération examen:", error);
+                                }
                             }
                         }
                     }
                 }
 
+                // Restaurer les examens
+                examenStore.examens = { ...examenStore.examens, rows: currentExamens };
+
                 // 6. Vérifier les allergies
-                const allergies = patient?.field_allergies ? patient.field_allergies.split(',').map(a => a.trim()) : [];
+                const allergies = patient?.field_allergies ?
+                    patient.field_allergies.split(',').map(a => a.trim()).filter(a => a) :
+                    [];
                 const medicationAlerts = [];
 
-                if (allergies.length > 0) {
+                if (allergies.length > 0 && prescribedMedications.length > 0) {
                     prescribedMedications.forEach(med => {
                         allergies.forEach(allergy => {
-                            if (med.name.toLowerCase().includes(allergy.toLowerCase())) {
+                            if (med.name && med.name.toLowerCase().includes(allergy.toLowerCase())) {
                                 medicationAlerts.push({
                                     medication: med.name,
                                     allergene: allergy,
@@ -891,7 +967,7 @@ export default {
                         contactUrgence: patient.field_contact_d_urgence,
                         notesMedicales: patient.field_notes_medicales
                     },
-                    consultations: patientConsultations.map(c => ({
+                    consultations: Array.isArray(patientConsultations) ? patientConsultations.map(c => ({
                         date: c.created,
                         motif: c.field_motif,
                         temperature: c.field_temperature,
@@ -899,12 +975,14 @@ export default {
                         poids: c.field_poids,
                         titre: c.title,
                         nid: c.nid
-                    })),
+                    })) : [],
                     prescriptions: {
                         medicaments: prescribedMedications,
                         examens: prescribedExams,
                         totalCommandes: patientOrders.length,
-                        montantTotal: patientOrders.reduce((sum, o) => sum + (parseFloat(o.field_total_vente) || 0), 0)
+                        montantTotal: Array.isArray(patientOrders) ?
+                            patientOrders.reduce((sum, o) => sum + (parseFloat(o.field_total_vente) || 0), 0) :
+                            0
                     },
                     alertes: {
                         allergies: medicationAlerts,
