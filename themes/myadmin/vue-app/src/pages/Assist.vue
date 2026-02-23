@@ -530,6 +530,243 @@ export default {
             const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
             const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
+            // === AJOUT: Recherche dynamique des médicaments demandés ===
+            let dynamicInventorySummary = '';
+
+            // Fonction de parsing simple pour extraire les médicaments
+            const extractMedicationNames = (query) => {
+                // Liste des mots à ignorer
+                const stopWords = [
+                    'le', 'la', 'les', 'du', 'de', 'des', 'un', 'une', 'dans', 'pour', 'avec',
+                    'est', 'sont', 'et', 'ou', 'mais', 'donc', 'car', 'ni', 'hier', 'aujourd',
+                    'verifie', 'vérifie', 'vérifier', 'verifier', 's', 'il', 'elle', 'on',
+                    'je', 'tu', 'nous', 'vous', 'ils', 'elles', 'me', 'te', 'se', 'lui',
+                    'moi', 'toi', 'soi', 'stp', 'svp', 's\'il', 'vous', 'plait', 'plaît',
+                    'peux', 'peut', 'pouvez', 'pouvoir', 'avoir', 'être', 'faire', 'voir',
+                    'donne', 'donner', 'donnez', 'donnes', 'please',
+                    'quantité', 'quantite', 'disponible', 'reste', 'restant',
+                    'combien', 'nombre', 'unites', 'unités', 'boites', 'boîtes'
+                ];
+
+                // Mots-clés de contexte à préserver
+                const contextKeywords = ['stock', 'inventaire', 'pharmacie', 'reserve', 'réserve'];
+
+                // Normaliser la requête
+                let cleanQuery = query.toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '') // Enlever les accents
+                    .trim();
+
+                console.log('Requête nettoyée:', cleanQuery);
+
+                // Étape 1: DÉTECTION DU CONTEXTE - mais on garde TOUTE la phrase
+                let workingQuery = cleanQuery;
+
+                // Étape 2: Pour les requêtes simples (type "verifie quantite de X")
+                // On cherche le médicament après "de", "d'", "du", "des"
+                const simpleMatch = workingQuery.match(/(?:de|d'|du|des)\s+([a-z0-9\s\-]+?)(?:\s+dans|\s+en|\s+au|\s+aux|\s+pour|\s+et|\s*$)/i);
+
+                if (simpleMatch && simpleMatch[1]) {
+                    let medication = simpleMatch[1].trim();
+                    // Nettoyer la fin
+                    medication = medication.replace(/\s+(?:dans|en|au|aux|pour|et|ou|stp|svp|please)$/, '');
+                    console.log('Médicament détecté (pattern simple):', medication);
+                    return [medication];
+                }
+
+                // Étape 3: Pattern avec "dans le stock" à la fin
+                const stockMatch = workingQuery.match(/^.*?(?:de|d'|du|des)\s+([a-z0-9\s\-]+?)(?:\s+dans le stock|\s+en stock|\s*$)/i);
+
+                if (stockMatch && stockMatch[1]) {
+                    let medication = stockMatch[1].trim();
+                    console.log('Médicament détecté (pattern stock):', medication);
+                    return [medication];
+                }
+
+                // Étape 4: Si aucun pattern simple, utiliser la méthode complexe (pour les listes)
+                // Mais en préservant les mots comme "stock" dans le contexte, pas comme médicament
+
+                // Supprimer la partie introductive mais GARDER le contenu
+                const introPatterns = [
+                    /^(?:combien|quel est|quelle est|verifie|vérifie|peux-tu|peux tu).*?(?:de|d'|du|des)\s+/i,
+                    /^.*?(?:dans le stock|en stock).*?(?:de|d'|du|des)\s+/i,
+                ];
+
+                introPatterns.forEach(pattern => {
+                    workingQuery = workingQuery.replace(pattern, '');
+                });
+
+                // Si le remplacement a tout supprimé, garder la requête originale
+                if (workingQuery.length === 0 || workingQuery === cleanQuery) {
+                    workingQuery = cleanQuery;
+                }
+
+                console.log('Après suppression intro:', workingQuery);
+
+                // Supprimer "dans le stock" seulement si c'est à la fin
+                workingQuery = workingQuery.replace(/\s+dans le stock$/, '');
+                workingQuery = workingQuery.replace(/\s+en stock$/, '');
+
+                console.log('Après suppression "dans le stock":', workingQuery);
+
+                // Vérifier si ce qui reste n'est PAS un mot-clé de contexte seul
+                if (contextKeywords.includes(workingQuery) || workingQuery.length < 3) {
+                    // Si on a juste "stock", essayer de récupérer depuis la requête originale
+                    const originalMatch = cleanQuery.match(/(?:de|d'|du|des)\s+([a-z0-9\s\-]+?)(?:\s+dans|\s+en|\s*$)/i);
+                    if (originalMatch && originalMatch[1]) {
+                        let medication = originalMatch[1].trim();
+                        medication = medication.replace(/\s+(?:dans|en|stock)$/, '');
+                        console.log('Médicament récupéré depuis original:', medication);
+                        return [medication];
+                    }
+                    return [];
+                }
+
+                // Étape 5: Détecter les groupes liés par "et", "+", "&"
+                let processedQuery = workingQuery
+                    .replace(/\s+et\s+/g, '###ET###')
+                    .replace(/\s*\+\s*/g, '###ET###')
+                    .replace(/\s*&\s*/g, '###ET###');
+
+                console.log('Après marquage des connecteurs:', processedQuery);
+
+                // Splitter par les virgules
+                let groups = processedQuery.split(/\s*,\s*/)
+                    .map(group => group.trim())
+                    .filter(group => group.length > 0 && !contextKeywords.includes(group));
+
+                console.log('Groupes détectés:', groups);
+
+                // Restaurer les "et" et nettoyer
+                const medications = [];
+
+                groups.forEach(group => {
+                    let restoredGroup = group.replace(/###ET###/g, ' et ');
+
+                    // Nettoyer
+                    restoredGroup = restoredGroup
+                        .replace(/^(?:de|d'|du|des|le|la|les)\s+/, '')
+                        .replace(/\s+(?:stp|svp|please|disponible|restant)$/, '')
+                        .trim();
+
+                    if (restoredGroup.length > 2 && !contextKeywords.includes(restoredGroup)) {
+                        medications.push(restoredGroup);
+                    }
+                });
+
+                // Si aucun médicament trouvé mais qu'il reste des groupes, prendre le premier
+                if (medications.length === 0 && groups.length > 0) {
+                    const firstGroup = groups[0].replace(/###ET###/g, ' et ');
+                    if (firstGroup.length > 2) {
+                        medications.push(firstGroup);
+                    }
+                }
+
+                console.log('Médicaments finaux:', medications);
+
+                return medications;
+            };
+
+            // Détecter si la question concerne le stock
+            if (userMessage.toLowerCase().match(/stock|quantité|reste|disponible|combien/i)) {
+                const possibleMedications = extractMedicationNames(userMessage);
+
+                if (possibleMedications.length > 0) {
+                    dynamicInventorySummary = '\n\n🔍 **RÉSULTATS DE LA RECHERCHE DE STOCKS:**\n';
+
+                    // Rechercher chaque médicament potentiel
+                    for (const medTerm of possibleMedications) {
+                        dynamicInventorySummary += `\n**${medTerm}:**\n`;
+
+                        try {
+                            // Nettoyer le terme de recherche pour l'API
+                            let searchTerm = medTerm
+                                .replace(/ et /g, ' ')  // Remplacer "et" par espace
+                                .replace(/[+&]/g, ' ')    // Remplacer + et & par espace
+                                .replace(/\s+/g, ' ')     // Normaliser les espaces
+                                .trim();
+
+                            console.log(`Recherche API pour: "${searchTerm}"`);
+
+                            // Recherche dynamique dans l'API
+                            await store.fetchArticles({
+                                fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
+                                filters: {
+                                    title: {
+                                        val: searchTerm,
+                                        op: 'CONTAINS',
+                                    }
+                                },
+                                pager: 0,
+                                offset: 10
+                            });
+
+                            const results = store.articles.rows;
+
+                            if (results.length > 0) {
+                                // Trier par pertinence (correspondance exacte d'abord)
+                                const sortedResults = results.sort((a, b) => {
+                                    const aTitle = a.title.toLowerCase();
+                                    const bTitle = b.title.toLowerCase();
+                                    const searchLower = searchTerm.toLowerCase();
+
+                                    // Priorité à la correspondance exacte
+                                    if (aTitle === searchLower) return -1;
+                                    if (bTitle === searchLower) return 1;
+
+                                    // Puis à ceux qui commencent par le terme
+                                    if (aTitle.startsWith(searchLower) && !bTitle.startsWith(searchLower)) return -1;
+                                    if (!aTitle.startsWith(searchLower) && bTitle.startsWith(searchLower)) return 1;
+
+                                    return 0;
+                                });
+
+                                // Prendre les 5 meilleurs résultats
+                                sortedResults.slice(0, 5).forEach(article => {
+                                    const stock = article.field_quantite_stock || 0;
+                                    const unite = article.field_unite || 'unités';
+                                    dynamicInventorySummary += `  - ${article.title}: **${stock} ${unite}**\n`;
+                                });
+                            } else {
+                                dynamicInventorySummary += `  ⚠️ Aucun résultat trouvé pour "${medTerm}"\n`;
+
+                                // Essayer avec une recherche plus large (premier mot seulement)
+                                const firstWord = medTerm.split(/\s+/)[0];
+                                if (firstWord.length > 3 && firstWord !== medTerm) {
+                                    dynamicInventorySummary += `  Recherche élargie avec "${firstWord}":\n`;
+
+                                    await store.fetchArticles({
+                                        fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
+                                        filters: {
+                                            title: {
+                                                val: firstWord,
+                                                op: 'CONTAINS',
+                                            }
+                                        },
+                                        pager: 0,
+                                        offset: 5
+                                    });
+
+                                    const broadResults = store.articles.rows;
+                                    if (broadResults.length > 0) {
+                                        broadResults.slice(0, 3).forEach(article => {
+                                            const stock = article.field_quantite_stock || 0;
+                                            const unite = article.field_unite || 'unités';
+                                            dynamicInventorySummary += `    • ${article.title}: **${stock} ${unite}**\n`;
+                                        });
+                                    }
+                                }
+                            }
+                        } catch (error) {
+                            console.error(`Erreur recherche ${medTerm}:`, error);
+                            dynamicInventorySummary += `  ❌ Erreur lors de la recherche\n`;
+                        }
+                    }
+                }
+            }
+
+            // === FIN DE L'AJOUT ===
+
             let patientContext = '';
             if (patientCardVisible.value) {
                 patientContext = `Information sur le patient : Nom: ${patientInfo.value.name}, Âge: ${patientInfo.value.age}, Sexe: ${patientInfo.value.gender}, Allergies: ${patientInfo.value.allergies || 'Aucune'}.`;
@@ -615,6 +852,7 @@ export default {
             
             CONTEXTE ET DONNÉES DE LA CLINIQUE :
             - Stock actuel: ${inventorySummary}
+            ${dynamicInventorySummary}
             - Patients: ${patientListSummary}
             - Consultations récentes: ${consultationSummary}
             - Examens disponibles: ${examSummary}
