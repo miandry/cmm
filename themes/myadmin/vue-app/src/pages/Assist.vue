@@ -647,7 +647,7 @@ export default {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${ apiKey } `
+                    'Authorization': `Bearer ${apiKey} `
                 },
                 body: JSON.stringify({
                     model: 'gpt-4o-mini',
@@ -662,7 +662,7 @@ export default {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error?.message || `HTTP error! status: ${ response.status } `);
+                throw new Error(errorData.error?.message || `HTTP error! status: ${response.status} `);
             }
 
             const data = await response.json();
@@ -718,6 +718,208 @@ export default {
             })
         }
 
+
+        // =============================================
+        // NOUVELLE FONCTION À AJOUTER ICI
+        // =============================================
+        // Fonction pour récupérer toutes les informations d'un patient
+        const getPatientFullInfo = async (patientNid) => {
+            try {
+                isTyping.value = true;
+
+                // 1. Récupérer les détails COMPLETS du patient spécifique
+                await clientStore.fetchClient(patientNid);
+
+                // Récupérer le patient depuis le store
+                const patient = clientStore.client;
+
+                if (!patient) {
+                    throw new Error("Patient non trouvé");
+                }
+
+                // 2. Récupérer TOUTES les consultations de CE patient spécifique
+                await consultationStore.fetchConsultations({
+                    fields: [
+                        'nid',
+                        'title',
+                        'field_motif',
+                        'field_temperature',
+                        'field_tension_arterielle',
+                        'field_poids',
+                        'created',
+                        'field_examens',
+                        'field_medicaments',
+                        'field_client',
+                    ],
+                    filters: {
+                        'field_client': {
+                            val: patientNid,
+                            op: '='
+                        }
+                    },
+                    values: {
+                        field_client: ['nid', 'title']
+                    },
+                    pager: 0,
+                    sort: { val: 'created', op: 'desc' }
+                });
+
+                // 3. Récupérer TOUTES les commandes/ventes de CE patient
+                await orderStore.fetchOrders({
+                    fields: [
+                        'nid',
+                        'title',
+                        'field_articles',
+                        'field_examens_order',
+                        'field_date',
+                        'field_total_vente',
+                        'created',
+                        'field_client',
+                    ],
+                    filters: {
+                        'field_client': {
+                            val: patientNid,
+                            op: '='
+                        }
+                    },
+                    values: {
+                        field_articles: [
+                            'field_article',
+                            'field_quantite'
+                        ],
+                        field_examens_order: [
+                            'field_examen'
+                        ],
+                        field_client: ['nid', 'title']
+                    },
+                    pager: 0,
+                    sort: { val: 'created', op: 'desc' }
+                });
+
+                const patientConsultations = consultationStore.consultations.rows;
+                const patientOrders = orderStore.orders.rows;
+
+                // 4. Récupérer les infos des médicaments prescrits
+                const prescribedMedications = [];
+                for (const order of patientOrders) {
+                    if (order.field_articles && order.field_articles.length > 0) {
+                        for (const article of order.field_articles) {
+                            if (article.field_article?.nid) {
+                                // Récupérer les infos à jour du médicament
+                                await store.fetchArticles({
+                                    fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
+                                    filters: {
+                                        nid: {
+                                            val: article.field_article.nid,
+                                            op: '='
+                                        }
+                                    },
+                                });
+
+                                const medInfo = store.articles.rows[0];
+                                prescribedMedications.push({
+                                    name: article.field_article?.title || 'Inconnu',
+                                    quantite: article.field_quantite,
+                                    date: order.field_date || order.created,
+                                    stockActuel: medInfo?.field_quantite_stock || 0,
+                                    unite: medInfo?.field_unite || 'unités',
+                                    nid: article.field_article?.nid
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // 5. Récupérer les infos des examens prescrits
+                const prescribedExams = [];
+                for (const order of patientOrders) {
+                    if (order.field_examens_order && order.field_examens_order.length > 0) {
+                        for (const exam of order.field_examens_order) {
+                            if (exam.field_examen?.nid) {
+                                // Récupérer les infos à jour de l'examen
+                                await examenStore.fetchExamens({
+                                    fields: ['nid', 'title', 'field_prix'],
+                                    filters: {
+                                        nid: {
+                                            val: exam.field_examen.nid,
+                                            op: '='
+                                        }
+                                    }
+                                });
+
+                                const examInfo = examenStore.examens.rows[0];
+                                prescribedExams.push({
+                                    name: exam.field_examen?.title || 'Inconnu',
+                                    prix: examInfo?.field_prix || 0,
+                                    date: order.field_date || order.created,
+                                    nid: exam.field_examen?.nid
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // 6. Vérifier les allergies
+                const allergies = patient?.field_allergies ? patient.field_allergies.split(',').map(a => a.trim()) : [];
+                const medicationAlerts = [];
+
+                if (allergies.length > 0) {
+                    prescribedMedications.forEach(med => {
+                        allergies.forEach(allergy => {
+                            if (med.name.toLowerCase().includes(allergy.toLowerCase())) {
+                                medicationAlerts.push({
+                                    medication: med.name,
+                                    allergene: allergy,
+                                    date: med.date
+                                });
+                            }
+                        });
+                    });
+                }
+
+                return {
+                    patient: {
+                        nid: patient.nid,
+                        nom: patient.title || 'Inconnu',
+                        age: patient.field_age,
+                        sexe: patient.field_sexe,
+                        allergies: patient.field_allergies || 'Aucune',
+                        telephone: patient.field_phone,
+                        assurance: patient.field_assurance,
+                        email: patient.field_email,
+                        adresse: patient.field_adresse,
+                        contactUrgence: patient.field_contact_d_urgence,
+                        notesMedicales: patient.field_notes_medicales
+                    },
+                    consultations: patientConsultations.map(c => ({
+                        date: c.created,
+                        motif: c.field_motif,
+                        temperature: c.field_temperature,
+                        tension: c.field_tension_arterielle,
+                        poids: c.field_poids,
+                        titre: c.title,
+                        nid: c.nid
+                    })),
+                    prescriptions: {
+                        medicaments: prescribedMedications,
+                        examens: prescribedExams,
+                        totalCommandes: patientOrders.length,
+                        montantTotal: patientOrders.reduce((sum, o) => sum + (parseFloat(o.field_total_vente) || 0), 0)
+                    },
+                    alertes: {
+                        allergies: medicationAlerts,
+                        hasAllergies: medicationAlerts.length > 0
+                    }
+                };
+            } catch (error) {
+                console.error("Erreur lors de la récupération des infos patient:", error);
+                throw error;
+            } finally {
+                isTyping.value = false;
+            }
+        };
+
+
         // Gestion patient
         const openPatientModal = () => {
             showPatientModal.value = true
@@ -727,11 +929,160 @@ export default {
             showPatientModal.value = false
         }
 
-        const savePatient = (patientData) => {
-            patientInfo.value = patientData
-            patientCardVisible.value = true
-            closePatientModal()
-        }
+        // const savePatient = (patientData) => {
+        //     patientInfo.value = patientData
+        //     patientCardVisible.value = true
+        //     closePatientModal()
+        // }
+
+
+        const savePatient = async (patientData) => {
+            console.log("Patient sélectionné:", patientData.nid);
+            patientInfo.value = patientData;
+            patientCardVisible.value = true;
+            closePatientModal();
+
+            try {
+                const patientFullInfo = await getPatientFullInfo(patientData.nid);
+
+                if (patientFullInfo) {
+                    // Créer un message avec toutes les informations
+                    let infoMessage = `
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <h3 class="font-bold text-blue-800 mb-2">Dossier Patient: ${patientFullInfo.patient.nom}</h3>
+                                <div class="grid grid-cols-2 gap-3 text-sm">
+                                    <div>
+                                        <span class="font-semibold">Âge:</span> ${patientFullInfo.patient.age || 'N/A'} ans
+                                    </div>
+                                    <div>
+                                        <span class="font-semibold">Sexe:</span> ${patientFullInfo.patient.sexe || 'N/A'}
+                                    </div>
+                                    <div class="col-span-2">
+                                        <span class="font-semibold">Allergies:</span> 
+                                        <span class="${patientFullInfo.alertes.hasAllergies ? 'text-red-600 font-bold' : 'text-green-600'}">
+                                            ${patientFullInfo.patient.allergies}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                    `;
+
+                    // Ajouter les alertes allergies si présentes
+                    if (patientFullInfo.alertes.hasAllergies) {
+                        infoMessage += `
+                            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                                <h4 class="font-bold text-red-800 mb-2">Alertes Allergies Médicamenteuses</h4>
+                                <ul class="list-disc list-inside text-sm text-red-700">
+                        `;
+                        patientFullInfo.alertes.allergies.forEach(alerte => {
+                            infoMessage += `
+                                <li>
+                                    <span class="font-semibold">${alerte.medication}</span> 
+                                    contient l'allergène: <span class="font-bold">${alerte.allergene}</span>
+                                    (Prescrit le ${new Date(alerte.date).toLocaleDateString()})
+                                </li>
+                            `;
+                        });
+                        infoMessage += `</ul></div>`;
+                    }
+
+                    // Ajouter les consultations
+                    if (patientFullInfo.consultations.length > 0) {
+                        infoMessage += `
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <h4 class="font-bold text-gray-800 mb-2">🩺 Consultations (${patientFullInfo.consultations.length})</h4>
+                                <div class="space-y-2 max-h-60 overflow-y-auto">
+                        `;
+                        patientFullInfo.consultations.forEach(cons => {
+                            infoMessage += `
+                                <div class="bg-white p-3 rounded border border-gray-100 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="font-semibold">${new Date(cons.date).toLocaleDateString()}</span>
+                                        <span class="text-gray-500">${cons.titre}</span>
+                                    </div>
+                                    <p class="text-gray-700 mt-1"><span class="font-semibold">Motif:</span> ${cons.motif || 'N/A'}</p>
+                                    <div class="grid grid-cols-3 gap-2 mt-1 text-xs">
+                                        <span>Temp: ${cons.temperature || '-'}°C</span>
+                                        <span>Tension: ${cons.tension || '-'}</span>
+                                        <span>Poids: ${cons.poids || '-'} kg</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        infoMessage += `</div></div>`;
+                    }
+
+                    // Ajouter les médicaments prescrits
+                    if (patientFullInfo.prescriptions.medicaments.length > 0) {
+                        infoMessage += `
+                            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                                <h4 class="font-bold text-green-800 mb-2">Médicaments Prescrits (${patientFullInfo.prescriptions.medicaments.length})</h4>
+                                <div class="space-y-2 max-h-60 overflow-y-auto">
+                        `;
+                        patientFullInfo.prescriptions.medicaments.forEach(med => {
+                            const stockStatus = med.stockActuel < 10 ? 'text-red-600 font-bold' : 'text-green-600';
+                            infoMessage += `
+                                <div class="bg-white p-3 rounded border border-green-100 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="font-semibold">${med.name}</span>
+                                        <span class="text-gray-500">${new Date(med.date).toLocaleDateString()}</span>
+                                    </div>
+                                    <div class="flex justify-between mt-1">
+                                        <span>Quantité prescrite: ${med.quantite} ${med.unite}</span>
+                                        <span class="${stockStatus}">Stock actuel: ${med.stockActuel} ${med.unite}</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        infoMessage += `</div></div>`;
+                    }
+
+                    // Ajouter les examens prescrits
+                    if (patientFullInfo.prescriptions.examens.length > 0) {
+                        infoMessage += `
+                            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                <h4 class="font-bold text-purple-800 mb-2">🔬 Examens Prescrits (${patientFullInfo.prescriptions.examens.length})</h4>
+                                <ul class="list-disc list-inside text-sm space-y-1">
+                        `;
+                        patientFullInfo.prescriptions.examens.forEach(exam => {
+                            infoMessage += `
+                                <li class="flex justify-between">
+                                    <span class="font-semibold">${exam.name}</span>
+                                    <span class="text-gray-500">${new Date(exam.date).toLocaleDateString()} - ${exam.prix} Ar</span>
+                                </li>
+                            `;
+                        });
+                        infoMessage += `</ul>`;
+                        infoMessage += `<p class="text-sm font-semibold mt-2 pt-2 border-t border-purple-200">Total des dépenses: ${patientFullInfo.prescriptions.montantTotal} Ar</p>`;
+                        infoMessage += `</div>`;
+                    }
+
+                    infoMessage += `</div>`;
+
+                    // Ajouter le message dans le chat
+                    messages.value.push({
+                        type: 'ai',
+                        content: infoMessage,
+                        time: new Date().toLocaleTimeString()
+                    });
+                }
+            } catch (error) {
+                console.error("Erreur:", error);
+                messages.value.push({
+                    type: 'ai',
+                    content: `
+                        <div class="bg-red-50 border-l-4 border-red-400 p-3 text-red-700">
+                            <p class="font-medium">Erreur lors du chargement des informations du patient</p>
+                            <p class="text-sm">${error.message}</p>
+                        </div>
+                    `,
+                    time: new Date().toLocaleTimeString()
+                });
+            } finally {
+                scrollToBottom();
+            }
+        };
 
         const removePatientCard = () => {
             patientCardVisible.value = false
