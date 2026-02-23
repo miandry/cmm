@@ -1073,7 +1073,7 @@ export default {
                             infoMessage += `
                                 <div class="bg-white p-3 rounded border border-gray-100 text-sm">
                                     <div class="flex justify-between">
-                                        <span class="font-semibold">${ formatDate(cons.date, cons.date, "short") }</span>
+                                        <span class="font-semibold">${ formatDate(null, cons.date, "short") }</span>
                                         <span class="text-gray-500">${cons.titre}</span>
                                     </div>
                                     <p class="text-gray-700 mt-1"><span class="font-semibold">Motif:</span> ${cons.motif || 'N/A'}</p>
@@ -1101,7 +1101,7 @@ export default {
                                 <div class="bg-white p-3 rounded border border-green-100 text-sm">
                                     <div class="flex justify-between">
                                         <span class="font-semibold">${med.name}</span>
-                                        <span class="text-gray-500">${ formatDate(med.date, med.date, "short") }</span>
+                                        <span class="text-gray-500">${ formatDate(null, med.date, "short") }</span>
                                     </div>
                                     <div class="flex justify-between mt-1">
                                         <span>Quantité prescrite: ${med.quantite} ${med.unite}</span>
@@ -1124,7 +1124,7 @@ export default {
                             infoMessage += `
                                 <li class="flex justify-between">
                                     <span class="font-semibold">${exam.name}</span>
-                                    <span class="text-gray-500">${formatDate(exam.date, exam.date, "short")} - ${exam.prix} Ar</span>
+                                    <span class="text-gray-500">${formatDate(null, exam.date, "short")} - ${exam.prix} Ar</span>
                                 </li>
                             `;
                         });
