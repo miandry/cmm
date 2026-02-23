@@ -831,6 +831,7 @@ export default {
                     });
 
                     patientOrders = orderStore.orders?.rows || [];
+                    console.log("Commandes du patient récupérées:", patientOrders);
 
                     // Restaurer les commandes originales
                     orderStore.orders = { ...orderStore.orders, rows: currentOrders };
@@ -876,6 +877,7 @@ export default {
                                         unite: medInfo?.field_unite || 'unités',
                                         nid: article.field_article?.nid
                                     });
+                                    console.log("Médicament ajouté à la liste des prescrits:", prescribedMedications[prescribedMedications.length - 1]);
                                 } catch (error) {
                                     console.error("Erreur récupération médicament:", error);
                                 }
@@ -922,6 +924,7 @@ export default {
                                         date: order.field_date || order.created || new Date().toISOString(),
                                         nid: exam.field_examen?.nid
                                     });
+                                    console.log("Examen ajouté à la liste des prescrits:", prescribedExams[prescribedExams.length - 1]);
                                 } catch (error) {
                                     console.error("Erreur récupération examen:", error);
                                 }
@@ -1022,7 +1025,7 @@ export default {
 
             try {
                 const patientFullInfo = await getPatientFullInfo(patientData.nid);
-
+                console.log("Informations complètes du patient:", patientFullInfo);
                 if (patientFullInfo) {
                     // Créer un message avec toutes les informations
                     let infoMessage = `
