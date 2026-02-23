@@ -1094,7 +1094,6 @@ export default {
                                 <div class="bg-white p-3 rounded border border-green-100 text-sm">
                                     <div class="flex justify-between">
                                         <span class="font-semibold">${med.name}</span>
-                                        <span class="text-gray-500">${formatDate(null, med.date, "short")}</span>
                                     </div>
                                     <div class="flex justify-between mt-1">
                                         <span>Quantité prescrite: ${med.quantite} ${med.unite}</span>
@@ -1187,7 +1186,7 @@ export default {
                     // Si pas trouvé, faire un appel API spécifique
                     if (!medication) {
                         await store.fetchArticles({
-                            fields: ['nid', 'title', 'field_quantite_stock', 'field_unite', 'created', 'field_description', 'field_prix_vente', 'field_date_expiration'],
+                            fields: ['nid', 'title', 'field_quantite_stock', 'created', 'field_prix_unitaire'],
                             filters: {
                                 nid: {
                                     val: medicationData.nid,
@@ -1244,7 +1243,7 @@ export default {
                                         clientNid: order.field_client?.nid,
                                         clientAllergies: order.field_client?.field_allergies || '',
                                         quantite: article.field_quantite || 0,
-                                        prix: article.field_prix || medication.field_prix_vente || 0
+                                        prix: article.field_prix_unitaire || medication.field_prix_unitaire || 0
                                     });
                                 }
                             });
@@ -1339,11 +1338,8 @@ export default {
                         nid: medication.nid,
                         nom: medication.title,
                         stock: medication.field_quantite_stock || 0,
-                        unite: medication.field_unite || 'unités',
+                        unite: 'unités',
                         prix: medication.field_prix_vente || 'Non défini',
-                        dateExpiration: medication.field_date_expiration,
-                        description: medication.field_description,
-                        dateAjout: medication.created
                     },
                     prescriptions: {
                         total: medicationPrescriptions.length,
@@ -1402,22 +1398,7 @@ export default {
                             <div>
                                 <span class="font-semibold">Prix:</span> ${medicationFullInfo.medication.prix} Ar
                             </div>
-                            ${medicationFullInfo.medication.dateExpiration ? `
-                            <div>
-                                <span class="font-semibold">Date d'expiration:</span> 
-                                ${formatDate(null, medicationFullInfo.medication.dateExpiration)}
-                            </div>
-                            ` : ''}
-                            <div>
-                                <span class="font-semibold">Ajouté le:</span> 
-                                ${formatDate(null, medicationFullInfo.medication.dateAjout)}
-                            </div>
                         </div>
-                        ${medicationFullInfo.medication.description ? `
-                        <div class="mt-2 text-sm">
-                            <span class="font-semibold">Description:</span> ${medicationFullInfo.medication.description}
-                        </div>
-                        ` : ''}
                     </div>
             `;
 
@@ -1491,7 +1472,6 @@ export default {
                         <div class="bg-white p-2 rounded border border-green-100 text-sm">
                             <div class="flex justify-between">
                                 <span class="font-semibold">${p.client}</span>
-                                <span class="text-gray-500">${formatDate(null, p.date)}</span>
                             </div>
                             <div class="flex justify-between text-xs">
                                 <span>Quantité: ${p.quantite} ${medicationFullInfo.medication.unite}</span>
