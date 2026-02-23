@@ -520,7 +520,7 @@ export default {
             }
         }
         // =============================================
-        // FONCTION EXTRACT MEDICATION NAMES - VERSION SCORING
+        // FONCTION EXTRACT MEDICATION NAMES - VERSION SIMPLIFIÉE
         // =============================================
         const extractMedicationNames = (query) => {
             // Normaliser la requête
@@ -531,63 +531,68 @@ export default {
 
             console.log('Requête:', normalizedQuery);
 
-            // Tokenizer la requête
-            const queryTokens = tokenize(normalizedQuery);
-            console.log('Tokens:', queryTokens);
+            // Détecter si la question concerne le stock
+            const stockKeywords = ['stock', 'inventaire', 'quantite', 'reste', 'disponible', 'combien'];
+            const hasStockContext = stockKeywords.some(keyword => normalizedQuery.includes(keyword));
 
-            // Détecter le contexte
-            const wantsStock = containsAny(queryTokens, ['stock', 'inventaire', 'quantite', 'reste', 'disponible', 'combien']);
+            if (!hasStockContext) return [];
 
-            if (!wantsStock) return [];
+            // Supprimer les mots de contexte de la requête
+            let cleanQuery = normalizedQuery;
 
-            // Étape 1: Supprimer les mots de contexte des tokens
-            const contextWords = ['stock', 'inventaire', 'quantite', 'reste', 'disponible', 'combien', 'de', 'du', 'des', 'd'];
-            const searchTokens = queryTokens.filter(token => !contextWords.includes(token));
+            // Remplacer les mots de contexte par des espaces
+            const contextWords = ['stock', 'inventaire', 'quantite', 'reste', 'disponible', 'combien',
+                'de', 'du', 'des', 'd', 'le', 'la', 'les', 'et', 'ou', 'dans', 'pour',
+                'verifie', 'vérifie', 'stp', 'svp', 'please'];
 
-            console.log('Tokens de recherche:', searchTokens);
+            contextWords.forEach(word => {
+                cleanQuery = cleanQuery.replace(new RegExp(`\\b${word}\\b`, 'g'), ' ');
+            });
 
-            if (searchTokens.length === 0) return [];
+            // Nettoyer les espaces multiples
+            cleanQuery = cleanQuery.replace(/\s+/g, ' ').trim();
 
-            // Étape 2: Regrouper les tokens pour former des termes de recherche
-            // Ex: ["vitamine", "c"] -> "vitamine c"
-            // Ex: ["paracetamol"] -> "paracetamol"
-            // Ex: ["artemether", "et", "lumefantrine"] -> "artemether et lumefantrine"
+            console.log('Requête nettoyée:', cleanQuery);
 
+            if (cleanQuery.length === 0) return [];
+
+            // Splitter en mots
+            const words = cleanQuery.split(' ');
+
+            // Regrouper les mots pour former des noms de médicaments
             const searchTerms = [];
             let i = 0;
 
-            while (i < searchTokens.length) {
-                let term = searchTokens[i];
+            while (i < words.length) {
+                const currentWord = words[i];
+                if (currentWord.length < 2) {
+                    i++;
+                    continue;
+                }
+
+                let term = currentWord;
                 let j = i + 1;
 
                 // Regrouper avec les mots suivants si:
                 // - C'est un nombre (dosage)
-                // - C'est "et", "+", "&"
-                // - Le mot suivant est court (comme "c", "b6")
-                while (j < searchTokens.length) {
-                    const nextToken = searchTokens[j];
+                // - C'est une unité (mg, g, ml, cp)
+                // - C'est une lettre simple (c, b6, b12)
+                while (j < words.length) {
+                    const nextWord = words[j];
 
-                    // Arrêter si on a déjà 3 mots (pour éviter des termes trop longs)
-                    if (j - i >= 3) break;
-
-                    // Toujours regrouper avec les nombres
-                    if (nextToken.match(/^\d+$/)) {
-                        term += ' ' + nextToken;
+                    // Si c'est un nombre, toujours le regrouper
+                    if (nextWord.match(/^\d+$/)) {
+                        term += ' ' + nextWord;
                         j++;
                     }
-                    // Regrouper avec "et" et le mot suivant
-                    else if (nextToken === 'et' && j + 1 < searchTokens.length) {
-                        term += ' et ' + searchTokens[j + 1];
-                        j += 2;
-                    }
-                    // Regrouper avec les lettres simples (c, b6, b12)
-                    else if (nextToken.match(/^[a-z]\d*$/)) {
-                        term += ' ' + nextToken;
+                    // Si c'est une unité, toujours la regrouper
+                    else if (nextWord.match(/^(mg|g|ml|ui|cp|amp|susp)$/)) {
+                        term += ' ' + nextWord;
                         j++;
                     }
-                    // Regrouper avec les mots de 2-3 lettres (mg, g, ml)
-                    else if (nextToken.match(/^(mg|g|ml|ui|cp|amp)$/)) {
-                        term += ' ' + nextToken;
+                    // Si c'est une lettre simple (c, b6, b12)
+                    else if (nextWord.match(/^[a-z]\d*$/)) {
+                        term += ' ' + nextWord;
                         j++;
                     }
                     else {
@@ -599,75 +604,12 @@ export default {
                 i = j;
             }
 
-            console.log('Termes de recherche générés:', searchTerms);
+            console.log('Termes de recherche:', searchTerms);
 
-            // Étape 3: Si aucun terme généré, utiliser les tokens bruts
-            if (searchTerms.length === 0) {
-                return searchTokens;
-            }
-
+            // Si on a plusieurs termes, on les garde tous
             return searchTerms;
         };
 
-        // -----------------------------------------------------------------------------
-        // FONCTIONS UTILITAIRES
-        // -----------------------------------------------------------------------------
-
-        function norm(s) {
-            return (s || '')
-                .toString()
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .toLowerCase()
-                .trim();
-        }
-
-        function tokenize(s) {
-            const t = norm(s).replace(/[^a-z0-9\s]/g, ' ');
-            return t.split(/\s+/).filter(w => w.length >= 2);
-        }
-
-        function containsAny(tokens, keywords) {
-            const set = new Set(tokens);
-            return keywords.some(k => set.has(norm(k)));
-        }
-
-        function makeTextScorer(queryTokens, extraBoostPhrases = []) {
-            const qset = new Set(queryTokens);
-            const qstr = queryTokens.join(' ');
-
-            return (text) => {
-                const tokens = tokenize(text);
-                let score = 0;
-
-                // Score basé sur les tokens individuels
-                for (const w of tokens) {
-                    if (qset.has(w)) score += 2;
-                }
-
-                // Boost si phrase complète correspond
-                const t = norm(text);
-                if (qstr.length > 0 && t.includes(qstr)) score += 6;
-
-                // Boost si plusieurs tokens correspondent
-                const overlap = tokens.filter(w => qset.has(w)).length;
-                if (overlap >= 2) score += 4;
-                if (overlap >= 3) score += 8;
-
-                // Boost pour les mots longs (>=6 caractères)
-                for (const w of queryTokens) {
-                    if (w.length >= 6 && t.includes(w)) score += 5;
-                }
-
-                // Boost pour les phrases dans extraBoostPhrases
-                for (const p of extraBoostPhrases) {
-                    const np = norm(p);
-                    if (np && t.includes(np)) score += 10;
-                }
-
-                return score;
-            };
-        }
         const generateAIResponse = async (userMessage, imageBase64 = null) => {
             const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
             const apiUrl = 'https://api.openai.com/v1/chat/completions';
@@ -716,7 +658,7 @@ export default {
                                     }
                                 },
                                 pager: 0,
-                                offset: 10
+                                offset: 50
                             });
 
                             const results = store.articles.rows;
