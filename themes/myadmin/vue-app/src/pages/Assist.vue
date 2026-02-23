@@ -817,13 +817,13 @@ export default {
                             }
                         },
                         values: {
-                            field_articles: [
-                                'field_article',
-                                'field_quantite'
-                            ],
-                            field_examens_order: [
-                                'field_examen'
-                            ],
+                            // field_articles: [
+                            //     'field_article',
+                            //     'field_quantite'
+                            // ],
+                            // field_examens_order: [
+                            //     'field_examen'
+                            // ],
                             field_client: ['nid', 'title']
                         },
                         pager: 0,
