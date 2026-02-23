@@ -1353,8 +1353,8 @@ export default {
 
         const addMedication = async (medicationData) => {
             selectedMedications.value = medicationData;
-            closeMedicationModal();
-
+            closeMedicationModal(); 
+            console.log("Médicament sélectionné:", medicationData);
             try {
                 const medicationFullInfo = await getMedicationFullInfo(medicationData);
                 console.log("Informations complètes du médicament:", medicationFullInfo);
