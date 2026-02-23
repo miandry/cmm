@@ -1184,8 +1184,6 @@ export default {
                                 op: '='
                             }
                         },
-                        pager: 0,
-                        offset: 1
                     });
                     medication = store.articles?.rows?.[0];
                 } catch (error) {
