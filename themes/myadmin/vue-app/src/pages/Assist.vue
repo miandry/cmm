@@ -1066,7 +1066,7 @@ export default {
                             infoMessage += `
                                 <div class="bg-white p-3 rounded border border-gray-100 text-sm">
                                     <div class="flex justify-between">
-                                        <span class="font-semibold">${ formatDate(null, cons.date, "short") }</span>
+                                        <span class="font-semibold">${formatDate(null, cons.date, "short")}</span>
                                         <span class="text-gray-500">${cons.titre}</span>
                                     </div>
                                     <p class="text-gray-700 mt-1"><span class="font-semibold">Motif:</span> ${cons.motif || 'N/A'}</p>
@@ -1094,7 +1094,7 @@ export default {
                                 <div class="bg-white p-3 rounded border border-green-100 text-sm">
                                     <div class="flex justify-between">
                                         <span class="font-semibold">${med.name}</span>
-                                        <span class="text-gray-500">${ formatDate(null, med.date, "short") }</span>
+                                        <span class="text-gray-500">${formatDate(null, med.date, "short")}</span>
                                     </div>
                                     <div class="flex justify-between mt-1">
                                         <span>Quantité prescrite: ${med.quantite} ${med.unite}</span>
@@ -1171,10 +1171,379 @@ export default {
             showMedicationModal.value = false
         }
 
-        const addMedication = (medicationData) => {
+        // Fonction pour récupérer toutes les informations d'un médicament
+        const getMedicationFullInfo = async (medicationData) => {
+            try {
+                isTyping.value = true;
+
+                // 1. Récupérer les infos de base du médicament depuis le store
+                let medication = null;
+                const currentArticles = [...(store.articles?.rows || [])];
+
+                try {
+                    // Chercher d'abord dans la liste existante
+                    medication = currentArticles.find(a => a.nid === medicationData.nid);
+
+                    // Si pas trouvé, faire un appel API spécifique
+                    if (!medication) {
+                        await store.fetchArticles({
+                            fields: ['nid', 'title', 'field_quantite_stock', 'field_unite', 'created', 'field_description', 'field_prix_vente', 'field_date_expiration'],
+                            filters: {
+                                nid: {
+                                    val: medicationData.nid,
+                                    op: '='
+                                }
+                            },
+                            pager: 0,
+                            offset: 1
+                        });
+                        medication = store.articles?.rows?.[0];
+                    }
+                } catch (error) {
+                    console.error("Erreur récupération médicament:", error);
+                }
+
+                if (!medication) {
+                    throw new Error("Médicament non trouvé dans l'inventaire");
+                }
+
+                // 2. Récupérer l'historique des prescriptions de ce médicament
+                const currentOrders = [...(orderStore.orders?.rows || [])];
+                const medicationPrescriptions = [];
+
+                try {
+                    // Chercher dans toutes les commandes où ce médicament apparaît
+                    await orderStore.fetchOrders({
+                        fields: [
+                            'nid',
+                            'title',
+                            'field_articles',
+                            'field_client',
+                            'field_date',
+                            'created'
+                        ],
+                        values: {
+                            field_client: ['nid', 'title', 'field_allergies']
+                        },
+                        pager: 0,
+                        sort: { val: 'created', op: 'desc' }
+                    });
+
+                    const allOrders = orderStore.orders?.rows || [];
+                    console.log("Toutes les commandes récupérées pour analyse des prescriptions:", allOrders);
+                    // Filtrer les commandes contenant ce médicament
+                    allOrders.forEach(order => {
+                        if (order.field_articles && Array.isArray(order.field_articles)) {
+                            order.field_articles.forEach(article => {
+                                if (article.field_article?.nid === medicationData.nid) {
+                                    medicationPrescriptions.push({
+                                        orderId: order.nid,
+                                        orderTitle: order.title,
+                                        date: order.field_date || order.created,
+                                        client: order.field_client?.title || 'Inconnu',
+                                        clientNid: order.field_client?.nid,
+                                        clientAllergies: order.field_client?.field_allergies || '',
+                                        quantite: article.field_quantite || 0,
+                                        prix: article.field_prix || medication.field_prix_vente || 0
+                                    });
+                                }
+                            });
+                        }
+                    });
+
+                    // Restaurer les commandes
+                    orderStore.orders = { ...orderStore.orders, rows: currentOrders };
+                } catch (error) {
+                    console.error("Erreur récupération prescriptions:", error);
+                }
+
+                // 3. Identifier les patients allergiques à ce médicament
+                const currentPatients = [...(clientStore.allClients?.rows || [])];
+                const allergicPatients = [];
+                const medicationName = medication.title.toLowerCase();
+
+                // Parcourir tous les patients pour vérifier les allergies
+                currentPatients.forEach(patient => {
+                    if (patient.field_allergies) {
+                        const allergies = patient.field_allergies.split(',').map(a => a.trim().toLowerCase());
+
+                        // Vérifier si le nom du médicament correspond à une allergie
+                        const matchingAllergies = allergies.filter(allergy =>
+                            medicationName.includes(allergy) || allergy.includes(medicationName)
+                        );
+
+                        if (matchingAllergies.length > 0) {
+                            // Vérifier si ce patient a déjà eu ce médicament
+                            const hasPrescription = medicationPrescriptions.some(p => p.clientNid === patient.nid);
+
+                            allergicPatients.push({
+                                nid: patient.nid,
+                                nom: patient.title,
+                                age: patient.field_age,
+                                sexe: patient.field_sexe,
+                                allergies: patient.field_allergies,
+                                allergiesMatch: matchingAllergies,
+                                hasPrescription: hasPrescription,
+                                prescriptions: medicationPrescriptions.filter(p => p.clientNid === patient.nid)
+                            });
+                        }
+                    }
+                });
+
+                // 4. Récupérer des informations complémentaires via l'IA (optionnel)
+                let aiInfo = null;
+                if (medication) {
+                    try {
+                        const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+                        const apiUrl = 'https://api.openai.com/v1/chat/completions';
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${apiKey}`
+                            },
+                            body: JSON.stringify({
+                                model: 'gpt-4o-mini',
+                                messages: [
+                                    {
+                                        role: 'system',
+                                        content: 'Tu es un assistant médical expert. Fournis des informations concises et précises sur les médicaments en français, au format HTML simple.'
+                                    },
+                                    {
+                                        role: 'user',
+                                        content: `Donne-moi des informations sur le médicament "${medication.title}" : 
+                                - Indications principales
+                                - Contre-indications
+                                - Effets secondaires courants
+                                - Précautions d'emploi
+                                Réponds en HTML simple avec des puces.`
+                                    }
+                                ],
+                                max_tokens: 500,
+                                temperature: 0.7
+                            })
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            aiInfo = data.choices[0].message.content;
+                        }
+                    } catch (error) {
+                        console.error("Erreur API OpenAI:", error);
+                    }
+                }
+
+                return {
+                    medication: {
+                        nid: medication.nid,
+                        nom: medication.title,
+                        stock: medication.field_quantite_stock || 0,
+                        unite: medication.field_unite || 'unités',
+                        prix: medication.field_prix_vente || 'Non défini',
+                        dateExpiration: medication.field_date_expiration,
+                        description: medication.field_description,
+                        dateAjout: medication.created
+                    },
+                    prescriptions: {
+                        total: medicationPrescriptions.length,
+                        historique: medicationPrescriptions.sort((a, b) => (b.date || 0) - (a.date || 0)),
+                        patientsUniques: [...new Set(medicationPrescriptions.map(p => p.clientNid))].length
+                    },
+                    allergies: {
+                        patientsAllergiques: allergicPatients,
+                        totalAllergiques: allergicPatients.length,
+                        patientsRisque: allergicPatients.filter(p => !p.hasPrescription).length // Patients allergiques jamais exposés
+                    },
+                    aiInfo: aiInfo
+                };
+            } catch (error) {
+                console.error("Erreur lors de la récupération des infos médicament:", error);
+                throw error;
+            } finally {
+                isTyping.value = false;
+            }
+        };
+
+        // const addMedication = (medicationData) => {
+        //     selectedMedications.value = medicationData;
+        //     closeMedicationModal()
+        // }
+
+
+        const addMedication = async (medicationData) => {
             selectedMedications.value = medicationData;
-            closeMedicationModal()
-        }
+            closeMedicationModal();
+
+            try {
+                const medicationFullInfo = await getMedicationFullInfo(medicationData);
+                console.log("Informations complètes du médicament:", medicationFullInfo);
+
+                if (medicationFullInfo) {
+                    // Déterminer le statut du stock
+                    const stockStatus = medicationFullInfo.medication.stock < 10 ? 'critique' :
+                        medicationFullInfo.medication.stock < 20 ? 'faible' : 'normal';
+
+                    const stockColor = stockStatus === 'critique' ? 'text-red-600' :
+                        stockStatus === 'faible' ? 'text-orange-600' : 'text-green-600';
+
+                    // Créer le message HTML
+                    let infoMessage = `
+                <div class="space-y-4">
+                    <!-- En-tête médicament -->
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h3 class="font-bold text-blue-800 mb-2">💊 ${medicationFullInfo.medication.nom}</h3>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <span class="font-semibold">Stock actuel:</span> 
+                                <span class="${stockColor} font-bold">${medicationFullInfo.medication.stock} ${medicationFullInfo.medication.unite}</span>
+                                <span class="text-xs ml-1">(${stockStatus})</span>
+                            </div>
+                            <div>
+                                <span class="font-semibold">Prix:</span> ${medicationFullInfo.medication.prix} Ar
+                            </div>
+                            ${medicationFullInfo.medication.dateExpiration ? `
+                            <div>
+                                <span class="font-semibold">Date d'expiration:</span> 
+                                ${formatDate(null, medicationFullInfo.medication.dateExpiration)}
+                            </div>
+                            ` : ''}
+                            <div>
+                                <span class="font-semibold">Ajouté le:</span> 
+                                ${formatDate(null, medicationFullInfo.medication.dateAjout)}
+                            </div>
+                        </div>
+                        ${medicationFullInfo.medication.description ? `
+                        <div class="mt-2 text-sm">
+                            <span class="font-semibold">Description:</span> ${medicationFullInfo.medication.description}
+                        </div>
+                        ` : ''}
+                    </div>
+            `;
+
+                    // Alertes allergies
+                    if (medicationFullInfo.allergies.totalAllergiques > 0) {
+                        infoMessage += `
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                        <h4 class="font-bold text-red-800 mb-2">⚠️ Alertes Allergies (${medicationFullInfo.allergies.totalAllergiques} patients)</h4>
+                        <div class="space-y-2 max-h-60 overflow-y-auto">
+                `;
+
+                        medicationFullInfo.allergies.patientsAllergiques.forEach(patient => {
+                            const alertClass = patient.hasPrescription ? 'bg-orange-50 border-orange-200' : 'bg-red-50 border-red-200';
+                            const alertIcon = patient.hasPrescription ? '⚠️ Déjà prescrit' : '🚫 Jamais prescrit';
+
+                            infoMessage += `
+                        <div class="p-3 rounded border ${alertClass} text-sm">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="font-semibold">${patient.nom}</span>
+                                    ${patient.age ? ` - ${patient.age} ans` : ''}
+                                    ${patient.sexe ? ` - ${patient.sexe}` : ''}
+                                </div>
+                                <span class="text-xs font-semibold ${patient.hasPrescription ? 'text-orange-600' : 'text-red-600'}">${alertIcon}</span>
+                            </div>
+                            <div class="mt-1">
+                                <span class="font-semibold">Allergies:</span> 
+                                <span class="text-red-600">${patient.allergies}</span>
+                            </div>
+                            <div class="mt-1 text-xs">
+                                <span class="font-semibold">Allergènes détectés:</span> 
+                                ${patient.allergiesMatch.map(a => `<span class="bg-red-100 px-1 rounded">${a}</span>`).join(' ')}
+                            </div>
+                            ${patient.hasPrescription && patient.prescriptions.length > 0 ? `
+                            <div class="mt-1 text-xs">
+                                <span class="font-semibold">Dernière prescription:</span> 
+                                ${formatDate(null, patient.prescriptions[0].date)}
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+                        });
+
+                        infoMessage += `</div></div>`;
+                    }
+
+                    // Statistiques des prescriptions
+                    if (medicationFullInfo.prescriptions.total > 0) {
+                        infoMessage += `
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <h4 class="font-bold text-green-800 mb-2">📊 Historique des Prescriptions</h4>
+                        <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+                            <div class="bg-white p-2 rounded">
+                                <div class="text-xl font-bold text-green-600">${medicationFullInfo.prescriptions.total}</div>
+                                <div class="text-xs">Prescriptions</div>
+                            </div>
+                            <div class="bg-white p-2 rounded">
+                                <div class="text-xl font-bold text-blue-600">${medicationFullInfo.prescriptions.patientsUniques}</div>
+                                <div class="text-xs">Patients</div>
+                            </div>
+                            <div class="bg-white p-2 rounded">
+                                <div class="text-xl font-bold text-orange-600">${medicationFullInfo.allergies.patientsRisque}</div>
+                                <div class="text-xs">À risque</div>
+                            </div>
+                        </div>
+                        <div class="space-y-2 max-h-40 overflow-y-auto">
+                `;
+
+                        medicationFullInfo.prescriptions.historique.slice(0, 5).forEach(p => {
+                            infoMessage += `
+                        <div class="bg-white p-2 rounded border border-green-100 text-sm">
+                            <div class="flex justify-between">
+                                <span class="font-semibold">${p.client}</span>
+                                <span class="text-gray-500">${formatDate(null, p.date)}</span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span>Quantité: ${p.quantite} ${medicationFullInfo.medication.unite}</span>
+                                <span>Montant: ${p.prix * p.quantite} Ar</span>
+                            </div>
+                        </div>
+                    `;
+                        });
+
+                        infoMessage += `</div></div>`;
+                    }
+
+                    // Informations IA
+                    if (medicationFullInfo.aiInfo) {
+                        infoMessage += `
+                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <h4 class="font-bold text-purple-800 mb-2">🤖 Informations complémentaires</h4>
+                        <div class="prose prose-sm max-w-none text-sm">
+                            ${medicationFullInfo.aiInfo}
+                        </div>
+                        <p class="text-[10px] text-gray-500 mt-2 italic">Source: IA - À titre informatif</p>
+                    </div>
+                `;
+                    }
+
+                    infoMessage += `</div>`;
+
+                    // Ajouter le message dans le chat
+                    messages.value.push({
+                        type: 'ai',
+                        content: infoMessage,
+                        time: new Date().toLocaleTimeString()
+                    });
+                }
+            } catch (error) {
+                console.error("Erreur:", error);
+                messages.value.push({
+                    type: 'ai',
+                    content: `
+                <div class="bg-red-50 border-l-4 border-red-400 p-3 text-red-700">
+                    <p class="font-medium">Erreur lors du chargement des informations du médicament</p>
+                    <p class="text-sm">${error.message}</p>
+                </div>
+            `,
+                    time: new Date().toLocaleTimeString()
+                });
+            } finally {
+                scrollToBottom();
+            }
+        };
+
+
 
         const removeSelectedMedication = () => {
             selectedMedications.value = {
