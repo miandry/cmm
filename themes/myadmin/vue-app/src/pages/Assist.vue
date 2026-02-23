@@ -779,7 +779,7 @@ export default {
                             field_client: ['nid', 'title']
                         },
                         pager: 0,
-                        sort: { val: 'created', op: 'desc' }
+                        sort: { val: 'nid', op: 'desc' }
                     });
 
                     patientConsultations = consultationStore.consultations?.rows || [];
@@ -1003,13 +1003,6 @@ export default {
         const closePatientModal = () => {
             showPatientModal.value = false
         }
-
-        // const savePatient = (patientData) => {
-        //     patientInfo.value = patientData
-        //     patientCardVisible.value = true
-        //     closePatientModal()
-        // }
-
 
         const savePatient = async (patientData) => {
             console.log("Patient sélectionné:", patientData.nid);
