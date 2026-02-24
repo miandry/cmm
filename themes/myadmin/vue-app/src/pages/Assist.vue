@@ -519,7 +519,7 @@ export default {
                 scrollToBottom()
             }
         }
-        
+
         // =============================================
         // FONCTION EXTRACT MEDICATION NAMES
         // =============================================
@@ -538,16 +538,16 @@ export default {
 
             if (!hasStockContext) return [];
 
-            // Étape 1: Gérer les apostrophes (transforme "d'ibuprofene" en "ibuprofene")
+            // Étape 1: Gérer les apostrophes et caractères spéciaux
             let cleanQuery = normalizedQuery
                 .replace(/([a-z])'([a-z])/g, '$1 $2')  // Remplace "d'ibuprofene" par "d ibuprofene"
-                .replace(/[^a-z0-9\s]/g, ' ')          // Remplace tous les autres caractères spéciaux par des espaces
+                .replace(/[^a-z0-9\s]/g, ' ')          // Remplace les caractères spéciaux par des espaces
                 .replace(/\s+/g, ' ')
                 .trim();
 
-            console.log('Requête après nettoyage apostrophes:', cleanQuery);
+            console.log('Requête après nettoyage:', cleanQuery);
 
-            // Étape 2: Supprimer les mots de contexte de la requête
+            // Étape 2: Supprimer les mots de contexte
             const contextWords = [
                 'stock', 'inventaire', 'quantite', 'reste', 'disponible', 'combien',
                 'de', 'du', 'des', 'd', 'le', 'la', 'les', 'et', 'ou', 'dans', 'pour',
@@ -557,46 +557,59 @@ export default {
                 'faire', 'voir', 'check', 'checker', 'voir', 'savoir', 'connaitre'
             ];
 
-            // Créer une liste des mots après split
             let words = cleanQuery.split(' ');
 
-            // Filtrer pour ne garder que les mots qui ne sont pas dans contextWords
-            const filteredWords = words.filter(word =>
-                word.length >= 2 && !contextWords.includes(word)
-            );
+            // Étape 3: Filtrer intelligemment - GARDER les lettres simples comme "c"
+            const filteredWords = words.filter(word => {
+                // Toujours garder si c'est un nombre
+                if (word.match(/^\d+$/)) return true;
+
+                // Toujours garder si c'est une unité
+                if (word.match(/^(mg|g|ml|ui|cp|amp|susp)$/)) return true;
+
+                // GARDER les lettres simples (c, b, k) - important pour "vitamine c"
+                if (word.match(/^[a-z]$/)) return true;
+
+                // GARDER les lettres avec chiffres (b6, b12, c100)
+                if (word.match(/^[a-z]\d+$/)) return true;
+
+                // Pour les autres mots, garder s'ils ont au moins 2 lettres ET pas dans contextWords
+                return word.length >= 2 && !contextWords.includes(word);
+            });
 
             console.log('Mots après filtrage:', filteredWords);
 
             if (filteredWords.length === 0) return [];
 
-            // Étape 3: Regrouper les mots pour former des noms de médicaments
+            // Étape 4: Regrouper intelligemment
             const searchTerms = [];
             let i = 0;
 
             while (i < filteredWords.length) {
-                const currentWord = filteredWords[i];
-                let term = currentWord;
+                let term = filteredWords[i];
                 let j = i + 1;
 
-                // Regrouper avec les mots suivants si:
-                // - C'est un nombre (dosage)
-                // - C'est une unité (mg, g, ml, cp)
-                // - C'est une lettre simple (c, b6, b12)
+                // Regrouper avec les mots suivants
                 while (j < filteredWords.length) {
                     const nextWord = filteredWords[j];
 
-                    // Si c'est un nombre, toujours le regrouper
+                    // Toujours regrouper avec les nombres
                     if (nextWord.match(/^\d+$/)) {
                         term += ' ' + nextWord;
                         j++;
                     }
-                    // Si c'est une unité, toujours la regrouper
+                    // Toujours regrouper avec les unités
                     else if (nextWord.match(/^(mg|g|ml|ui|cp|amp|susp)$/)) {
                         term += ' ' + nextWord;
                         j++;
                     }
-                    // Si c'est une lettre simple (c, b6, b12)
-                    else if (nextWord.match(/^[a-z]\d*$/)) {
+                    // IMPORTANT: Regrouper les lettres simples (c) avec le mot précédent
+                    else if (nextWord.match(/^[a-z]$/)) {
+                        term += ' ' + nextWord;
+                        j++;
+                    }
+                    // Regrouper les lettres avec chiffres (b6, b12)
+                    else if (nextWord.match(/^[a-z]\d+$/)) {
                         term += ' ' + nextWord;
                         j++;
                     }
