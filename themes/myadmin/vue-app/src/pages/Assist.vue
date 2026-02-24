@@ -521,7 +521,7 @@ export default {
         }
         
         // =============================================
-        // FONCTION EXTRACT MEDICATION NAMES - CORRIGÉE POUR APOSTROPHES
+        // FONCTION EXTRACT MEDICATION NAMES
         // =============================================
         const extractMedicationNames = (query) => {
             // Normaliser la requête
