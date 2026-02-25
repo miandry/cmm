@@ -115,6 +115,12 @@ export default {
                 'field_age',
                 'field_sexe',
                 'field_allergies',
+                'field_phone',
+                'field_email',
+                'field_adresse',
+                'field_assurance',
+                'field_contact_d_urgence',
+                'field_notes_medicales',
             ],
             sort: { val: 'title', op: 'asc' },
             filters: {},
@@ -149,6 +155,12 @@ export default {
                 age: selectedPatient.value.field_age || null,
                 gender: selectedPatient.value.field_sexe || '',
                 allergies: selectedPatient.value.field_allergies || '',
+                phone: selectedPatient.value.field_phone || '',
+                email: selectedPatient.value.field_email || '',
+                adresse: selectedPatient.value.field_adresse || '',
+                assurance: selectedPatient.value.field_assurance || '0',
+                contactUrgence: selectedPatient.value.field_contact_d_urgence || '',
+                notesMedicales: selectedPatient.value.field_notes_medicales || '',
             };
 
             emit('save', patientData);
