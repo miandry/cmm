@@ -7,8 +7,10 @@
                         <i class="ri-capsule-line text-white text-lg md:text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="text-lg md:text-xl font-semibold text-gray-900 leading-tight">Assistant Clinique IA</h1>
-                        <p class="text-[10px] md:text-sm text-gray-500 line-clamp-1 md:line-clamp-none">Basé sur l'inventaire clinique</p>
+                        <h1 class="text-lg md:text-xl font-semibold text-gray-900 leading-tight">Assistant Clinique IA
+                        </h1>
+                        <p class="text-[10px] md:text-sm text-gray-500 line-clamp-1 md:line-clamp-none">Basé sur
+                            l'inventaire clinique</p>
                     </div>
                 </div>
                 <div class="hidden sm:flex items-center text-sm text-gray-500">
@@ -31,63 +33,90 @@
         <main class="max-w-4xl mx-auto px-1 md:px-6 py-2 md:py-6">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <!-- Chat Container -->
-                <div ref="chatContainer" class="chat-container overflow-y-auto px-2 md:px-6 py-3 md:py-6 space-y-3 md:space-y-6">
+                <div ref="chatContainer"
+                    class="chat-container overflow-y-auto px-2 md:px-6 py-3 md:py-6 space-y-3 md:space-y-6">
                     <!-- Message de bienvenue -->
                     <div class="flex items-start space-x-3 mb-4">
-                        <div class="w-8 h-8 md:w-10 md:h-10 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+                        <div
+                            class="w-8 h-8 md:w-10 md:h-10 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
                             <i class="ri-robot-2-line text-white text-lg"></i>
                         </div>
                         <div class="flex-1">
-                            <div class="message-bubble bg-gray-100 rounded-2xl rounded-tl-sm px-3 md:px-4 py-2 md:py-3 mb-4">
+                            <div
+                                class="message-bubble bg-gray-100 rounded-2xl rounded-tl-sm px-3 md:px-4 py-2 md:py-3 mb-4">
                                 <p class="text-sm md:text-base font-medium text-gray-900 mb-1">Bonjour Docteur !</p>
-                                <p class="text-sm md:text-base text-gray-700">Je suis votre Assistant Clinique. Je peux vous aider à analyser les stocks, consulter l'historique des patients ou préparer des recommandations basées sur les données réelles de la clinique.</p>
+                                <p class="text-sm md:text-base text-gray-700">Je suis votre Assistant Clinique. Je peux
+                                    vous aider à analyser les stocks, consulter l'historique des patients ou préparer
+                                    des recommandations basées sur les données réelles de la clinique.</p>
                                 <p class="text-[11px] text-gray-500 mt-2 font-medium italic flex items-center">
                                     <i class="ri-radio-button-line text-green-500 mr-1 animate-pulse"></i>
                                     Connecté à l'inventaire en temps réel
                                 </p>
                             </div>
 
-                            <!-- Suggestions rapides -->
-                            <div class="flex flex-wrap gap-1.5 mt-3">
-                                <button @click="selectPrompt('patients', 'Donne-moi la liste de tous les patients avec leurs informations')" 
-                                    class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full border border-gray-200 bg-white hover:border-primary/40 hover:bg-primary/5 transition-all text-[11px] font-medium text-gray-600">
-                                    <i class="ri-user-heart-line text-teal-400 text-xs"></i>
-                                    <span>Patients</span>
+                            <!-- Aide Idéale / Suggestions -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+                                <div
+                                    class="col-span-1 sm:col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1 ml-1">
+                                    Suggestions rapides</div>
+
+                                <button
+                                    @click="selectPrompt('Fais-moi un résumé des stocks critiques (faible quantité)')"
+                                    class="text-left p-3 rounded-xl border border-gray-100 bg-white hover:border-primary/30 hover:bg-primary/5 transition-all group">
+                                    <div class="flex items-center space-x-3">
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                                            <i class="ri-error-warning-line text-red-500"></i>
+                                        </div>
+                                        <div class="text-[13px] font-medium text-gray-700">Stocks critiques</div>
+                                    </div>
                                 </button>
-                                <button @click="selectPrompt('stock', 'Fais-moi un résumé des stocks critiques (faible quantité)')" 
-                                    class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full border border-gray-200 bg-white hover:border-primary/40 hover:bg-primary/5 transition-all text-[11px] font-medium text-gray-600">
-                                    <i class="ri-error-warning-line text-red-400 text-xs"></i>
-                                    <span>Stocks critiques</span>
+
+                                <button @click="selectPrompt('Quelles sont les dernières consultations enregistrées ?')"
+                                    class="text-left p-3 rounded-xl border border-gray-100 bg-white hover:border-primary/30 hover:bg-primary/5 transition-all group">
+                                    <div class="flex items-center space-x-3">
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                                            <i class="ri-stethoscope-line text-blue-500"></i>
+                                        </div>
+                                        <div class="text-[13px] font-medium text-gray-700">Dernières consultations</div>
+                                    </div>
                                 </button>
-                                <button @click="selectPrompt('consultations', 'Quelles sont les dernières consultations enregistrées ?')" 
-                                    class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full border border-gray-200 bg-white hover:border-primary/40 hover:bg-primary/5 transition-all text-[11px] font-medium text-gray-600">
-                                    <i class="ri-stethoscope-line text-blue-400 text-xs"></i>
-                                    <span>Consultations</span>
+
+                                <button
+                                    @click="selectPrompt('Donne-moi la liste des examens disponibles avec leurs prix')"
+                                    class="text-left p-3 rounded-xl border border-gray-100 bg-white hover:border-primary/30 hover:bg-primary/5 transition-all group">
+                                    <div class="flex items-center space-x-3">
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center group-hover:bg-green-100 transition-colors">
+                                            <i class="ri-test-tube-line text-green-500"></i>
+                                        </div>
+                                        <div class="text-[13px] font-medium text-gray-700">Examens & Tarifs</div>
+                                    </div>
                                 </button>
-                                <button @click="selectPrompt('examens', 'Donne-moi la liste des examens disponibles avec leurs prix')" 
-                                    class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full border border-gray-200 bg-white hover:border-primary/40 hover:bg-primary/5 transition-all text-[11px] font-medium text-gray-600">
-                                    <i class="ri-test-tube-line text-green-400 text-xs"></i>
-                                    <span>Examens & Tarifs</span>
+
+                                <button @click="selectPrompt('Quelles ont été les dernières ventes réalisées ?')"
+                                    class="text-left p-3 rounded-xl border border-gray-100 bg-white hover:border-primary/30 hover:bg-primary/5 transition-all group">
+                                    <div class="flex items-center space-x-3">
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                                            <i class="ri-shopping-bag-2-line text-purple-500"></i>
+                                        </div>
+                                        <div class="text-[13px] font-medium text-gray-700">Historique des ventes</div>
+                                    </div>
                                 </button>
-                                <button @click="selectPrompt('ventes', 'Quelles ont été les dernières ventes réalisées ?')" 
-                                    class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full border border-gray-200 bg-white hover:border-primary/40 hover:bg-primary/5 transition-all text-[11px] font-medium text-gray-600">
-                                    <i class="ri-shopping-bag-2-line text-purple-400 text-xs"></i>
-                                    <span>Ventes</span>
-                                </button>
-                                <button @click="selectPrompt('ventes', 'Montre-moi l\'évolution des ventes par semaine et par jour sous forme de graphique')" 
-                                    class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full border border-gray-200 bg-white hover:border-primary/40 hover:bg-primary/5 transition-all text-[11px] font-medium text-gray-600">
-                                    <i class="ri-bar-chart-groupped-line text-indigo-400 text-xs"></i>
-                                    <span>Graphique ventes</span>
-                                </button>
-                                <button @click="selectPrompt('today', 'Quel patient a consulté aujourd\'hui ?')" 
-                                    class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full border border-gray-200 bg-white hover:border-primary/40 hover:bg-primary/5 transition-all text-[11px] font-medium text-gray-600">
-                                    <i class="ri-calendar-check-line text-orange-400 text-xs"></i>
-                                    <span>Consultations aujourd'hui</span>
-                                </button>
-                                <button @click="selectPrompt('sales_today', 'Quel est le total des ventes aujourd\'hui ?')" 
-                                    class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full border border-gray-200 bg-white hover:border-primary/40 hover:bg-primary/5 transition-all text-[11px] font-medium text-gray-600">
-                                    <i class="ri-money-dollar-circle-line text-emerald-400 text-xs"></i>
-                                    <span>Total ventes aujourd'hui</span>
+
+                                <button
+                                    @click="selectPrompt('Montre-moi l\'évolution des ventes par semaine et par jour sous forme de graphique')"
+                                    class="text-left p-3 rounded-xl border border-gray-100 bg-white hover:border-primary/30 hover:bg-primary/5 transition-all group">
+                                    <div class="flex items-center space-x-3">
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+                                            <i class="ri-bar-chart-groupped-line text-indigo-500"></i>
+                                        </div>
+                                        <div class="text-[13px] font-medium text-gray-700">Évolution Ventes (Sem/Jour)
+                                        </div>
+                                    </div>
                                 </button>
                             </div>
                         </div>
@@ -97,8 +126,10 @@
                     <div v-for="(message, index) in messages" :key="index">
                         <!-- Message utilisateur -->
                         <div v-if="message.type === 'user'" class="flex items-start space-x-3 justify-end">
-                            <div class="message-bubble bg-primary text-white rounded-2xl rounded-tr-sm px-3 md:px-4 py-2 md:py-3 max-w-[80%]">
-                                <img v-if="message.image" :src="message.image" class="w-full h-auto rounded-lg mb-2 border-2 border-white/20" alt="Image analysée">
+                            <div
+                                class="message-bubble bg-primary text-white rounded-2xl rounded-tr-sm px-3 md:px-4 py-2 md:py-3 max-w-[80%]">
+                                <img v-if="message.image" :src="message.image"
+                                    class="w-full h-auto rounded-lg mb-2 border-2 border-white/20" alt="Image analysée">
                                 <p v-if="message.content" class="text-[13px] md:text-sm">{{ message.content }}</p>
                                 <p class="text-[10px] text-blue-100 mt-1">{{ message.time }}</p>
                             </div>
@@ -114,7 +145,8 @@
                                 <i class="ri-robot-line text-white text-sm"></i>
                             </div>
                             <div class="message-bubble bg-gray-100 rounded-2xl rounded-tl-sm px-3 md:px-4 py-2 md:py-3">
-                                <div class="prose prose-sm max-w-none text-[13px] md:text-sm" v-html="message.content"></div>
+                                <div class="prose prose-sm max-w-none text-[13px] md:text-sm" v-html="message.content">
+                                </div>
                                 <SalesChart v-if="message.hasChart" />
                                 <p class="text-[10px] text-gray-500 mt-1">{{ message.time }}</p>
                             </div>
@@ -148,16 +180,19 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <p class="text-[10px] text-gray-500 mb-0.5">Nom du Patient</p>
-                                <p class="text-xs font-semibold text-gray-900 truncate">{{ patientInfo.name || '-' }}</p>
+                                <p class="text-xs font-semibold text-gray-900 truncate">{{ patientInfo.name || '-' }}
+                                </p>
                             </div>
                             <div class="grid grid-cols-3 sm:block gap-2 sm:gap-0">
                                 <div>
                                     <p class="text-[10px] text-gray-500 mb-0.5">Âge</p>
-                                    <p class="text-xs font-semibold text-gray-900">{{ patientInfo.age ? `${patientInfo.age} ans` : '-' }}</p>
+                                    <p class="text-xs font-semibold text-gray-900">{{ patientInfo.age ?
+                                        `${patientInfo.age} ans` : '-' }}</p>
                                 </div>
                                 <div>
                                     <p class="text-[10px] text-gray-500 mb-0.5">Sexe</p>
-                                    <p class="text-xs font-semibold text-gray-900 capitalize">{{ patientInfo.gender || '-' }}</p>
+                                    <p class="text-xs font-semibold text-gray-900 capitalize">{{ patientInfo.gender ||
+                                        '-' }}</p>
                                 </div>
                             </div>
                             <div class="sm:col-span-2">
@@ -177,8 +212,7 @@
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-900">{{ selectedMedications.name }}</p>
                             </div>
-                            <button @click="removeSelectedMedication"
-                                class="text-gray-500 hover:text-red-500 ml-2">
+                            <button @click="removeSelectedMedication" class="text-gray-500 hover:text-red-500 ml-2">
                                 <i class="ri-close-line text-lg"></i>
                             </button>
                         </div>
@@ -202,31 +236,32 @@
                                 <i class="ri-capsule-line text-sm"></i>
                                 <span>Médicament</span>
                             </button>
-                            <input type="file" ref="fileInput" accept="image/*" class="hidden" @change="handleFileSelect">
+                            <input type="file" ref="fileInput" accept="image/*" class="hidden"
+                                @change="handleFileSelect">
                             <button @click="triggerFileUpload"
                                 class="flex items-center justify-center bg-gray-50 text-gray-700 w-10 h-10 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
-                                title="Ajouter une image (Radio, Echo, etc.)"
-                                :disabled="isProcessingImage">
+                                title="Ajouter une image (Radio, Echo, etc.)" :disabled="isProcessingImage">
                                 <i v-if="isProcessingImage" class="ri-loader-4-line animate-spin"></i>
                                 <i v-else class="ri-attachment-2 active:scale-95 transition-transform"></i>
                             </button>
                         </div>
-                        
+
                         <!-- Image Preview -->
                         <div v-if="selectedImage" class="relative group inline-block">
-                            <img :src="selectedImage" class="h-20 w-auto rounded-lg border border-gray-200 object-cover" alt="Preview">
-                            <button @click="removeImage" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:bg-red-600">
+                            <img :src="selectedImage" class="h-20 w-auto rounded-lg border border-gray-200 object-cover"
+                                alt="Preview">
+                            <button @click="removeImage"
+                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:bg-red-600">
                                 <i class="ri-close-line text-xs"></i>
                             </button>
                         </div>
-                        
+
                         <!-- Textarea and Send Row -->
                         <div class="flex space-x-2">
-                             <textarea ref="messageInput" v-model="currentMessage" @input="handleInput"
-                            @keydown="handleKeyDown"
-                            placeholder="Écrivez votre message..."
-                            class="flex-1 resize-none border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm min-h-[48px]"
-                            rows="1" maxlength="1000"></textarea>
+                            <textarea ref="messageInput" v-model="currentMessage" @input="handleInput"
+                                @keydown="handleKeyDown" placeholder="Écrivez votre message..."
+                                class="flex-1 resize-none border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm min-h-[48px]"
+                                rows="1" maxlength="1000"></textarea>
                             <button @click="sendMessage" :disabled="!canSend"
                                 class="bg-primary text-white w-12 h-12 flex items-center justify-center rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                 <i class="ri-send-plane-line text-xl"></i>
@@ -255,6 +290,7 @@ import PatientModal from '../components/assists/PatientModal.vue';
 import MedicationModal from '../components/assists/MedicationModal.vue';
 import SalesChart from '../components/charts/SalesChart.vue';
 import { useArticleStore, useClientStore, useConsultationStore, useExamenStore, useOrderStore } from '../stores/index.js';
+import { formatDate } from '../utils/formateDate';
 
 export default {
     name: "Assist",
@@ -280,7 +316,6 @@ export default {
         const isTyping = ref(false)
         const selectedImage = ref(null)
         const isProcessingImage = ref(false)
-        const activeSuggestion = ref(null)
 
         // État patient
         const patientCardVisible = ref(false)
@@ -310,17 +345,17 @@ export default {
         onMounted(async () => {
             // Charger l'inventaire au montage
             await store.fetchArticles({
-                fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
+                fields: ['nid', 'title', 'field_quantite_stock', 'field_unite', 'created'],
                 pager: 0,
-                offset: 50,
-                sort: { val: 'title', op: 'asc' }
+                offset: 20,
+                sort: { val: 'created', op: 'asc' }
             });
 
             // Charger les patients au montage
             await clientStore.fetchAllClients({
-                fields: ['nid', 'title', 'field_age', 'field_sexe', 'field_allergies', 'field_phone', 'field_email', 'field_adresse', 'field_assurance', 'field_contact_d_urgence', 'field_notes_medicales'],
+                fields: ['nid', 'title', 'field_age', 'field_sexe', 'field_allergies', 'created'],
                 pager: 0,
-                offset: 50,
+                offset: 20,
                 sort: { val: 'title', op: 'asc' }
             });
 
@@ -334,11 +369,27 @@ export default {
                     'field_temperature',
                     'field_tension_arterielle',
                     'field_poids',
-                    'field_medicaments',
+                    'created',
                     'field_examens',
-                    'created'
+                    'field_medicaments'
                 ],
                 pager: 0,
+                values: {
+                    field_client: [
+                        'nid',
+                        'title',
+                        'field_phone',
+                        'field_assurance',
+                        'field_adresse',
+                        'field_age',
+                        'created',
+                        'field_allergies',
+                        'field_contact_d_urgence',
+                        'field_email',
+                        'field_notes_medicales',
+                        'field_sexe',
+                    ]
+                },
                 offset: 20,
                 sort: { val: 'nid', op: 'desc' }
             });
@@ -346,7 +397,7 @@ export default {
             // Charger les examens au montage
             await examenStore.fetchExamens({
                 pager: 0,
-                offset: 50
+                offset: 20
             });
 
             // Charger les commandes (ventes) au montage
@@ -361,6 +412,22 @@ export default {
                     'field_total_vente',
                     'created'
                 ],
+                values: {
+                    field_client: [
+                        'nid',
+                        'title',
+                        'field_phone',
+                        'field_assurance',
+                        'field_adresse',
+                        'field_age',
+                        'created',
+                        'field_allergies',
+                        'field_contact_d_urgence',
+                        'field_email',
+                        'field_notes_medicales',
+                        'field_sexe',
+                    ]
+                },
                 pager: 0,
                 offset: 20,
                 sort: { val: 'nid', op: 'desc' }
@@ -369,9 +436,9 @@ export default {
 
         // Computed
         const canSend = computed(() => {
-            return (currentMessage.value.trim().length > 0 || selectedImage.value) && 
-                   currentMessage.value.length <= 1000 && 
-                   !isProcessingImage.value
+            return (currentMessage.value.trim().length > 0 || selectedImage.value) &&
+                currentMessage.value.length <= 1000 &&
+                !isProcessingImage.value
         })
 
         // Gestion du texte
@@ -396,7 +463,7 @@ export default {
         // Messages
         const sendMessage = async () => {
             if (isProcessingImage.value) return;
-            
+
             const message = currentMessage.value.trim()
             if (!message && !selectedImage.value) return
 
@@ -412,7 +479,7 @@ export default {
             const imageToSend = selectedImage.value
             currentMessage.value = ''
             selectedImage.value = null
-            
+
             nextTick(() => {
                 if (messageInput.value) {
                     messageInput.value.style.height = 'auto'
@@ -425,11 +492,11 @@ export default {
 
             try {
                 const response = await generateAIResponse(message, imageToSend)
-                
+
                 // Vérifier si la réponse contient la commande pour afficher le graphique
                 let content = response;
                 let hasChart = false;
-                
+
                 if (content.includes('<SHOW_SALES_CHART>')) {
                     hasChart = true;
                     content = content.replace('<SHOW_SALES_CHART>', '');
@@ -459,542 +526,360 @@ export default {
             }
         }
 
+        // =============================================
+        // FONCTION EXTRACT MEDICATION NAMES
+        // =============================================
+        const extractMedicationNames = (query) => {
+            // Normaliser la requête
+            const normalizedQuery = query.toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim();
+
+            console.log('Requête:', normalizedQuery);
+
+            // Détecter si la question concerne le stock
+            const stockKeywords = ['stock', 'inventaire', 'quantite', 'reste', 'disponible', 'combien'];
+            const hasStockContext = stockKeywords.some(keyword => normalizedQuery.includes(keyword));
+
+            if (!hasStockContext) return [];
+
+            // Étape 1: Gérer les apostrophes et caractères spéciaux
+            let cleanQuery = normalizedQuery
+                .replace(/([a-z])'([a-z])/g, '$1 $2')  // Remplace "d'ibuprofene" par "d ibuprofene"
+                .replace(/[^a-z0-9\s]/g, ' ')          // Remplace les caractères spéciaux par des espaces
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            console.log('Requête après nettoyage:', cleanQuery);
+
+            // Étape 2: Supprimer les mots de contexte
+            const contextWords = [
+                'stock', 'inventaire', 'quantite', 'reste', 'disponible', 'combien',
+                'de', 'du', 'des', 'd', 'le', 'la', 'les', 'et', 'ou', 'dans', 'pour',
+                'verifie', 'vérifie', 'stp', 'svp', 'please', 'peux', 'peut', 'pouvez',
+                'me', 'te', 'lui', 'moi', 'toi', 'nous', 'vous', 'ils', 'elles',
+                'pourrais', 'pourrait', 'pourriez', 'dire', 'donner', 'avoir', 'être',
+                'faire', 'voir', 'check', 'checker', 'voir', 'savoir', 'connaitre'
+            ];
+
+            let words = cleanQuery.split(' ');
+
+            // Étape 3: Filtrer intelligemment - GARDER les lettres simples comme "c"
+            const filteredWords = words.filter(word => {
+                // Toujours garder si c'est un nombre
+                if (word.match(/^\d+$/)) return true;
+
+                // Toujours garder si c'est une unité
+                if (word.match(/^(mg|g|ml|ui|cp|amp|susp)$/)) return true;
+
+                // GARDER les lettres simples (c, b, k) - important pour "vitamine c"
+                if (word.match(/^[a-z]$/)) return true;
+
+                // GARDER les lettres avec chiffres (b6, b12, c100)
+                if (word.match(/^[a-z]\d+$/)) return true;
+
+                // Pour les autres mots, garder s'ils ont au moins 2 lettres ET pas dans contextWords
+                return word.length >= 2 && !contextWords.includes(word);
+            });
+
+            console.log('Mots après filtrage:', filteredWords);
+
+            if (filteredWords.length === 0) return [];
+
+            // Étape 4: Regrouper intelligemment
+            const searchTerms = [];
+            let i = 0;
+
+            while (i < filteredWords.length) {
+                let term = filteredWords[i];
+                let j = i + 1;
+
+                // Regrouper avec les mots suivants
+                while (j < filteredWords.length) {
+                    const nextWord = filteredWords[j];
+
+                    // Toujours regrouper avec les nombres
+                    if (nextWord.match(/^\d+$/)) {
+                        term += ' ' + nextWord;
+                        j++;
+                    }
+                    // Toujours regrouper avec les unités
+                    else if (nextWord.match(/^(mg|g|ml|ui|cp|amp|susp)$/)) {
+                        term += ' ' + nextWord;
+                        j++;
+                    }
+                    // IMPORTANT: Regrouper les lettres simples (c) avec le mot précédent
+                    else if (nextWord.match(/^[a-z]$/)) {
+                        term += ' ' + nextWord;
+                        j++;
+                    }
+                    // Regrouper les lettres avec chiffres (b6, b12)
+                    else if (nextWord.match(/^[a-z]\d+$/)) {
+                        term += ' ' + nextWord;
+                        j++;
+                    }
+                    else {
+                        break;
+                    }
+                }
+
+                searchTerms.push(term);
+                i = j;
+            }
+
+            console.log('Termes de recherche:', searchTerms);
+            return searchTerms;
+        };
+
         const generateAIResponse = async (userMessage, imageBase64 = null) => {
             const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
             const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
-            // Helper pour formater une consultation proprement
-            const formatConsultation = (c, includePatient = true) => {
-                const parts = [];
-                if (includePatient) parts.push(`Patient: ${c.patient_name || 'Anonyme'}`);
-                if (c.motif) parts.push(`Motif: ${c.motif}`);
-                const constantes = [];
-                if (c.temperature) constantes.push(`Temp: ${c.temperature}°C`);
-                if (c.tension_arterielle) constantes.push(`Tension: ${c.tension_arterielle}`);
-                if (c.poids) constantes.push(`Poids: ${c.poids}kg`);
-                if (constantes.length) parts.push(`Constantes: [${constantes.join(', ')}]`);
-                const meds = c.medications?.map(m => m.title).filter(Boolean);
-                if (meds?.length) parts.push(`Médicaments: [${meds.join(', ')}]`);
-                const exams = c.exams?.map(e => e.title).filter(Boolean);
-                if (exams?.length) parts.push(`Examens: [${exams.join(', ')}]`);
-                if (c.date) parts.push(`Date: ${c.date}`);
-                return `- ${parts.join(', ')}`;
-            };
-
-            // Helper pour formater une vente
-            const formatSale = (o) => {
-                const products = o.products?.map(p => `${p.title} (x${p.quantity})`).join(', ') || 'Aucun produit';
-                const exams = o.exams?.map(e => e.title).join(', ') || 'Aucun examen';
-                return `- Commande #${o.order_number}, Client: ${o.client_name || 'Anonyme'}, Produits: [${products}], Examens: [${exams}], Total: ${o.total} Ar`;
-            };
-
-            // Définition des tools/functions pour RAG
-            const tools = [
-                {
-                    type: "function",
-                    function: {
-                        name: "patients_search",
-                        description: "Rechercher un patient par nom, téléphone, email ou adresse. Utilise cette fonction quand l'utilisateur demande des informations sur un patient spécifique ou cherche un patient.",
-                        parameters: {
-                            type: "object",
-                            properties: {
-                                query: { 
-                                    type: "string", 
-                                    description: "Terme de recherche (nom, téléphone, email, etc.)" 
-                                },
-                                limit: { 
-                                    type: "number", 
-                                    description: "Nombre maximum de résultats (défaut: 20)" 
-                                }
-                            },
-                            required: ["query"]
-                        }
-                    }
-                },
-                {
-                    type: "function",
-                    function: {
-                        name: "rag_search",
-                        description: "Rechercher le dossier complet d'un patient incluant ses consultations, ventes et historique médical. Utilise cette fonction pour un résumé ou historique patient.",
-                        parameters: {
-                            type: "object",
-                            properties: {
-                                patient_id: { 
-                                    type: "number", 
-                                    description: "ID du patient (nid)" 
-                                },
-                                query: { 
-                                    type: "string", 
-                                    description: "Type d'information recherchée (historique, consultations, ventes, etc.)" 
-                                }
-                            },
-                            required: ["patient_id", "query"]
-                        }
-                    }
-                },
-                {
-                    type: "function",
-                    function: {
-                        name: "medications_search",
-                        description: "Rechercher des médicaments par nom ou filtrer par stock. Utilise pour les requêtes sur les médicaments, stocks, ou articles.",
-                        parameters: {
-                            type: "object",
-                            properties: {
-                                query: { 
-                                    type: "string", 
-                                    description: "Nom du médicament à rechercher" 
-                                },
-                                low_stock_only: { 
-                                    type: "boolean", 
-                                    description: "Filtrer uniquement les stocks bas (quantité <= 10)" 
-                                },
-                                limit: { 
-                                    type: "number", 
-                                    description: "Nombre maximum de résultats (défaut: 50)" 
-                                }
-                            },
-                            required: []
-                        }
-                    }
-                },
-                {
-                    type: "function",
-                    function: {
-                        name: "consultations_search",
-                        description: "Rechercher des consultations par patient, date ou motif. Utilise pour l'historique des consultations.",
-                        parameters: {
-                            type: "object",
-                            properties: {
-                                patient_id: { 
-                                    type: "number", 
-                                    description: "ID du patient pour filtrer" 
-                                },
-                                date_from: { 
-                                    type: "string", 
-                                    description: "Date de début (YYYY-MM-DD)" 
-                                },
-                                date_to: { 
-                                    type: "string", 
-                                    description: "Date de fin (YYYY-MM-DD)" 
-                                },
-                                limit: { 
-                                    type: "number", 
-                                    description: "Nombre maximum de résultats (défaut: 20)" 
-                                }
-                            },
-                            required: []
-                        }
-                    }
-                },
-                {
-                    type: "function",
-                    function: {
-                        name: "sales_search",
-                        description: "Rechercher des ventes/commandes par client, date ou produit. Utilise pour l'historique des ventes.",
-                        parameters: {
-                            type: "object",
-                            properties: {
-                                client_id: { 
-                                    type: "number", 
-                                    description: "ID du client pour filtrer" 
-                                },
-                                date_from: { 
-                                    type: "string", 
-                                    description: "Date de début (YYYY-MM-DD)" 
-                                },
-                                date_to: { 
-                                    type: "string", 
-                                    description: "Date de fin (YYYY-MM-DD)" 
-                                },
-                                limit: { 
-                                    type: "number", 
-                                    description: "Nombre maximum de résultats (défaut: 20)" 
-                                }
-                            },
-                            required: []
-                        }
-                    }
-                },
-                {
-                    type: "function",
-                    function: {
-                        name: "today_stats",
-                        description: "Obtenir les statistiques du jour: consultations, ventes totales, et stocks bas. Utilise pour les requêtes sur 'aujourd'hui'.",
-                        parameters: {
-                            type: "object",
-                            properties: {},
-                            required: []
-                        }
-                    }
-                },
-                {
-                    type: "function",
-                    function: {
-                        name: "semantic_search",
-                        description: "Recherche sémantique globale across patients, médicaments, consultations et ventes. Utilise pour les requêtes générales ou ambiguës.",
-                        parameters: {
-                            type: "object",
-                            properties: {
-                                query: { 
-                                    type: "string", 
-                                    description: "Requête de recherche" 
-                                },
-                                types: { 
-                                    type: "array", 
-                                    items: { type: "string" },
-                                    description: "Types d'entités à rechercher: patient, medication, consultation, sale" 
-                                },
-                                limit: { 
-                                    type: "number", 
-                                    description: "Nombre maximum de résultats par type (défaut: 10)" 
-                                }
-                            },
-                            required: ["query"]
-                        }
-                    }
-                },
-                {
-                    type: "function",
-                    function: {
-                        name: "plan_consultation",
-                        description: "Planifier la prochaine consultation d'un patient en analysant l'évolution de son état de santé (tendances poids, tension, température, médicaments prescrits). Retourne une recommandation de date et de motif.",
-                        parameters: {
-                            type: "object",
-                            properties: {
-                                patient_id: { 
-                                    type: "number", 
-                                    description: "ID du patient (nid)" 
-                                },
-                                urgency_level: { 
-                                    type: "string", 
-                                    enum: ["routine", "surveillance", "urgent"],
-                                    description: "Niveau d'urgence: routine (contrôle normal), surveillance (pathologie chronique), urgent (symptômes inquiétants)" 
-                                },
-                                notes: { 
-                                    type: "string", 
-                                    description: "Notes médicales ou observations pour la planification" 
-                                }
-                            },
-                            required: ["patient_id"]
-                        }
-                    }
-                }
-            ];
-
-            // Fonction pour exécuter les tool calls
-            const executeToolCall = async (toolName, args) => {
-                console.log(`Executing tool: ${toolName}`, args);
-                
-                switch (toolName) {
-                    case 'patients_search': {
-                        const response = await fetch('/api/rag/patients', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                query: args.query, 
-                                limit: args.limit || 20 
-                            })
-                        });
-                        const data = await response.json();
-                        return JSON.stringify(data.data || []);
-                    }
-                    
-                    case 'rag_search': {
-                        // D'abord récupérer les infos patient
-                        const patientResponse = await fetch('/api/rag/patients', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ query: String(args.patient_id) })
-                        });
-                        const patientData = await patientResponse.json();
-                        
-                        // Puis les consultations du patient
-                        const consultResponse = await fetch('/api/rag/consultations', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ patient_id: args.patient_id, limit: 20 })
-                        });
-                        const consultData = await consultResponse.json();
-                        
-                        // Et les ventes du patient
-                        const salesResponse = await fetch('/api/rag/sales', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ client_id: args.patient_id, limit: 20 })
-                        });
-                        const salesData = await salesResponse.json();
-                        
-                        return JSON.stringify({
-                            patient: patientData.data?.[0] || null,
-                            consultations: consultData.data || [],
-                            sales: salesData.data || []
-                        });
-                    }
-                    
-                    case 'medications_search': {
-                        const params = new URLSearchParams();
-                        if (args.query) params.append('query', args.query);
-                        if (args.low_stock_only) params.append('low_stock_only', 'true');
-                        if (args.limit) params.append('limit', args.limit);
-                        
-                        const response = await fetch(`/api/rag/medications?${params.toString()}`);
-                        const data = await response.json();
-                        return JSON.stringify(data.data || []);
-                    }
-                    
-                    case 'consultations_search': {
-                        const response = await fetch('/api/rag/consultations', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                patient_id: args.patient_id,
-                                date_from: args.date_from,
-                                date_to: args.date_to,
-                                limit: args.limit || 20 
-                            })
-                        });
-                        const data = await response.json();
-                        return JSON.stringify(data.data || []);
-                    }
-                    
-                    case 'sales_search': {
-                        const response = await fetch('/api/rag/sales', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                client_id: args.client_id,
-                                date_from: args.date_from,
-                                date_to: args.date_to,
-                                limit: args.limit || 20 
-                            })
-                        });
-                        const data = await response.json();
-                        return JSON.stringify(data.data || []);
-                    }
-                    
-                    case 'today_stats': {
-                        const response = await fetch('/api/rag/today');
-                        const data = await response.json();
-                        return JSON.stringify(data);
-                    }
-                    
-                    case 'semantic_search': {
-                        const response = await fetch('/api/rag/semantic', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                query: args.query,
-                                types: args.types || ['patient', 'medication', 'consultation', 'sale'],
-                                limit: args.limit || 10
-                            })
-                        });
-                        const data = await response.json();
-                        return JSON.stringify(data.results || {});
-                    }
-                    
-                    case 'plan_consultation': {
-                        // Récupérer les infos patient
-                        const patientResponse = await fetch('/api/rag/patients', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ query: String(args.patient_id) })
-                        });
-                        const patientData = await patientResponse.json();
-                        const patient = patientData.data?.[0] || null;
-                        
-                        // Récupérer l'historique des consultations
-                        const consultResponse = await fetch('/api/rag/consultations', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ patient_id: args.patient_id, limit: 10 })
-                        });
-                        const consultData = await consultResponse.json();
-                        const consultations = consultData.data || [];
-                        
-                        // Analyser l'évolution de l'état de santé
-                        const healthEvolution = {
-                            patient: patient,
-                            consultations_count: consultations.length,
-                            last_consultation: consultations[0] || null,
-                            consultations_history: consultations,
-                            trends: {
-                                poids: consultations.filter(c => c.poids).map(c => ({ date: c.date, value: c.poids })).reverse(),
-                                tension: consultations.filter(c => c.tension_arterielle).map(c => ({ date: c.date, value: c.tension_arterielle })).reverse(),
-                                temperature: consultations.filter(c => c.temperature).map(c => ({ date: c.date, value: c.temperature })).reverse()
-                            },
-                            medications_prescribed: [...new Set(consultations.flatMap(c => c.medications?.map(m => m.title) || []))],
-                            urgency_level: args.urgency_level || 'routine',
-                            notes: args.notes || ''
-                        };
-                        
-                        // Calculer la date recommandée
-                        const today = new Date();
-                        let recommendedDays = 30; // défaut: 1 mois
-                        
-                        if (args.urgency_level === 'urgent') {
-                            recommendedDays = 3;
-                        } else if (args.urgency_level === 'surveillance') {
-                            recommendedDays = 14;
-                        } else if (consultations.length > 0) {
-                            // Analyser les tendances pour ajuster
-                            const lastConsult = new Date(consultations[0].created * 1000);
-                            const daysSinceLastConsult = Math.floor((today - lastConsult) / (1000 * 60 * 60 * 24));
-                            
-                            // Si dernière consultation récente (< 7 jours), proposer plus tard
-                            if (daysSinceLastConsult < 7) {
-                                recommendedDays = 30 - daysSinceLastConsult;
-                            }
-                        }
-                        
-                        const recommendedDate = new Date(today);
-                        recommendedDate.setDate(today.getDate() + recommendedDays);
-                        
-                        healthEvolution.recommended_date = recommendedDate.toISOString().split('T')[0];
-                        healthEvolution.recommended_days = recommendedDays;
-                        
-                        return JSON.stringify(healthEvolution);
-                    }
-                    
-                    default:
-                        return JSON.stringify({ error: `Unknown tool: ${toolName}` });
-                }
-            };
-
-            // Construire le contexte initial (patient/médicament sélectionné)
-            let initialContext = '';
-            
+            let patientContext = '';
             if (patientCardVisible.value) {
-                initialContext += `
-            DOSSIER DU PATIENT SÉLECTIONNÉ :
-            - Nom: ${patientInfo.value.name}
-            - ID: ${patientInfo.value.nid}
-            - Âge: ${patientInfo.value.age || 'Non renseigné'}
-            - Sexe: ${patientInfo.value.gender || 'Non renseigné'}
-            - Téléphone: ${patientInfo.value.phone || 'Non renseigné'}
-            - Email: ${patientInfo.value.email || 'Non renseigné'}
-            - Adresse: ${patientInfo.value.adresse || 'Non renseignée'}
-            - Allergies: ${patientInfo.value.allergies || 'Aucune'}
-            - Assurance: ${patientInfo.value.assurance === '1' ? 'Oui' : 'Non'}`;
+                patientContext = `Information sur le patient : Nom: ${patientInfo.value.name}, Âge: ${patientInfo.value.age}, Sexe: ${patientInfo.value.gender}, Allergies: ${patientInfo.value.allergies || 'Aucune'}.`;
             }
 
+            let medicationContext = '';
             if (selectedMedications.value.nid) {
-                initialContext += `
-            MÉDICAMENT SÉLECTIONNÉ :
-            - Nom: ${selectedMedications.value.name}
-            - ID: ${selectedMedications.value.nid}`;
+                medicationContext = `Médicament sélectionné pour discussion : ${selectedMedications.value.name}.`;
             }
+
+            // === AJOUT: Recherche dynamique des médicaments demandés ===
+            let dynamicInventorySummary = '';
+
+            // Détecter si la question concerne le stock
+            if (userMessage.toLowerCase().match(/stock|quantité|reste|disponible|combien/i)) {
+                const possibleMedications = extractMedicationNames(userMessage);
+
+                if (possibleMedications.length > 0) {
+                    dynamicInventorySummary = '\n\n🔍 **RÉSULTATS DE LA RECHERCHE DE STOCKS:**\n';
+
+                    // Rechercher chaque médicament potentiel
+                    for (const medTerm of possibleMedications) {
+                        dynamicInventorySummary += `\n**${medTerm}:**\n`;
+
+                        try {
+                            // Nettoyer le terme de recherche pour l'API
+                            let searchTerm = medTerm
+                                .replace(/ et /g, ' ')  // Remplacer "et" par espace
+                                .replace(/[+&]/g, ' ')    // Remplacer + et & par espace
+                                .replace(/\s+/g, ' ')     // Normaliser les espaces
+                                .trim();
+
+                            console.log(`Recherche API pour: "${searchTerm}"`);
+
+                            // Recherche dynamique dans l'API
+                            await store.fetchArticles({
+                                fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
+                                filters: {
+                                    title: {
+                                        val: searchTerm,
+                                        op: 'CONTAINS',
+                                    }
+                                },
+                                pager: 0,
+                                offset: 50
+                            });
+
+                            const results = store.articles.rows;
+
+                            if (results.length > 0) {
+                                // Trier par pertinence (correspondance exacte d'abord)
+                                const sortedResults = results.sort((a, b) => {
+                                    const aTitle = a.title.toLowerCase();
+                                    const bTitle = b.title.toLowerCase();
+                                    const searchLower = searchTerm.toLowerCase();
+
+                                    // Priorité à la correspondance exacte
+                                    if (aTitle === searchLower) return -1;
+                                    if (bTitle === searchLower) return 1;
+
+                                    // Puis à ceux qui commencent par le terme
+                                    if (aTitle.startsWith(searchLower) && !bTitle.startsWith(searchLower)) return -1;
+                                    if (!aTitle.startsWith(searchLower) && bTitle.startsWith(searchLower)) return 1;
+
+                                    return 0;
+                                });
+
+                                // Prendre les 5 meilleurs résultats
+                                sortedResults.slice(0, 5).forEach(article => {
+                                    const stock = article.field_quantite_stock || 0;
+                                    const unite = article.field_unite || 'unités';
+                                    dynamicInventorySummary += `  - ${article.title}: **${stock} ${unite}**\n`;
+                                });
+                            } else {
+                                dynamicInventorySummary += `  ⚠️ Aucun résultat trouvé pour "${medTerm}"\n`;
+
+                                // Essayer avec une recherche plus large (premier mot seulement)
+                                const firstWord = medTerm.split(/\s+/)[0];
+                                if (firstWord.length > 3 && firstWord !== medTerm) {
+                                    dynamicInventorySummary += `  Recherche élargie avec "${firstWord}":\n`;
+
+                                    await store.fetchArticles({
+                                        fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
+                                        filters: {
+                                            title: {
+                                                val: firstWord,
+                                                op: 'CONTAINS',
+                                            }
+                                        },
+                                        pager: 0,
+                                        offset: 5
+                                    });
+
+                                    const broadResults = store.articles.rows;
+                                    if (broadResults.length > 0) {
+                                        broadResults.slice(0, 3).forEach(article => {
+                                            const stock = article.field_quantite_stock || 0;
+                                            const unite = article.field_unite || 'unités';
+                                            dynamicInventorySummary += `    • ${article.title}: **${stock} ${unite}**\n`;
+                                        });
+                                    }
+                                }
+                            }
+                        } catch (error) {
+                            console.error(`Erreur recherche ${medTerm}:`, error);
+                            dynamicInventorySummary += `  ❌ Erreur lors de la recherche\n`;
+                        }
+                    }
+                }
+            }
+            // === FIN DE L'AJOUT ===
+
+            // Préparer un résumé de l'inventaire réel
+            const inventorySummary = store.articles.rows.map(item =>
+                `- ${item.title}: ${item.field_quantite_stock} ${item.field_unite || 'unités'}`
+            ).join('\n');
+
+            // Préparer un résumé de la liste des patients
+            const patientListSummary = clientStore.allClients.rows.map(p =>
+                `- ${p.title} (${p.field_age ? p.field_age + ' ans' : 'âge inconnu'}, ${p.field_sexe || 'sexe inconnu'})`
+            ).join('\n');
+
+            // Préparer un résumé des dernières consultations avec détails cliniques
+            const consultationSummary = consultationStore.consultations.rows.map(c =>
+                `- Patient: ${c.field_client?.title || 'Anonyme'}, Motif: ${c.field_motif || 'N/A'}, Constantes: [Temp: ${c.field_temperature || '-'}°C, Tension: ${c.field_tension_arterielle || '-'}, Poids: ${c.field_poids || '-'}kg]`
+            ).join('\n');
+
+            // Préparer un résumé des examens disponibles
+            const examSummary = examenStore.examens.rows.map(e =>
+                `- ${e.title} (${e.field_prix || '0'} Ar)`
+            ).join('\n');
+
+            // Préparer un résumé des dernières ventes (orders) avec produits détaillés
+            const salesSummary = orderStore.orders.rows.map(o => {
+                const products = o.field_articles?.map(a => `${a.field_article?.title} (x${a.field_quantite})`).join(', ') || 'Aucun produit';
+                const exams = o.field_examens_order?.map(e => e.field_examen?.title).join(', ') || 'Aucun examen';
+                return `- Commande #${o.title}, Client: ${o.field_client?.title || 'Anonyme'}, Produits: [${products}], Examens: [${exams}], Total: ${o.field_total_vente || '0'} Ar`;
+            }).join('\n');
 
             const systemPrompt = `Tu es l'Assistant IA expert de la Clinique Medical, aidant le médecin dans sa pratique quotidienne.
-
-            INSTRUCTIONS IMPORTANTES :
-            - NE réponds PAS directement aux questions sur les patients, consultations, ventes ou médicaments.
-            - Utilise les TOOLS disponibles pour rechercher les informations dans la base de données.
-            - Après avoir obtenu les résultats des tools, formule ta réponse en HTML.
             
-            TOOLS DISPONIBLES :
-            - patients_search: Pour rechercher un patient par nom, téléphone, email
-            - rag_search: Pour obtenir le dossier complet d'un patient (consultations + ventes)
-            - medications_search: Pour rechercher des médicaments ou vérifier les stocks
-            - consultations_search: Pour rechercher des consultations
-            - sales_search: Pour rechercher des ventes/commandes
-            - today_stats: Pour les statistiques du jour
-            - semantic_search: Pour une recherche globale
-            - plan_consultation: Pour planifier la prochaine consultation en analysant l'évolution de l'état de santé du patient (tendances poids, tension, température)
-            
-            ANALYSE D'IMAGES :
-            - Tu ANALYSES les images médicales fournies (radiographies, échographies, ordonnances, résultats d'analyses).
-            - Décris précisément les observations visuelles.
+            ANALYSE D'IMAGES ET DOCUMENTS :
+            - Tu ANALYSES les images médicales fournies (radiographies, échographies, ordonnances, résultats d'analyses, photos cliniques).
+            - Décris précisément les observations visuelles, lis les textes sur les documents et suggère des pistes cliniques ou thérapeutiques.
+            - Si l'image n'est manifestement pas médicale, mentionne-le simplement et reste concentré sur le contexte clinique.
             
             CONSIGNES GÉNÉRALES :
-            - Reste dans le domaine médical et pharmaceutique.
-            - Tu es AUTORISÉ à afficher toutes les données patients quand le médecin le demande.
-            - Sois professionnel, concis et réponds en français.
+            - Reste strictement dans le domaine médical et pharmaceutique.
+            - Sois professionnel, concis et réponds en français utilisant du HTML simple (p, ul, li, strong).
             - Termine tes conseils médicaux en rappelant que la décision finale revient au médecin.
             - Si on demande des statistiques ou graphiques de ventes, ajoute <SHOW_SALES_CHART> à la fin.
-            
-            FORMAT DE RÉPONSE (HTML) :
-            - Titres: <h4>Titre</h4>
-            - Paragraphes: <p>texte</p>
-            - Listes: <ul><li>élément</li></ul>
-            - Alertes: <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 my-2"><p class="text-sm text-yellow-800">message</p></div>
-            - Ne JAMAIS utiliser de tableaux <table>.
-            ${initialContext}`;
 
-            // Messages pour la conversation
-            let messages = [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: imageBase64 ? [
+            STRUCTURE DES DONNÉES ET RELATIONS ENTRE ENTITÉS :
+
+            1. RELATIONS CLIENT (PATIENT) :
+            - Un CLIENT (patient) est identifié par son 'nid' (ID unique)
+            - Chaque CLIENT possède : title (nom), field_age (âge), field_sexe (sexe), field_allergies (allergies), field_phone (téléphone), field_assurance (assurance), field_adresse (adresse), field_contact_d_urgence (contact urgence), field_email (email), field_notes_medicales (notes médicales)
+
+            2. RELATIONS CONSULTATION :
+            - Une CONSULTATION est liée à un CLIENT via la clé étrangère 'field_client' qui contient le 'nid' du client
+            - Chaque CONSULTATION contient : title (titre/n°), field_motif (motif de consultation), field_temperature (température), field_tension_arterielle (tension), field_poids (poids), created (date)
+            - Les constantes cliniques (température, tension, poids) sont enregistrées par consultation
+
+            3. RELATIONS ARTICLE (MÉDICAMENT/PRODUIT) :
+            - Un ARTICLE est identifié par son 'nid'
+            - Chaque ARTICLE possède : title (nom), field_quantite_stock (quantité en stock), field_unite (unité de mesure)
+            - Les ARTICLES sont utilisés dans les COMMANDES via field_articles
+
+            4. RELATIONS EXAMEN :
+            - Un EXAMEN est identifié par son 'nid'
+            - Chaque EXAMEN possède : title (nom), field_prix (prix)
+            - Les EXAMENS peuvent être prescrits dans les COMMANDES via field_examens_order
+
+            5. RELATIONS COMMANDE (VENTE) :
+            - Une COMMANDE est liée à un CLIENT via la clé étrangère 'field_client' (contient le 'nid' du client)
+            - Une COMMANDE peut contenir plusieurs ARTICLES via 'field_articles' : tableau d'objets contenant {field_article: {nid, title}, field_quantite: nombre}
+            - Une COMMANDE peut contenir plusieurs EXAMENS via 'field_examens_order' : tableau d'objets contenant {field_examen: {nid, title}}
+            - Chaque COMMANDE a : title (n° commande), field_date (date), field_total_vente (montant total)
+
+            6. SCHÉMA DES RELATIONS (Clés étrangères) :
+            - Client (nid) ← field_client → Consultation (field_client)
+            - Client (nid) ← field_client → Commande (field_client)
+            - Article (nid) ← field_article.field_article → field_articles dans Commande
+            - Examen (nid) ← field_examen.field_examen → field_examens_order dans Commande
+            
+            CONTEXTE ET DONNÉES DE LA CLINIQUE :
+            - Stock actuel: ${inventorySummary}
+            ${dynamicInventorySummary}
+            - Patients: ${patientListSummary}
+            - Consultations récentes: ${consultationSummary}
+            - Examens disponibles: ${examSummary}
+            - Ventes (Commandes): ${salesSummary}
+            
+            CONTEXTE DE LA SESSION :
+            Patient sélectionné: ${patientContext || 'Aucun'}
+            Médicament sélectionné: ${medicationContext || 'Aucun'}
+            
+            COMMENT UTILISER CES RELATIONS :
+            - Pour obtenir l'historique d'un patient, cherche les CONSULTATIONS et COMMANDES liées à son 'nid'
+            - Pour analyser les prescriptions, regarde les ARTICLES et EXAMENS dans les COMMANDES par client
+            - Pour le suivi clinique, relie les CONSTANTES des CONSULTATIONS aux prescriptions dans les COMMANDES
+            - Pour l'inventaire, croise les sorties de stock (field_quantite dans field_articles) avec les COMMANDES`;
+
+            let userContent = userMessage;
+
+            if (imageBase64) {
+                userContent = [
                     { type: "text", text: userMessage || "Analyse cette image médicale." },
-                    { type: "image_url", image_url: { url: imageBase64 } }
-                ] : userMessage }
-            ];
-
-            // Boucle de conversation avec tools
-            let maxIterations = 5;
-            let iteration = 0;
-            
-            while (iteration < maxIterations) {
-                iteration++;
-                
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: 'gpt-4o-mini',
-                        messages: messages,
-                        tools: tools,
-                        tool_choice: 'auto',
-                        max_tokens: 1500,
-                        temperature: 0.7
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                const assistantMessage = data.choices[0].message;
-
-                // Ajouter la réponse de l'assistant aux messages
-                messages.push(assistantMessage);
-
-                // Vérifier si l'assistant veut faire des tool calls
-                if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
-                    // Exécuter chaque tool call
-                    for (const toolCall of assistantMessage.tool_calls) {
-                        const toolName = toolCall.function.name;
-                        const toolArgs = JSON.parse(toolCall.function.arguments);
-                        
-                        console.log(`Tool call requested: ${toolName}`, toolArgs);
-                        
-                        // Exécuter le tool
-                        const toolResult = await executeToolCall(toolName, toolArgs);
-                        
-                        // Ajouter le résultat aux messages
-                        messages.push({
-                            role: 'tool',
-                            tool_call_id: toolCall.id,
-                            content: toolResult
-                        });
+                    {
+                        type: "image_url",
+                        image_url: {
+                            "url": imageBase64
+                        }
                     }
-                    // Continuer la boucle pour obtenir la réponse finale
-                } else {
-                    // Pas de tool call, on a la réponse finale
-                    return assistantMessage.content;
-                }
+                ];
             }
-            
-            // Si on atteint la limite d'itérations
-            return "<p>Désolé, je n'ai pas pu compléter la recherche. Veuillez reformuler votre question.</p>";
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey} `
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userContent }
+                    ],
+                    max_tokens: 1000,
+                    temperature: 0.7
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || `HTTP error! status: ${response.status} `);
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content;
         }
 
-        const selectPrompt = (key, promptText) => {
-            activeSuggestion.value = key;
+        const selectPrompt = (promptText) => {
             currentMessage.value = promptText;
             sendMessage();
         }
@@ -1020,7 +905,7 @@ export default {
                 alert("Erreur lors de la lecture de l'image.");
             };
             reader.readAsDataURL(file);
-            
+
             // Reset input value to allow re-selecting same file
             event.target.value = '';
         }
@@ -1043,6 +928,277 @@ export default {
             })
         }
 
+        // =============================================
+        // FONCTION POUR RÉCUPÉRER TOUTES LES INFORMATIONS D'UN PATIENT
+        // =============================================
+        const getPatientFullInfo = async (patientNid) => {
+            try {
+                isTyping.value = true;
+
+                // 1. Récupérer les détails COMPLETS du patient spécifique
+                let patient = null;
+
+                // Sauvegarder la liste actuelle des patients
+                const currentPatients = [...(clientStore.allClients?.rows || [])];
+
+                try {
+                    await clientStore.fetchClient(patientNid);
+                    patient = clientStore.client;
+
+                    // Restaurer la liste des patients
+                    clientStore.allClients = { ...clientStore.allClients, rows: currentPatients };
+                } catch (error) {
+                    console.error("Erreur récupération patient:", error);
+                    patient = currentPatients.find(p => p.nid === patientNid);
+                }
+
+                if (!patient) {
+                    throw new Error("Patient non trouvé");
+                }
+
+                // 2. Sauvegarder l'état actuel des consultations
+                const currentConsultations = [...(consultationStore.consultations?.rows || [])];
+
+                // Récupérer les consultations du patient
+                let patientConsultations = [];
+                try {
+                    const response = await consultationStore.fetchConsultations({
+                        fields: [
+                            'nid',
+                            'title',
+                            'field_motif',
+                            'field_temperature',
+                            'field_tension_arterielle',
+                            'field_poids',
+                            'created',
+                            'field_examens',
+                            'field_medicaments',
+                            'field_client',
+                        ],
+                        filters: {
+                            'field_client': {
+                                val: patientNid,
+                                op: '='
+                            }
+                        },
+                        values: {
+                            field_client: ['nid', 'title']
+                        },
+                        pager: 0,
+                        sort: { val: 'nid', op: 'desc' }
+                    });
+
+                    patientConsultations = consultationStore.consultations?.rows || [];
+
+                    // Restaurer les consultations originales
+                    consultationStore.consultations = {
+                        ...consultationStore.consultations,
+                        rows: currentConsultations
+                    };
+                } catch (error) {
+                    console.error("Erreur récupération consultations:", error);
+                    patientConsultations = [];
+                }
+
+                // 3. Sauvegarder l'état actuel des commandes
+                const currentOrders = [...(orderStore.orders?.rows || [])];
+
+                // Récupérer les commandes du patient
+                let patientOrders = [];
+                try {
+                    await orderStore.fetchOrders({
+                        fields: [
+                            'nid',
+                            'title',
+                            'field_articles',
+                            'field_examens_order',
+                            'field_date',
+                            'field_total_vente',
+                            'created',
+                            'field_client',
+                        ],
+                        filters: {
+                            'field_client': {
+                                val: patientNid,
+                                op: '='
+                            }
+                        },
+                        values: {
+                            field_client: ['nid', 'title']
+                        },
+                        pager: 0,
+                        sort: { val: 'nid', op: 'desc' }
+                    });
+
+                    patientOrders = orderStore.orders?.rows || [];
+
+                    // Restaurer les commandes originales
+                    orderStore.orders = { ...orderStore.orders, rows: currentOrders };
+                } catch (error) {
+                    console.error("Erreur récupération commandes:", error);
+                    patientOrders = [];
+                }
+
+                // 4. Récupérer les infos des médicaments prescrits sans écraser le store
+                const prescribedMedications = [];
+                const currentArticles = [...(store.articles?.rows || [])];
+
+                for (const order of patientOrders) {
+                    if (order.field_articles && order.field_articles.length > 0) {
+                        for (const article of order.field_articles) {
+                            if (article.field_article?.nid) {
+                                let medInfo = null;
+                                try {
+                                    // Chercher d'abord dans la liste existante
+                                    medInfo = currentArticles.find(a => a.nid === article.field_article.nid);
+
+                                    // Si pas trouvé, faire un appel API spécifique
+                                    if (!medInfo) {
+                                        const response = await store.fetchArticles({
+                                            fields: ['nid', 'title', 'field_quantite_stock', 'field_unite'],
+                                            filters: {
+                                                nid: {
+                                                    val: article.field_article.nid,
+                                                    op: '='
+                                                }
+                                            },
+                                            pager: 0,
+                                            offset: 1
+                                        });
+                                        medInfo = store.articles?.rows?.[0];
+                                    }
+
+                                    prescribedMedications.push({
+                                        name: article.field_article?.title || 'Inconnu',
+                                        quantite: article.field_quantite || 0,
+                                        date: order.field_date || order.created || new Date().toISOString(),
+                                        stockActuel: medInfo?.field_quantite_stock || 0,
+                                        unite: medInfo?.field_unite || 'unités',
+                                        nid: article.field_article?.nid
+                                    });
+
+                                } catch (error) {
+                                    console.error("Erreur récupération médicament:", error);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Restaurer les articles
+                store.articles = { ...store.articles, rows: currentArticles };
+
+                // 5. Récupérer les infos des examens prescrits sans écraser le store
+                const prescribedExams = [];
+                const currentExamens = [...(examenStore.examens?.rows || [])];
+
+                for (const order of patientOrders) {
+                    if (order.field_examens_order && order.field_examens_order.length > 0) {
+                        for (const exam of order.field_examens_order) {
+                            if (exam.field_examen?.nid) {
+                                let examInfo = null;
+                                try {
+                                    // Chercher d'abord dans la liste existante
+                                    examInfo = currentExamens.find(e => e.nid === exam.field_examen.nid);
+
+                                    // Si pas trouvé, faire un appel API spécifique
+                                    if (!examInfo) {
+                                        const response = await examenStore.fetchExamens({
+                                            fields: ['nid', 'title', 'field_prix'],
+                                            filters: {
+                                                nid: {
+                                                    val: exam.field_examen.nid,
+                                                    op: '='
+                                                }
+                                            },
+                                            pager: 0,
+                                            offset: 1
+                                        });
+                                        examInfo = examenStore.examens?.rows?.[0];
+                                    }
+
+                                    prescribedExams.push({
+                                        name: exam.field_examen?.title || 'Inconnu',
+                                        prix: examInfo?.field_prix || 0,
+                                        date: order.field_date || order.created || new Date().toISOString(),
+                                        nid: exam.field_examen?.nid
+                                    });
+
+                                } catch (error) {
+                                    console.error("Erreur récupération examen:", error);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Restaurer les examens
+                examenStore.examens = { ...examenStore.examens, rows: currentExamens };
+
+                // 6. Vérifier les allergies
+                const allergies = patient?.field_allergies ?
+                    patient.field_allergies.split(',').map(a => a.trim()).filter(a => a) :
+                    [];
+                const medicationAlerts = [];
+
+                if (allergies.length > 0 && prescribedMedications.length > 0) {
+                    prescribedMedications.forEach(med => {
+                        allergies.forEach(allergy => {
+                            if (med.name && med.name.toLowerCase().includes(allergy.toLowerCase())) {
+                                medicationAlerts.push({
+                                    medication: med.name,
+                                    allergene: allergy,
+                                    date: med.date
+                                });
+                            }
+                        });
+                    });
+                }
+
+                return {
+                    patient: {
+                        nid: patient.nid,
+                        nom: patient.title || 'Inconnu',
+                        age: patient.field_age,
+                        sexe: patient.field_sexe,
+                        allergies: patient.field_allergies || 'Aucune',
+                        telephone: patient.field_phone,
+                        assurance: patient.field_assurance,
+                        email: patient.field_email,
+                        adresse: patient.field_adresse,
+                        contactUrgence: patient.field_contact_d_urgence,
+                        notesMedicales: patient.field_notes_medicales
+                    },
+                    consultations: Array.isArray(patientConsultations) ? patientConsultations.map(c => ({
+                        date: c.created,
+                        motif: c.field_motif,
+                        temperature: c.field_temperature,
+                        tension: c.field_tension_arterielle,
+                        poids: c.field_poids,
+                        titre: c.title,
+                        nid: c.nid
+                    })) : [],
+                    prescriptions: {
+                        medicaments: prescribedMedications,
+                        examens: prescribedExams,
+                        totalCommandes: patientOrders.length,
+                        montantTotal: Array.isArray(patientOrders) ?
+                            patientOrders.reduce((sum, o) => sum + (parseFloat(o.field_total_vente) || 0), 0) :
+                            0
+                    },
+                    alertes: {
+                        allergies: medicationAlerts,
+                        hasAllergies: medicationAlerts.length > 0
+                    }
+                };
+            } catch (error) {
+                console.error("Erreur lors de la récupération des infos patient:", error);
+                throw error;
+            } finally {
+                isTyping.value = false;
+            }
+        };
+
         // Gestion patient
         const openPatientModal = () => {
             showPatientModal.value = true
@@ -1053,52 +1209,149 @@ export default {
         }
 
         const savePatient = async (patientData) => {
-            patientInfo.value = patientData
-            patientCardVisible.value = true
-            closePatientModal()
+            patientInfo.value = patientData;
+            patientCardVisible.value = true;
+            closePatientModal();
 
-            // Charger les consultations du patient sélectionné
-            await consultationStore.fetchConsultations({
-                fields: [
-                    'nid',
-                    'title',
-                    'field_client',
-                    'field_motif',
-                    'field_temperature',
-                    'field_tension_arterielle',
-                    'field_poids',
-                    'field_medicaments',
-                    'field_examens',
-                    'created'
-                ],
-                filters: {
-                    field_client: { val: patientData.nid, op: '=' }
-                },
-                pager: 0,
-                offset: 20,
-                sort: { val: 'nid', op: 'desc' }
-            });
+            try {
+                const patientFullInfo = await getPatientFullInfo(patientData.nid);
+                if (patientFullInfo) {
+                    // Créer un message avec toutes les informations
+                    let infoMessage = `
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <h3 class="font-bold text-blue-800 mb-2">Dossier Patient: ${patientFullInfo.patient.nom}</h3>
+                                <div class="grid grid-cols-2 gap-3 text-sm">
+                                    <div>
+                                        <span class="font-semibold">Âge:</span> ${patientFullInfo.patient.age || 'N/A'} ans
+                                    </div>
+                                    <div>
+                                        <span class="font-semibold">Sexe:</span> ${patientFullInfo.patient.sexe || 'N/A'}
+                                    </div>
+                                    <div class="col-span-2">
+                                        <span class="font-semibold">Allergies:</span> 
+                                        <span class="${patientFullInfo.alertes.hasAllergies ? 'text-red-600 font-bold' : 'text-green-600'}">
+                                            ${patientFullInfo.patient.allergies}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                    `;
 
-            // Charger les ventes/commandes du patient sélectionné
-            await orderStore.fetchOrders({
-                fields: [
-                    'nid',
-                    'title',
-                    'field_articles',
-                    'field_examens_order',
-                    'field_client',
-                    'field_date',
-                    'field_total_vente',
-                    'created'
-                ],
-                filters: {
-                    field_client: { val: patientData.nid, op: '=' }
-                },
-                pager: 0,
-                offset: 20,
-                sort: { val: 'nid', op: 'desc' }
-            });
-        }
+                    // Ajouter les alertes allergies si présentes
+                    if (patientFullInfo.alertes.hasAllergies) {
+                        infoMessage += `
+                            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                                <h4 class="font-bold text-red-800 mb-2">Alertes Allergies Médicamenteuses</h4>
+                                <ul class="list-disc list-inside text-sm text-red-700">
+                        `;
+                        patientFullInfo.alertes.allergies.forEach(alerte => {
+                            infoMessage += `
+                                <li>
+                                    <span class="font-semibold">${alerte.medication}</span> 
+                                    contient l'allergène: <span class="font-bold">${alerte.allergene}</span>
+                                    (Prescrit le ${new Date(alerte.date).toLocaleDateString()})
+                                </li>
+                            `;
+                        });
+                        infoMessage += `</ul></div>`;
+                    }
+
+                    // Ajouter les consultations
+                    if (patientFullInfo.consultations.length > 0) {
+                        infoMessage += `
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <h4 class="font-bold text-gray-800 mb-2">- Consultations (${patientFullInfo.consultations.length})</h4>
+                                <div class="space-y-2 max-h-60 overflow-y-auto">
+                        `;
+                        patientFullInfo.consultations.forEach(cons => {
+                            infoMessage += `
+                                <div class="bg-white p-3 rounded border border-gray-100 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="font-semibold">${formatDate(null, cons.date, "short")}</span>
+                                        <span class="text-gray-500">${cons.titre}</span>
+                                    </div>
+                                    <p class="text-gray-700 mt-1"><span class="font-semibold">Motif:</span> ${cons.motif || 'N/A'}</p>
+                                    <div class="grid grid-cols-3 gap-2 mt-1 text-xs">
+                                        <span>Temp: ${cons.temperature || '-'}°C</span>
+                                        <span>Tension: ${cons.tension || '-'}</span>
+                                        <span>Poids: ${cons.poids || '-'} kg</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        infoMessage += `</div></div>`;
+                    }
+
+                    // Ajouter les médicaments prescrits
+                    if (patientFullInfo.prescriptions.medicaments.length > 0) {
+                        infoMessage += `
+                            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                                <h4 class="font-bold text-green-800 mb-2">- Médicaments Prescrits (${patientFullInfo.prescriptions.medicaments.length})</h4>
+                                <div class="space-y-2 max-h-60 overflow-y-auto">
+                        `;
+                        patientFullInfo.prescriptions.medicaments.forEach(med => {
+                            const stockStatus = med.stockActuel < 10 ? 'text-red-600 font-bold' : 'text-green-600';
+                            infoMessage += `
+                                <div class="bg-white p-3 rounded border border-green-100 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="font-semibold">${med.name}</span>
+                                    </div>
+                                    <div class="flex justify-between mt-1">
+                                        <span>Quantité prescrite: ${med.quantite} ${med.unite}</span>
+                                        <span class="${stockStatus}">Stock actuel: ${med.stockActuel} ${med.unite}</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        infoMessage += `</div></div>`;
+                    }
+
+                    // Ajouter les examens prescrits
+                    if (patientFullInfo.prescriptions.examens.length > 0) {
+                        infoMessage += `
+                            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                <h4 class="font-bold text-purple-800 mb-2">- Examens Prescrits (${patientFullInfo.prescriptions.examens.length})</h4>
+                                <ul class="list-disc list-inside text-sm space-y-1">
+                        `;
+                        patientFullInfo.prescriptions.examens.forEach(exam => {
+                            infoMessage += `
+                                <li class="flex justify-between">
+                                    <span class="font-semibold">${exam.name}</span>
+                                    <span class="text-gray-500">${exam.prix} Ar</span>
+                                </li>
+                            `;
+                        });
+                        infoMessage += `</ul>`;
+                        infoMessage += `<p class="text-sm font-semibold mt-2 pt-2 border-t border-purple-200">Total des dépenses: ${patientFullInfo.prescriptions.montantTotal} Ar</p>`;
+                        infoMessage += `</div>`;
+                    }
+
+                    infoMessage += `</div>`;
+
+                    // Ajouter le message dans le chat
+                    messages.value.push({
+                        type: 'ai',
+                        content: infoMessage,
+                        time: new Date().toLocaleTimeString()
+                    });
+                }
+            } catch (error) {
+                console.error("Erreur:", error);
+                messages.value.push({
+                    type: 'ai',
+                    content: `
+                        <div class="bg-red-50 border-l-4 border-red-400 p-3 text-red-700">
+                            <p class="font-medium">Erreur lors du chargement des informations du patient</p>
+                            <p class="text-sm">${error.message}</p>
+                        </div>
+                    `,
+                    time: new Date().toLocaleTimeString()
+                });
+            } finally {
+                scrollToBottom();
+            }
+        };
 
         const removePatientCard = async () => {
             patientCardVisible.value = false
@@ -1155,10 +1408,437 @@ export default {
             showMedicationModal.value = false
         }
 
-        const addMedication = (medicationData) => {
+        // Fonction pour récupérer toutes les informations d'un médicament
+        const getMedicationFullInfo = async (medicationData) => {
+            try {
+                isTyping.value = true;
+                let medication = null;
+                try {
+                    await store.fetchArticles({
+                        fields: ['nid', 'title', 'field_quantite_stock', 'created', 'field_prix_unitaire'],
+                        filters: {
+                            nid: {
+                                val: medicationData.nid,
+                                op: '='
+                            }
+                        },
+                    });
+                    medication = store.articles?.rows?.[0];
+                } catch (error) {
+                    console.error("Erreur récupération médicament:", error);
+                }
+
+                if (!medication) {
+                    throw new Error("Médicament non trouvé dans l'inventaire");
+                }
+                // 2. Récupérer l'historique des prescriptions de ce médicament
+                const currentOrders = [...(orderStore.orders?.rows || [])];
+                const medicationPrescriptions = [];
+
+                try {
+                    // Chercher dans toutes les commandes où ce médicament apparaît
+                    await orderStore.fetchOrders({
+                        fields: [
+                            'nid',
+                            'title',
+                            'field_articles',
+                            'field_client',
+                            'field_date',
+                            'created'
+                        ],
+                        values: {
+                            field_client: ['nid', 'title', 'field_allergies']
+                        },
+                        pager: 0,
+                        offset: 50,
+                        sort: { val: 'created', op: 'desc' }
+                    });
+
+                    const allOrders = orderStore.orders?.rows || [];
+                    // Filtrer les commandes contenant ce médicament
+                    allOrders.forEach(order => {
+                        if (order.field_articles && Array.isArray(order.field_articles)) {
+                            order.field_articles.forEach(article => {
+                                if (article.field_article?.nid === medicationData.nid) {
+                                    medicationPrescriptions.push({
+                                        orderId: order.nid,
+                                        orderTitle: order.title,
+                                        date: order.field_date || order.created,
+                                        client: order.field_client?.title || 'Inconnu',
+                                        clientNid: order.field_client?.nid,
+                                        clientAllergies: order.field_client?.field_allergies || '',
+                                        quantite: article.field_quantite || 0,
+                                        prix: article.field_prix_unitaire || medication.field_prix_unitaire || 0
+                                    });
+                                }
+                            });
+                        }
+                    });
+
+                    // Restaurer les commandes
+                    orderStore.orders = { ...orderStore.orders, rows: currentOrders };
+                } catch (error) {
+                    console.error("Erreur récupération prescriptions:", error);
+                }
+
+                // 3. Identifier les patients allergiques à ce médicament
+                const currentPatients = [...(clientStore.allClients?.rows || [])];
+                const allergicPatients = [];
+                const medicationName = medication.title.toLowerCase();
+
+                // Parcourir tous les patients pour vérifier les allergies
+                currentPatients.forEach(patient => {
+                    if (patient.field_allergies) {
+                        const allergies = patient.field_allergies.split(',').map(a => a.trim().toLowerCase());
+
+                        // Vérifier si le nom du médicament correspond à une allergie
+                        const matchingAllergies = allergies.filter(allergy =>
+                            medicationName.includes(allergy) || allergy.includes(medicationName)
+                        );
+
+                        if (matchingAllergies.length > 0) {
+                            // Vérifier si ce patient a déjà eu ce médicament
+                            const hasPrescription = medicationPrescriptions.some(p => p.clientNid === patient.nid);
+
+                            allergicPatients.push({
+                                nid: patient.nid,
+                                nom: patient.title,
+                                age: patient.field_age,
+                                sexe: patient.field_sexe,
+                                allergies: patient.field_allergies,
+                                allergiesMatch: matchingAllergies,
+                                hasPrescription: hasPrescription,
+                                prescriptions: medicationPrescriptions.filter(p => p.clientNid === patient.nid)
+                            });
+                        }
+                    }
+                });
+
+                // 4. Récupérer des informations complémentaires via l'IA (optionnel)
+                let aiInfo = null;
+                if (medication) {
+                    try {
+                        const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+                        const apiUrl = 'https://api.openai.com/v1/chat/completions';
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${apiKey}`
+                            },
+                            body: JSON.stringify({
+                                model: 'gpt-4o-mini',
+                                messages: [
+                                    {
+                                        role: 'system',
+                                        content: 'Tu es un assistant médical expert. Fournis des informations concises et précises sur les médicaments en français, au format HTML simple.'
+                                    },
+                                    {
+                                        role: 'user',
+                                        content: `Donne-moi des informations sur le médicament "${medication.title}" : 
+                                - Indications principales
+                                - Contre-indications
+                                - Effets secondaires courants
+                                - Précautions d'emploi
+                                Réponds en HTML simple avec des puces.`
+                                    }
+                                ],
+                                max_tokens: 500,
+                                temperature: 0.7
+                            })
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            aiInfo = data.choices[0].message.content;
+                        }
+                    } catch (error) {
+                        console.error("Erreur API OpenAI:", error);
+                    }
+                }
+
+                return {
+                    medication: {
+                        nid: medication.nid,
+                        nom: medication.title,
+                        stock: Number(medication.field_quantite_stock) || 0,
+                        unite: 'unités',
+                        prix: medication.field_prix_unitaire || 'Non défini',
+                    },
+                    prescriptions: {
+                        total: medicationPrescriptions.length,
+                        historique: medicationPrescriptions.sort((a, b) => (b.date || 0) - (a.date || 0)),
+                        patientsUniques: [...new Set(medicationPrescriptions.map(p => p.clientNid))].length
+                    },
+                    allergies: {
+                        patientsAllergiques: allergicPatients,
+                        totalAllergiques: allergicPatients.length,
+                        patientsRisque: allergicPatients.filter(p => !p.hasPrescription).length // Patients allergiques jamais exposés
+                    },
+                    aiInfo: aiInfo
+                };
+            } catch (error) {
+                console.error("Erreur lors de la récupération des infos médicament:", error);
+                throw error;
+            } finally {
+                isTyping.value = false;
+            }
+        };
+
+        const addMedication = async (medicationData) => {
             selectedMedications.value = medicationData;
-            closeMedicationModal()
-        }
+            closeMedicationModal();
+
+            try {
+                const medicationFullInfo = await getMedicationFullInfo(medicationData);
+
+                if (!medicationFullInfo) return;
+
+                const stock = Number(medicationFullInfo.medication.stock) || 0;
+                const prix = Number(medicationFullInfo.medication.prix) || 0;
+
+                // Déterminer le statut du stock
+                const stockStatus =
+                    stock === 0 ? 'rupture' :
+                        stock < 10 ? 'critique' :
+                            stock < 20 ? 'faible' :
+                                'normal';
+
+                const stockColor =
+                    stockStatus === 'rupture' ? 'text-red-700' :
+                        stockStatus === 'critique' ? 'text-red-600' :
+                            stockStatus === 'faible' ? 'text-orange-600' :
+                                'text-green-600';
+
+                let infoMessage = `
+        <div class="space-y-4">
+
+            <!-- En-tête médicament -->
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h3 class="font-bold text-blue-800 mb-2">
+                    💊 ${medicationFullInfo.medication.nom}
+                </h3>
+
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <span class="font-semibold">Stock actuel:</span> 
+                        <span class="${stockColor} font-bold">
+                            ${stock} ${medicationFullInfo.medication.unite}
+                        </span>
+                        <span class="text-xs ml-1">(${stockStatus})</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold">Prix:</span> 
+                        ${prix} Ar
+                    </div>
+                </div>
+
+                ${stock === 0 ? `
+                    <div class="mt-3 bg-red-100 border border-red-300 p-2 rounded text-red-700 font-semibold text-sm">
+                        🚨 Médicament en rupture de stock
+                    </div>
+                ` : ''}
+            </div>
+        `;
+
+                /* ============================
+                   SECTION ALLERGIES
+                ============================ */
+
+                if (medicationFullInfo.allergies.totalAllergiques > 0) {
+
+                    infoMessage += `
+            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                <h4 class="font-bold text-red-800 mb-2">
+                    ⚠️ Alertes Allergies (${medicationFullInfo.allergies.totalAllergiques})
+                </h4>
+                <div class="space-y-2 max-h-60 overflow-y-auto">
+            `;
+
+                    medicationFullInfo.allergies.patientsAllergiques.forEach(patient => {
+
+                        const alertClass = patient.hasPrescription
+                            ? 'bg-orange-50 border-orange-200'
+                            : 'bg-red-50 border-red-200';
+
+                        const alertIcon = patient.hasPrescription
+                            ? '⚠️ Déjà prescrit'
+                            : '🚫 Jamais prescrit';
+
+                        infoMessage += `
+                    <div class="p-3 rounded border ${alertClass} text-sm">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="font-semibold">${patient.nom}</span>
+                                ${patient.age ? ` - ${patient.age} ans` : ''}
+                                ${patient.sexe ? ` - ${patient.sexe}` : ''}
+                            </div>
+                            <span class="text-xs font-semibold">
+                                ${alertIcon}
+                            </span>
+                        </div>
+
+                        <div class="mt-1">
+                            <span class="font-semibold">Allergies:</span> 
+                            <span class="text-red-600">${patient.allergies}</span>
+                        </div>
+                    </div>
+                `;
+                    });
+
+                    infoMessage += `</div></div>`;
+
+                } else {
+
+                    infoMessage += `
+            <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
+                <h4 class="font-bold text-emerald-800 mb-2">✅ Allergies</h4>
+                <p class="text-sm text-emerald-700">
+                    Aucun patient enregistré avec une allergie liée à ce médicament.
+                </p>
+            </div>
+            `;
+                }
+
+                /* ============================
+                   SECTION PRESCRIPTIONS
+                ============================ */
+
+                if (medicationFullInfo.prescriptions.total > 0) {
+
+                    infoMessage += `
+            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                <h4 class="font-bold text-green-800 mb-2">
+                    📊 Historique des Prescriptions
+                </h4>
+
+                <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+                    <div class="bg-white p-2 rounded">
+                        <div class="text-xl font-bold text-green-600">
+                            ${medicationFullInfo.prescriptions.total}
+                        </div>
+                        <div class="text-xs">Prescriptions</div>
+                    </div>
+                    <div class="bg-white p-2 rounded">
+                        <div class="text-xl font-bold text-blue-600">
+                            ${medicationFullInfo.prescriptions.patientsUniques}
+                        </div>
+                        <div class="text-xs">Patients</div>
+                    </div>
+                    <div class="bg-white p-2 rounded">
+                        <div class="text-xl font-bold text-orange-600">
+                            ${medicationFullInfo.allergies.patientsRisque}
+                        </div>
+                        <div class="text-xs">À risque</div>
+                    </div>
+                </div>
+
+                <div class="space-y-2 max-h-40 overflow-y-auto">
+            `;
+
+                    medicationFullInfo.prescriptions.historique
+                        .slice(0, 5)
+                        .forEach(p => {
+
+                            const totalMontant = (Number(p.prix) || 0) * (Number(p.quantite) || 0);
+
+                            infoMessage += `
+                        <div class="bg-white p-2 rounded border border-green-100 text-sm">
+                            <div class="flex justify-between">
+                                <span class="font-semibold">${p.client}</span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span>
+                                    Quantité: ${p.quantite} ${medicationFullInfo.medication.unite}
+                                </span>
+                                <span>
+                                    Montant: ${totalMontant} Ar
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                        });
+
+                    infoMessage += `</div></div>`;
+
+                } else {
+
+                    infoMessage += `
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h4 class="font-bold text-gray-800 mb-2">
+                    📊 Historique des Prescriptions
+                </h4>
+                <p class="text-sm text-gray-600">
+                    Aucune prescription enregistrée pour ce médicament.
+                </p>
+            </div>
+            `;
+                }
+
+                /* ============================
+                   SECTION IA
+                ============================ */
+
+                if (medicationFullInfo.aiInfo) {
+
+                    infoMessage += `
+            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <h4 class="font-bold text-purple-800 mb-2">
+                    🤖 Informations complémentaires
+                </h4>
+                <div class="prose prose-sm max-w-none text-sm">
+                    ${medicationFullInfo.aiInfo}
+                </div>
+                <p class="text-[10px] text-gray-500 mt-2 italic">
+                    Source: IA - À titre informatif
+                </p>
+            </div>
+            `;
+
+                } else {
+
+                    infoMessage += `
+            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <h4 class="font-bold text-purple-800 mb-2">
+                    🤖 Informations complémentaires
+                </h4>
+                <p class="text-sm text-purple-700">
+                    Aucune information complémentaire disponible.
+                </p>
+            </div>
+            `;
+                }
+
+                infoMessage += `</div>`;
+
+                messages.value.push({
+                    type: 'ai',
+                    content: infoMessage,
+                    time: new Date().toLocaleTimeString()
+                });
+
+            } catch (error) {
+
+                messages.value.push({
+                    type: 'ai',
+                    content: `
+            <div class="bg-red-50 border-l-4 border-red-400 p-3 text-red-700">
+                <p class="font-medium">
+                    Erreur lors du chargement des informations du médicament
+                </p>
+                <p class="text-sm">
+                    ${error.message || 'Erreur inconnue'}
+                </p>
+            </div>
+            `,
+                    time: new Date().toLocaleTimeString()
+                });
+
+            } finally {
+                scrollToBottom();
+            }
+        };
 
         const removeSelectedMedication = () => {
             selectedMedications.value = {

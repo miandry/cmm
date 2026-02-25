@@ -357,7 +357,8 @@
                             </div>
 
                             <!-- TVA pour la page courante -->
-                            <div v-if="pageSubTotal > 0" class="flex justify-between py-1 border-t border-gray-300">
+                            <div v-if="pageSubTotal > 0" class="flex justify-between py-1 border-t border-gray-300"
+                                :class="{ 'no-print': tvaRate == 0 }">
                                 <span class="font-medium text-gray-700">TVA (
                                     <span class="editable-field" contenteditable="true" @blur="updateTvaRate"
                                         @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'tvaRate')"

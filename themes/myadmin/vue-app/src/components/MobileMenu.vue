@@ -30,7 +30,7 @@
       </nav>
 
       <!-- Status Footer -->
-      <div class="menu-footer">
+      <div class="menu-footer" v-if="authStore.isAuthenticated">
         <div class="status-indicator">
           <div class="online-dot" />
           <span class="status-text capitalize">
@@ -50,6 +50,8 @@
 </template>
 
 <script>
+import { useAuthStore } from '../stores/auth';
+
 export default {
   name: "MobileMenu",
 
@@ -63,23 +65,27 @@ export default {
   emits: ["close"],
 
   data() {
-    return {
-      user: window.APP_DATA || {},
-    };
+    return {};
+  },
+
+  setup() {
+    const authStore = useAuthStore();
+    return { authStore };
   },
 
   computed: {
     username() {
-      return this.user.username || "";
+      return this.authStore.user?.name || this.authStore.user?.username || window.APP_DATA?.username || "";
     },
 
     roles() {
-      return this.user.roles || [];
+      return this.authStore.user?.roles || window.APP_DATA?.roles || [];
     },
 
     // MENU FILTRÉ SELON LES RÔLES
     menuItems() {
-      return (this.user.menu || []).filter(item => {
+      const menu = this.authStore.user?.menu || window.APP_DATA?.menu || [];
+      return menu.filter(item => {
         // menu public
         if (!item.roles || item.roles.length === 0) {
           return true;
@@ -95,7 +101,7 @@ export default {
 
   methods: {
     closeMenu() {
-      this.$emit("close");fr/frontdesk
+      this.$emit("close");
     },
 
     // même logique que le header

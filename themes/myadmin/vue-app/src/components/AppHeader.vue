@@ -12,7 +12,8 @@
           </router-link>
         </nav>
       </div>
-      <div class="hidden md:flex items-center space-x-2 md:space-x-4">
+      <div v-if="authStore.isAuthenticated"
+        class="hidden md:flex items-center space-x-2 md:space-x-4">
         <div class="flex items-center space-x-2 text-xs md:text-sm text-gray-600">
           <div class="w-2 h-2 bg-secondary rounded-full"></div>
           <span class="hidden sm:inline capitalize">{{ username }}</span>
@@ -44,36 +45,43 @@
     </div>
 
     <!-- Menu Toggle Button -->
-    <button class="menu-toggle" @click="emitToggleMenu" aria-label="Toggle navigation menu">
+    <button class="menu-toggle" @click="emitToggleMenu" aria-label="Toggle navigation menu" v-if="authStore.isAuthenticated">
       <i class="fas fa-bars"></i>
     </button>
   </div>
 </template>
 
 <script>
+import { useAuthStore } from '../stores/auth';
+
 export default {
   name: "AppHeader",
   emits: ["toggle-menu"],
 
   data() {
     return {
-      user: window.APP_DATA || {},
       showUserMenu: false,
     };
   },
 
+  setup() {
+    const authStore = useAuthStore();
+    return { authStore };
+  },
+
   computed: {
     username() {
-      return this.user.username || "";
+      return this.authStore.user?.name || this.authStore.user?.username || window.APP_DATA?.username || "";
     },
 
     roles() {
-      return this.user.roles || [];
+      return this.authStore.user?.roles || window.APP_DATA?.roles || [];
     },
 
     // MENU FILTRÉ SELON LES RÔLES
     menuItems() {
-      return (this.user.menu || []).filter(item => {
+      const menu = this.authStore.user?.menu || window.APP_DATA?.menu || [];
+      return menu.filter(item => {
         // menu public
         if (!item.roles || item.roles.length === 0) {
           return true;

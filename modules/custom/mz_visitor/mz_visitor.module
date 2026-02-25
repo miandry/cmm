@@ -1,0 +1,63 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for MZ Visitor module.
+ */
+
+use Drupal\user\Entity\User;
+
+/**
+ * Implements hook_cron().
+ *
+ * Automatically block visitor users whose expiration date has passed.
+ */
+function mz_visitor_cron()
+{
+    $current_date = date('Y-m-d');
+
+    // Query for active users who have an expiration date in the past.
+    $query = \Drupal::entityQuery('user')
+        ->condition('status', 1)
+        ->condition('field_expiration_date', $current_date, '<')
+        ->condition('field_expiration_date', '', '<>')
+        ->accessCheck(FALSE);
+
+    $uids = $query->execute();
+
+    if (!empty($uids)) {
+        $users = User::loadMultiple($uids);
+        foreach ($users as $user) {
+            $user->block();
+            $user->save();
+            \Drupal::logger('mz_visitor')->notice('L\'utilisateur @name (@uid) a été bloqué pour expiration (@date).', [
+                '@name' => $user->getAccountName(),
+                '@uid' => $user->id(),
+                '@date' => $user->get('field_expiration_date')->value,
+            ]);
+        }
+    }
+}
+
+/**
+ * Implements hook_mail().
+ */
+function mz_visitor_mail($key, &$message, $params)
+{
+    $options = [
+        'langcode' => $message['langcode'],
+    ];
+
+    switch ($key) {
+        case 'visitor_credentials':
+            $message['from'] = \Drupal::config('system.site')->get('mail');
+            $message['subject'] = t('Vos identifiants d\'accès visiteur', [], $options);
+            $message['body'][] = t('Bonjour,', [], $options);
+            $message['body'][] = t('Votre compte visiteur a été créé.', [], $options);
+            $message['body'][] = t('Nom d\'utilisateur : @username', ['@username' => $params['username']], $options);
+            $message['body'][] = t('Mot de passe : @password', ['@password' => $params['password']], $options);
+            $message['body'][] = t('Lien de connexion : @link', ['@link' => $params['url']], $options);
+            $message['body'][] = t('Ce compte expirera le @date.', ['@date' => $params['expiration']], $options);
+            break;
+    }
+}

@@ -3,11 +3,11 @@
         <div class="flex justify-between">
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Historique médical</h3>
             <span class="text-xs text-primary" v-if="consultationsStore.consultations.rows.length > 5"
-                @click="showAllHistory(consultationsStore.consultations.rows[0].field_client.nid)">voir plus</span> 
+                @click="showAllHistory(consultationsStore.consultations.rows[0].field_client.nid)">voir plus</span>
         </div>
         <div class="space-y-1 max-h-48 overflow-y-auto" v-if="consultationsStore.consultations.rows.length">
-            <div v-for="cons in consultationsStore.consultations.rows" :key="cons.nid" @click="editConsultation(cons)"
-                class="p-2 rounded-lg cursor-pointer"
+            <div v-for="(cons, index) in consultationsStore.consultations.rows" :key="cons.nid"
+                @click="editConsultation(cons)" class="p-2 rounded-lg cursor-pointer"
                 :class="[cons.field_consultation_status == 'draft' ? 'bg-orange-100 hover:bg-orange-200' : 'bg-green-100 hover:bg-green-200']">
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-xs flex-1 two-lines font-medium text-gray-900">{{ cons.field_motif }}</span>
@@ -20,7 +20,14 @@
                         <span>{{ cons.field_temperature }}°C </span>
                         <span> - {{ cons.field_tension_arterielle }} mmHg</span>
                     </p>
-                    <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short') }}</span>
+                    <p>
+                        <span v-if="index == 0 && cons.field_consultation_status != 'draft'"
+                            @click.stop="rollbackConsultation(cons, index)" title="Revenir à une version ultérieure"
+                            class="cursor-pointer mr-2 text-green-600"><i class="ri-arrow-go-back-line"></i></span>
+                        <span @click.stop="print(cons.nid)" title="Imprimer ordonnance"
+                            class="cursor-pointer mr-2 text-green-600"><i class="ri-printer-line"></i></span>
+                        <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short') }}</span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -33,7 +40,7 @@
 </template>
 
 <script>
-import { watch, ref, onMounted } from 'vue';
+import { watch, ref } from 'vue';
 import { useClientStore, useConsultationStore } from '../../stores/index.js';
 import { formatDate } from '../../utils/formateDate.js';
 import { useRouter } from 'vue-router';
@@ -41,7 +48,7 @@ import { toast } from 'vue-sonner';
 
 export default {
     name: "Historique",
-    emits: ['openHistory'],
+    emits: ['openHistory', 'loadLastconsultation'],
     setup(_, { emit }) {
         const patienStore = useClientStore();
         const consultationsStore = useConsultationStore();
@@ -57,7 +64,9 @@ export default {
                 'field_tension_arterielle',
                 'field_client',
                 'created',
-                'field_consultation_status'
+                'field_consultation_status',
+                'field_poids',
+                'field_montant',
             ],
             sort: { val: 'nid', op: 'desc' },
             filters: {},
@@ -107,6 +116,27 @@ export default {
             }
         };
 
+        const rollbackConsultation = (consultation, index) => {
+            if (index == 0 && consultation.field_consultation_status != "draft") {
+                router.push({
+                    name: 'consultations'
+                });
+
+                emit('loadLastconsultation', consultation);
+                toast("Consultation chargé.", { class: "!bg-orange-100 !text-orange-700", });
+                return;
+            }
+        };
+
+        const print = (nid) => {
+            router.push({
+                name: 'ordonnance',
+                query: {
+                    key: nid,
+                }
+            })
+        }
+
         const showAllHistory = (clientId) => {
             emit('openHistory', clientId);
         }
@@ -115,7 +145,9 @@ export default {
             consultationsStore,
             formatDate,
             editConsultation,
-            showAllHistory
+            rollbackConsultation,
+            showAllHistory,
+            print
         }
     },
 }
