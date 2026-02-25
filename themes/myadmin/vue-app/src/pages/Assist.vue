@@ -19,7 +19,6 @@
                 </div>
             </div>
         </header>
-
         <div class="bg-primary/10 px-4 py-2 md:px-6 md:py-3 border-b border-primary/20">
             <div class="max-w-4xl mx-auto flex items-center">
                 <i class="ri-information-line text-primary mr-2 flex-shrink-0"></i>
