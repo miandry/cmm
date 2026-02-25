@@ -324,6 +324,12 @@ export default {
             age: null,
             gender: '',
             allergies: '',
+            phone: '',
+            email: '',
+            adresse: '',
+            assurance: '0',
+            contactUrgence: '',
+            notesMedicales: '',
         })
 
         // État médicaments sélectionnés
@@ -912,6 +918,8 @@ export default {
             selectedImage.value = null;
         }
 
+
+
         const scrollToBottom = () => {
             nextTick(() => {
                 if (chatContainer.value) {
@@ -1345,7 +1353,7 @@ export default {
             }
         };
 
-        const removePatientCard = () => {
+        const removePatientCard = async () => {
             patientCardVisible.value = false
             patientInfo.value = {
                 name: '',
@@ -1353,6 +1361,42 @@ export default {
                 gender: '',
                 allergies: '',
             }
+
+            // Recharger les consultations générales (sans filtre patient)
+            await consultationStore.fetchConsultations({
+                fields: [
+                    'nid',
+                    'title',
+                    'field_client',
+                    'field_motif',
+                    'field_temperature',
+                    'field_tension_arterielle',
+                    'field_poids',
+                    'field_medicaments',
+                    'field_examens',
+                    'created'
+                ],
+                pager: 0,
+                offset: 20,
+                sort: { val: 'nid', op: 'desc' }
+            });
+
+            // Recharger les ventes générales (sans filtre patient)
+            await orderStore.fetchOrders({
+                fields: [
+                    'nid',
+                    'title',
+                    'field_articles',
+                    'field_examens_order',
+                    'field_client',
+                    'field_date',
+                    'field_total_vente',
+                    'created'
+                ],
+                pager: 0,
+                offset: 20,
+                sort: { val: 'nid', op: 'desc' }
+            });
         }
 
         // Gestion médicaments

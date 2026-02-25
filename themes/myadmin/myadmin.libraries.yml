@@ -8,7 +8,7 @@ global:
   dependencies:
     - core/drupal
     - core/drupalSettings
-    - themeVue/tailwindcss
+    - myadmin/tailwindcss
 
 tailwindcss:
   header: true
