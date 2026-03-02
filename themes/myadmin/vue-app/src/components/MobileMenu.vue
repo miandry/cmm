@@ -9,7 +9,7 @@
       <div class="menu-header">
         <div class="brand">
           <h1 class="text-xl md:text-2xl font-['Pacifico'] text-primary">
-            Clinic Vonjy Aina
+            {{ siteTitle }}
           </h1>
         </div>
 
@@ -74,6 +74,20 @@ export default {
   },
 
   computed: {
+    siteTitle() {
+      const host = window.location.hostname;
+
+      if (host.includes('vonjyaina.platforme.site')) {
+        return 'Clinic Vonjy Aina';
+      }
+
+      if (host.includes('clinic.mizara.io')) {
+        return 'Clinic Plateforme';
+      }
+
+      return 'Clinic Plateforme'; // fallback
+    },
+
     username() {
       return this.authStore.user?.name || this.authStore.user?.username || window.APP_DATA?.username || "";
     },

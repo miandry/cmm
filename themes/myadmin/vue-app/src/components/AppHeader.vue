@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between xxl-justify-around">
       <div class="flex items-center space-x-2 md:space-x-8">
         <h1 class="text-xl md:text-2xl font-['Pacifico'] text-primary">
-          Clinique Vonjy Aina
+          {{ siteTitle }}
         </h1>
         <nav class="hidden lg:flex space-x-1">
           <router-link v-for="menuItem in menuItems" :key="menuItem.id" :to="menuItem.path" class="menu-item"
@@ -12,8 +12,7 @@
           </router-link>
         </nav>
       </div>
-      <div v-if="authStore.isAuthenticated"
-        class="hidden md:flex items-center space-x-2 md:space-x-4">
+      <div v-if="authStore.isAuthenticated" class="hidden md:flex items-center space-x-2 md:space-x-4">
         <div class="flex items-center space-x-2 text-xs md:text-sm text-gray-600">
           <div class="w-2 h-2 bg-secondary rounded-full"></div>
           <span class="hidden sm:inline capitalize">{{ username }}</span>
@@ -40,12 +39,13 @@
     <!-- Logo and Brand -->
     <div class="brand">
       <h1 class="text-xl md:text-2xl font-['Pacifico'] text-primary">
-        Clinique Vonjy Aina
+        {{ siteTitle }}
       </h1>
     </div>
 
     <!-- Menu Toggle Button -->
-    <button class="menu-toggle" @click="emitToggleMenu" aria-label="Toggle navigation menu" v-if="authStore.isAuthenticated">
+    <button class="menu-toggle" @click="emitToggleMenu" aria-label="Toggle navigation menu"
+      v-if="authStore.isAuthenticated">
       <i class="fas fa-bars"></i>
     </button>
   </div>
@@ -70,6 +70,20 @@ export default {
   },
 
   computed: {
+    siteTitle() {
+      const host = window.location.hostname;
+
+      if (host.includes('vonjyaina.platforme.site')) {
+        return 'Clinic Vonjy Aina';
+      }
+
+      if (host.includes('clinic.mizara.io')) {
+        return 'Clinic Plateforme';
+      }
+
+      return 'Clinic Plateforme'; // fallback
+    },
+
     username() {
       return this.authStore.user?.name || this.authStore.user?.username || window.APP_DATA?.username || "";
     },
