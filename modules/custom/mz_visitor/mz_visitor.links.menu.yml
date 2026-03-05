@@ -1,0 +1,13 @@
+mz_visitor.settings:
+  title: 'Visitor User Settings'
+  description: 'Configure default role and expiration for visitor users.'
+  parent: user.admin_index
+  route_name: mz_visitor.settings
+  weight: 20
+
+mz_visitor.create_form:
+  title: 'Create Visitor User'
+  description: 'Form to quickly create a temporary visitor user.'
+  parent: user.admin_index
+  route_name: mz_visitor.create_form
+  weight: 10

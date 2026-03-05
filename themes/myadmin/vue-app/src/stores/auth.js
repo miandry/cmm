@@ -29,49 +29,25 @@ export const useAuthStore = defineStore('auth', {
             this.error = null;
 
             try {
-                const response = await axios.post('/crud/login', {
+                const response = await axios.post('/user/login?_format=json', {
                     name: username,
                     pass: password
                 });
 
                 if (response.status === 200) {
                     const userData = response.data;
-                    this.user = userData.current_user || userData.user || userData;
+                    this.user = userData.current_user;
                     this.isAuthenticated = true;
-
-                    // Extract roles from response
-                    const userRoles = this.user.roles || userData.roles || [];
-                    this.user.roles = userRoles;
 
                     // Persist for page reloads
                     localStorage.setItem('user_data', JSON.stringify(this.user));
 
-                    // Sync to window.APP_DATA with menu
+                    // Sync to window.APP_DATA
                     if (!window.APP_DATA) window.APP_DATA = {};
                     window.APP_DATA.user = this.user;
                     window.APP_DATA.isLoggedIn = true;
                     window.APP_DATA.username = this.user.name || this.user.username;
-                    window.APP_DATA.roles = userRoles;
-
-                    // Set menu based on roles
-                    const allMenuItems = [
-                        { id: 2, name: "Caisses", path: "/", icon: "fas fa-shopping-cart", paths: ["/", "/caisse", "/fr", "/fr/frontdesk"] },
-                        { id: 8, name: "Tableau de bord", path: "/dashboard", icon: "fas fa-chart-line" },
-                        { id: 5, name: "Commandes", path: "/commandes", icon: "fas fa-shopping-bag" },
-                        { id: 3, name: "Patients", path: "/patients", icon: "fas fa-users", roles: ["docteur", "administrator"] },
-                        { id: 4, name: "Consulter", path: "/consultations", icon: "fas fa-stethoscope", paths: ["/consultations", "/consultations/edit"], roles: ["docteur", "administrator"] },
-                        { id: 6, name: "Stocks", path: "/stocks", icon: "fas fa-boxes" },
-                        { id: 7, name: "Assistant IA", path: "/assist", icon: "ri-robot-2-line", roles: ["docteur", "administrator"] },
-                        { id: 9, name: "Utilisateurs", path: "/users", icon: "fas fa-users-cog", roles: ["administrator"] },
-                    ];
-
-                    // Filter menu based on user roles
-                    window.APP_DATA.menu = allMenuItems.filter(item => {
-                        if (!item.roles || item.roles.length === 0) return true;
-                        return item.roles.some(role => userRoles.includes(role));
-                    });
-
-                    this.user.menu = window.APP_DATA.menu;
+                    window.APP_DATA.roles = this.user.roles || [];
 
                     return true;
                 }
@@ -102,7 +78,7 @@ export const useAuthStore = defineStore('auth', {
                     window.APP_DATA.user = null;
                     window.APP_DATA.isLoggedIn = false;
                 }
-                window.location.href = '/login';
+                window.location.href = '/user/login';
             }
         },
 
