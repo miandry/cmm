@@ -9,7 +9,7 @@
       <div class="menu-header">
         <div class="brand">
           <h1 class="text-xl md:text-2xl font-['Pacifico'] text-primary">
-            Clinic Vonjy Aina
+            {{ siteTitle }}
           </h1>
         </div>
 
@@ -30,7 +30,7 @@
       </nav>
 
       <!-- Status Footer -->
-      <div class="menu-footer">
+      <div class="menu-footer" v-if="authStore.isAuthenticated">
         <div class="status-indicator">
           <div class="online-dot" />
           <span class="status-text capitalize">
@@ -39,10 +39,10 @@
         </div>
 
         <div class="store-info">
-          <a href="/user/logout">
-            <i class="fas fa-sign-out-alt text-red-500 me-0 pe-0 text-sm"></i>
-            <span class="text-sm text-red-500 ms-2">Déconnexion</span>
-          </a>
+          <button @click="handleLogout" class="flex items-center border-0 bg-transparent cursor-pointer hover:opacity-80 transition-opacity p-0">
+            <i class="fas fa-sign-out-alt text-red-500 text-sm"></i>
+            <span class="text-sm text-red-500 ms-2 font-medium">Déconnexion</span>
+          </button>
         </div>
       </div>
     </div>
@@ -50,6 +50,8 @@
 </template>
 
 <script>
+import { useAuthStore } from '../stores/auth';
+
 export default {
   name: "MobileMenu",
 
@@ -63,23 +65,41 @@ export default {
   emits: ["close"],
 
   data() {
-    return {
-      user: window.APP_DATA || {},
-    };
+    return {};
+  },
+
+  setup() {
+    const authStore = useAuthStore();
+    return { authStore };
   },
 
   computed: {
+    siteTitle() {
+      const host = window.location.hostname;
+
+      if (host.includes('vonjyaina.platforme.site')) {
+        return 'Clinic Vonjy Aina';
+      }
+
+      if (host.includes('clinic.mizara.io')) {
+        return 'Clinic Plateforme';
+      }
+
+      return 'Clinic Plateforme'; // fallback
+    },
+
     username() {
-      return this.user.username || "";
+      return this.authStore.user?.name || this.authStore.user?.username || window.APP_DATA?.username || "";
     },
 
     roles() {
-      return this.user.roles || [];
+      return this.authStore.user?.roles || window.APP_DATA?.roles || [];
     },
 
     // MENU FILTRÉ SELON LES RÔLES
     menuItems() {
-      return (this.user.menu || []).filter(item => {
+      const menu = this.authStore.user?.menu || window.APP_DATA?.menu || [];
+      return menu.filter(item => {
         // menu public
         if (!item.roles || item.roles.length === 0) {
           return true;
@@ -95,7 +115,7 @@ export default {
 
   methods: {
     closeMenu() {
-      this.$emit("close");fr/frontdesk
+      this.$emit("close");
     },
 
     // même logique que le header
@@ -125,6 +145,10 @@ export default {
       if (event.key === "Escape" && this.isOpen) {
         this.closeMenu();
       }
+    },
+
+    async handleLogout() {
+      await this.authStore.logout();
     },
   },
 

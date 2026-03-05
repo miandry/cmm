@@ -138,7 +138,12 @@
                         </div>
                         Changer statut
                     </button>
-                    <router-link :to="`/facture/${orderToShow.title}`"
+                    <router-link :to="{
+                        path: '/facture',
+                        query: {
+                            key: orderToShow.title
+                        }
+                    }"
                         class="px-4 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 !rounded-button font-medium whitespace-nowrap">
                         <div class="w-4 h-4 flex items-center justify-center inline-block mr-1">
                             <i class="ri-printer-line"></i>

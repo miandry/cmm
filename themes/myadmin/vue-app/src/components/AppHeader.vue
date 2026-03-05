@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between xxl-justify-around">
       <div class="flex items-center space-x-2 md:space-x-8">
         <h1 class="text-xl md:text-2xl font-['Pacifico'] text-primary">
-          Clinique Vonjy Aina
+          {{ siteTitle }}
         </h1>
         <nav class="hidden lg:flex space-x-1">
           <router-link v-for="menuItem in menuItems" :key="menuItem.id" :to="menuItem.path" class="menu-item"
@@ -12,7 +12,7 @@
           </router-link>
         </nav>
       </div>
-      <div class="hidden md:flex items-center space-x-2 md:space-x-4">
+      <div v-if="authStore.isAuthenticated" class="hidden md:flex items-center space-x-2 md:space-x-4">
         <div class="flex items-center space-x-2 text-xs md:text-sm text-gray-600">
           <div class="w-2 h-2 bg-secondary rounded-full"></div>
           <span class="hidden sm:inline capitalize">{{ username }}</span>
@@ -25,10 +25,10 @@
           <!-- DROP DOWN -->
           <div v-if="showUserMenu"
             class="absolute right-0 mt-2 w-40 bg-white shadow-lg border rounded-md py-2 z-50 animate-fade">
-            <a href="/user/logout" class="flex items-center w-full px-3 py-2 text-left hover:bg-gray-100 text-sm">
+            <button @click="handleLogout" class="flex items-center w-full px-3 py-2 text-left hover:bg-red-50 text-sm border-0 bg-transparent cursor-pointer transition-colors">
               <i class="fas fa-sign-out-alt text-red-500 mr-2 text-xs"></i>
-              <span class="text-red-500">Déconnexion</span>
-            </a>
+              <span class="text-red-500 font-medium">Déconnexion</span>
+            </button>
           </div>
         </div>
       </div>
@@ -39,41 +39,63 @@
     <!-- Logo and Brand -->
     <div class="brand">
       <h1 class="text-xl md:text-2xl font-['Pacifico'] text-primary">
-        Clinique Vonjy Aina
+        {{ siteTitle }}
       </h1>
     </div>
 
     <!-- Menu Toggle Button -->
-    <button class="menu-toggle" @click="emitToggleMenu" aria-label="Toggle navigation menu">
+    <button class="menu-toggle" @click="emitToggleMenu" aria-label="Toggle navigation menu"
+      v-if="authStore.isAuthenticated">
       <i class="fas fa-bars"></i>
     </button>
   </div>
 </template>
 
 <script>
+import { useAuthStore } from '../stores/auth';
+
 export default {
   name: "AppHeader",
   emits: ["toggle-menu"],
 
   data() {
     return {
-      user: window.APP_DATA || {},
       showUserMenu: false,
     };
   },
 
+  setup() {
+    const authStore = useAuthStore();
+    return { authStore };
+  },
+
   computed: {
+    siteTitle() {
+      const host = window.location.hostname;
+
+      if (host.includes('vonjyaina.platforme.site')) {
+        return 'Clinic Vonjy Aina';
+      }
+
+      if (host.includes('clinic.mizara.io')) {
+        return 'Clinic Plateforme';
+      }
+
+      return 'Clinic Plateforme'; // fallback
+    },
+
     username() {
-      return this.user.username || "";
+      return this.authStore.user?.name || this.authStore.user?.username || window.APP_DATA?.username || "";
     },
 
     roles() {
-      return this.user.roles || [];
+      return this.authStore.user?.roles || window.APP_DATA?.roles || [];
     },
 
     // MENU FILTRÉ SELON LES RÔLES
     menuItems() {
-      return (this.user.menu || []).filter(item => {
+      const menu = this.authStore.user?.menu || window.APP_DATA?.menu || [];
+      return menu.filter(item => {
         // menu public
         if (!item.roles || item.roles.length === 0) {
           return true;
@@ -131,6 +153,10 @@ export default {
       if (!event.target.closest("#user")) {
         this.showUserMenu = false;
       }
+    },
+
+    async handleLogout() {
+      await this.authStore.logout();
     },
   },
 };

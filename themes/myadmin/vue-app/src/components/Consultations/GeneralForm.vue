@@ -1,5 +1,6 @@
 <template>
     <div class="space-y-4">
+        <Patient :canChange="canChange" class="block lg:hidden"/>
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Motif de consultation</label>
             <textarea v-model="form.consultationMotif" rows="3"
@@ -45,11 +46,21 @@
 </template>
 
 <script>
-import { reactive, ref, defineExpose } from 'vue';
+import { reactive, ref, defineExpose, watch } from 'vue';
+import Patient from './Patient.vue';
 
 export default {
     name: 'GeneralForm',
-    setup() {
+    components: {
+        Patient
+    },
+    props: {
+        canChange: {
+            type: Boolean,
+        },
+    },
+    setup(props) {
+        const canChange = ref(props.canChange)
         const form = reactive({
             consultationMotif: '',
             temperature: '',
@@ -65,6 +76,14 @@ export default {
             poids: false,
             montant: false,
         });
+
+        watch(
+            () => props.canChange,
+            (newVal) => {
+                canChange.value = newVal
+            },
+            { immediate: true }
+        )
 
         function validateForm() {
             let isValid = true;
@@ -149,10 +168,9 @@ export default {
             getGeneralFormData,
             errors,
             resetForm,
-            setFormData
+            setFormData,
+            canChange,
         }
     }
 }
 </script>
-
-<style></style>

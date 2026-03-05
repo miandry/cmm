@@ -1,4 +1,4 @@
-export function formatDate(dateStr, createdTimestamp = null, type = "long") {
+export function formatDate(dateStr = null, createdTimestamp = null, type = "long") {
   let date;
 
   // 1. Si la date standard existe → on l'utilise

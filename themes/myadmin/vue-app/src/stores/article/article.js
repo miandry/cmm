@@ -1,6 +1,11 @@
 import { defineStore } from "pinia";
-import { computed, h, ref } from "vue";
-import { getArticles, getCategories, getPacks, saveArticle } from "../../services/article";
+import { computed, h, ref, watch } from "vue";
+import {
+  getArticles,
+  getCategories,
+  getPacks,
+  saveArticle,
+} from "../../services/article";
 import { buildQueryParams } from "../../utils/queryBuilder.js";
 import { toast } from "vue-sonner";
 
@@ -13,21 +18,44 @@ export const useArticleStore = defineStore("article", () => {
   const savedOrder = ref(null);
   const cardItems = ref([]);
 
-  // fetchArticles: si append=true, on ajoute les nouvelles données
-  async function fetchArticles(options, append = false) {
+  // Map pour garder trace des stocks originaux et des quantités dans le panier
+  const originalStocks = ref(new Map());
+
+  // Mettre à jour les stocks des articles affichés en fonction du panier
+  function updateDisplayedStocks() {
+    articles.value.rows.forEach((article) => {
+      // Sauvegarder le stock original si pas déjà fait
+      if (!originalStocks.value.has(article.nid)) {
+        originalStocks.value.set(article.nid, article.field_quantite_stock);
+      }
+      // Calculer la quantité totale dans le panier pour cet article
+      const cartItem = cardItems.value.find((item) => item.nid === article.nid);
+      const quantityInCart = cartItem ? cartItem.quantity : 0;
+      // Le stock affiché = stock original - quantité dans le panier
+      const originalStock = originalStocks.value.get(article.nid);
+      article.field_quantite_stock = Math.max(
+        0,
+        originalStock - quantityInCart,
+      );
+    });
+  }
+
+  async function fetchArticles(options, append = false, page = null) {
     loading.value = true;
     try {
       const query = buildQueryParams(options);
       const response = await getArticles(query);
-
       const data = response.data;
 
       if (append && articles.value.rows.length) {
-        // Ajouter les nouvelles données à la liste existante
         articles.value.rows = [...articles.value.rows, ...data.rows];
       } else {
-        // Remplacer les données
         articles.value = data;
+      }
+
+      // Après avoir chargé les articles, mettre à jour les stocks affichés
+      if (page == "caisse") {
+        updateDisplayedStocks();
       }
     } catch (err) {
       error.value = err;
@@ -50,54 +78,57 @@ export const useArticleStore = defineStore("article", () => {
 
   function addItem(article) {
     const item = cardItems.value.find((i) => i.nid == article.nid);
+    const originalStock =
+      originalStocks.value.get(article.nid) || article.field_quantite_stock;
 
     if (item) {
-      // vérifier le stock avant d'augmenter
-      if (article.field_quantite_stock > 0) {
+      if (originalStock > item.quantity) {
         item.quantity++;
-        article.field_quantite_stock--;
+        updateDisplayedStocks(); // Mettre à jour tous les stocks affichés
       } else {
         toast.warning(() =>
-          h("div", ["Rupture de stock !", h("br"), h("span", article.title)])
+          h("div", ["Rupture de stock !", h("br"), h("span", article.title)]),
         );
       }
     } else {
-      if (article.field_quantite_stock > 0) {
-        // sauvegarder le prix original si pas déjà enregistré
-        const originalPrice = article.field_prix_unitaire;
+      if (originalStock > 0) {
+        // Sauvegarder le stock original si pas déjà fait
+        if (!originalStocks.value.has(article.nid)) {
+          originalStocks.value.set(article.nid, article.field_quantite_stock);
+        }
 
         cardItems.value.push({
           ...article,
           quantity: 1,
-          _original_price: originalPrice, // on stocke le prix initial ici
+          _original_price: article.field_prix_unitaire,
         });
 
-        article.field_quantite_stock--;
+        updateDisplayedStocks(); // Mettre à jour tous les stocks affichés
       } else {
         toast.warning(() =>
-          h("div", ["Rupture de stock !", h("br"), h("span", article.title)])
+          h("div", ["Rupture de stock !", h("br"), h("span", article.title)]),
         );
       }
     }
   }
 
   function incrementQuantity(item) {
-    const article = articles.value.rows.find((a) => a.nid == item.nid);
-    if (article && article.field_quantite_stock > 0) {
+    const originalStock = originalStocks.value.get(item.nid);
+
+    if (originalStock > item.quantity) {
       item.quantity++;
-      article.field_quantite_stock--;
+      updateDisplayedStocks(); // Mettre à jour tous les stocks affichés
     } else {
       toast.warning(() =>
-        h("div", ["Rupture de stock !", h("br"), h("span", article.title)])
+        h("div", ["Rupture de stock !", h("br"), h("span", item.title)]),
       );
     }
   }
 
   function decrementQuantity(item) {
-    const article = articles.value.rows.find((a) => a.nid == item.nid);
     if (item.quantity > 1) {
       item.quantity--;
-      if (article) article.field_quantite_stock++;
+      updateDisplayedStocks(); // Mettre à jour tous les stocks affichés
     } else {
       removeItem(item);
     }
@@ -106,13 +137,10 @@ export const useArticleStore = defineStore("article", () => {
   function removeItem(item) {
     const index = cardItems.value.findIndex((i) => i.nid == item.nid);
     if (index !== -1) {
-      const article = articles.value.rows.find((a) => a.nid == item.nid);
-      if (article) {
-        article.field_quantite_stock += cardItems.value[index].quantity;
-      }
       cardItems.value.splice(index, 1);
+      updateDisplayedStocks(); // Mettre à jour tous les stocks affichés
       toast.success(() =>
-        h("div", [h("span", item.title), h("br"), "a été retiré du panier !"])
+        h("div", [h("span", item.title), h("br"), "a été retiré du panier !"]),
       );
     }
   }
@@ -121,13 +149,10 @@ export const useArticleStore = defineStore("article", () => {
     if (order) {
       cardItems.value.splice(0);
     } else {
-      cardItems.value.forEach((item) => {
-        const article = articles.value.rows.find((a) => a.nid == item.nid);
-        if (article) article.field_quantite_stock += item.quantity;
-      });
       cardItems.value.splice(0);
       toast.success("Le panier a été vidé avec succès !");
     }
+    updateDisplayedStocks(); // Mettre à jour tous les stocks affichés
   }
 
   // Calcul du total
@@ -144,8 +169,21 @@ export const useArticleStore = defineStore("article", () => {
       items: cardItems.value.map((item) => ({ ...item })), // copie des articles
       total: total.value,
     };
+
+    // Réinitialiser les stocks originaux après la commande
+    originalStocks.value.clear();
+
     return savedOrder.value;
   }
+
+  // Watch pour surveiller les changements dans le panier et mettre à jour les stocks
+  watch(
+    cardItems,
+    () => {
+      updateDisplayedStocks();
+    },
+    { deep: true },
+  );
 
   // categories
   async function fetchCategories(options) {
@@ -162,7 +200,7 @@ export const useArticleStore = defineStore("article", () => {
     }
   }
 
-    // categories
+  // packs
   async function fetchTypePack(options) {
     loading.value = true;
     try {
@@ -176,6 +214,7 @@ export const useArticleStore = defineStore("article", () => {
       loading.value = false;
     }
   }
+
   return {
     articles,
     categories,

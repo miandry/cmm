@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import { computed, ref, onMounted } from 'vue';
+import { computed } from 'vue';
 import {
   Chart as ChartJS,
   Title,
@@ -34,70 +34,23 @@ export default {
   },
   setup() {
     const orderStore = useOrderStore();
-    const salesData = ref([]);
-
-    // Charger les ventes depuis l'API RAG
-    const fetchSalesData = async () => {
-      try {
-        // Calculer la date d'il y a 14 jours
-        const today = new Date();
-        const twoWeeksAgo = new Date(today);
-        twoWeeksAgo.setDate(today.getDate() - 14);
-        const dateFrom = twoWeeksAgo.toISOString().split('T')[0];
-        
-        const response = await fetch('/api/rag/sales', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            limit: 100,
-            date_from: dateFrom
-          })
-        });
-        const data = await response.json();
-        salesData.value = data.data || [];
-      } catch (error) {
-        console.error('Error fetching sales data:', error);
-        // Fallback vers le store local
-        salesData.value = orderStore.orders.rows || [];
-      }
-    };
-
-    onMounted(() => {
-      fetchSalesData();
-    });
 
     const chartData = computed(() => {
-      // Utiliser les données de l'API RAG ou du store
-      const orders = salesData.value.length > 0 ? salesData.value : (orderStore.orders.rows || []);
-      
-      if (orders.length === 0) {
-        return { labels: [], datasets: [] };
-      }
+      const orders = orderStore.orders.rows || [];
       
       // Grouper les ventes par date
       const salesByDate = {};
       
       orders.forEach(order => {
-        let dateObj;
-        let amount = 0;
+        if (!order.created) return;
         
-        // Gérer différents formats de date
-        if (order.created) {
-          // Timestamp Unix (seconds)
-          dateObj = new Date(order.created * 1000);
-        } else if (order.date) {
-          // Date string (YYYY-MM-DD)
-          dateObj = new Date(order.date);
-        } else {
-          return;
-        }
-        
-        // Gérer différents noms de champ pour le total
-        amount = parseFloat(order.total || order.field_total_vente || 0);
-        
-        if (isNaN(dateObj.getTime())) return;
+        // Convertir le timestamp ou la date en format lisible (DD/MM)
+        const dateObj = new Date(order.created * 1000); // Supposons timestamp unix
+        // Si c'est une string ISO, new Date(order.created) fonctionne aussi
         
         const dateKey = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+        
+        const amount = parseFloat(order.field_total_vente) || 0;
         
         if (salesByDate[dateKey]) {
           salesByDate[dateKey] += amount;
@@ -106,26 +59,27 @@ export default {
         }
       });
 
-      // Trier par date correctement
+      // Trier par date (approximation simple via les clés ou sorting explicite)
+      // Pour faire simple, on prend les clés telles quelles, idéalement on trierait par timestamp
+      // Créons un tableau pour trier
       const sortedEntries = Object.entries(salesByDate).sort((a, b) => {
+        // Cette méthode de tri sur DD/MM est imparfaite sur une année glissante mais ok pour démo courte
+        // Mieux : reconstruire des objets date pour le tri
         const [d1, m1] = a[0].split('/');
         const [d2, m2] = b[0].split('/');
-        // Utiliser l'année courante pour le tri
-        const year = new Date().getFullYear();
-        return new Date(year, parseInt(m1) - 1, parseInt(d1)) - new Date(year, parseInt(m2) - 1, parseInt(d2));
+        return new Date(2024, m1 - 1, d1) - new Date(2024, m2 - 1, d2);
       });
 
-      // Garder les 14 derniers jours
-      const recentEntries = sortedEntries.slice(-14);
-      const labels = recentEntries.map(e => e[0]);
-      const data = recentEntries.map(e => e[1]);
+      // Garder les 7 derniers jours par exemple, ou tout afficher
+      const labels = sortedEntries.map(e => e[0]);
+      const data = sortedEntries.map(e => e[1]);
 
       return {
         labels: labels,
         datasets: [
           {
             label: 'Ventes (Ar)',
-            backgroundColor: '#3b82f6',
+            backgroundColor: '#3b82f6', // primary blue
             borderRadius: 6,
             data: data
           }

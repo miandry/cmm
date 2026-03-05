@@ -42,6 +42,15 @@ export function buildQueryParams(options) {
     }
   }
 
+  // Values dynamiques pour n'importe quel champ
+  if (options.values) {
+    for (const [field, arr] of Object.entries(options.values)) {
+      if (Array.isArray(arr)) {
+        arr.forEach((v) => params.append(`values[${field}][]`, v));
+      }
+    }
+  }
+
   // Pagination
   if (options.pager !== undefined) params.append("pager", options.pager);
   if (options.offset !== undefined) params.append("offset", options.offset);
