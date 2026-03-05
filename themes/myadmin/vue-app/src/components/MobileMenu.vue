@@ -39,10 +39,10 @@
         </div>
 
         <div class="store-info">
-          <a href="/user/logout">
-            <i class="fas fa-sign-out-alt text-red-500 me-0 pe-0 text-sm"></i>
-            <span class="text-sm text-red-500 ms-2">Déconnexion</span>
-          </a>
+          <button @click="handleLogout" class="flex items-center border-0 bg-transparent cursor-pointer hover:opacity-80 transition-opacity p-0">
+            <i class="fas fa-sign-out-alt text-red-500 text-sm"></i>
+            <span class="text-sm text-red-500 ms-2 font-medium">Déconnexion</span>
+          </button>
         </div>
       </div>
     </div>
@@ -145,6 +145,10 @@ export default {
       if (event.key === "Escape" && this.isOpen) {
         this.closeMenu();
       }
+    },
+
+    async handleLogout() {
+      await this.authStore.logout();
     },
   },
 

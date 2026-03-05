@@ -25,10 +25,10 @@
           <!-- DROP DOWN -->
           <div v-if="showUserMenu"
             class="absolute right-0 mt-2 w-40 bg-white shadow-lg border rounded-md py-2 z-50 animate-fade">
-            <a href="/user/logout" class="flex items-center w-full px-3 py-2 text-left hover:bg-gray-100 text-sm">
+            <button @click="handleLogout" class="flex items-center w-full px-3 py-2 text-left hover:bg-red-50 text-sm border-0 bg-transparent cursor-pointer transition-colors">
               <i class="fas fa-sign-out-alt text-red-500 mr-2 text-xs"></i>
-              <span class="text-red-500">Déconnexion</span>
-            </a>
+              <span class="text-red-500 font-medium">Déconnexion</span>
+            </button>
           </div>
         </div>
       </div>
@@ -153,6 +153,10 @@ export default {
       if (!event.target.closest("#user")) {
         this.showUserMenu = false;
       }
+    },
+
+    async handleLogout() {
+      await this.authStore.logout();
     },
   },
 };

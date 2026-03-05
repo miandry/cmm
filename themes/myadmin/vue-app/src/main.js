@@ -9,6 +9,8 @@ import Clients from "./pages/Clients.vue";
 import Order from "./pages/Order.vue";
 import Consultations from "./pages/Consultations.vue";
 import Assist from "./pages/Assist.vue";
+import Dashboard from "./pages/Dashboard.vue";
+import UserManager from "./pages/UserManager.vue";
 import Facture from "./pages/Facture.vue";
 import Ordonnance from "./pages/Ordonnance.vue";
 import Stocks from "./pages/Stocks.vue";
@@ -22,6 +24,8 @@ const routes = [
   { path: "/login", name: "login", component: Login, meta: { roles: [] } },
   { path: "/", name: "home", component: Caisse, meta: { roles: ["caissier", "docteur", "administrator"] } },
   { path: "/caisse", name: "caisse", component: Caisse, meta: { roles: ["caissier", "docteur", "administrator"] } },
+  { path: "/dashboard", name: "dashboard", component: Dashboard, meta: { roles: ["caissier", "docteur", "administrator"] } },
+  { path: "/users", name: "users", component: UserManager, meta: { roles: ["administrator"] } },
   { path: "/fr", name: "home-fr", component: Caisse, meta: { roles: ["caissier", "docteur", "administrator"] } },
   { path: "/fr/frontdesk", name: "frontdesk", component: Caisse, meta: { roles: ["caissier", "docteur", "administrator"] } },
   {
