@@ -30,4 +30,11 @@ mz_crud.user_edit:
   requirements:
     _permission: 'access content'
     
+mz_crud.createUser:
+  path: '/crud/create_user'
+  defaults:
+    _controller: '\Drupal\mz_crud\Controller\ApiController::createUser'
+    _title: 'crud insert'
+  requirements:
+    _permission: 'access content'  
        

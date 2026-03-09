@@ -6,7 +6,8 @@
         <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Gestion des Utilisateurs</h1>
         <p class="text-gray-600 text-sm mt-1">Gérer les comptes utilisateurs de la clinique</p>
       </div>
-      <button @click="openCreateModal" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2">
+      <button @click="openCreateModal"
+        class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2">
         <i class="fas fa-plus"></i>
         <span>Nouvel Utilisateur</span>
       </button>
@@ -33,16 +34,17 @@
                 <p>Chargement...</p>
               </td>
             </tr>
-            <tr v-else-if="users.length === 0" class="text-center">
-              <td colspan="6" class="px-4 py-8 text-gray-500">
+            <tr v-else-if="userStore.users.rows.length === 0" class="text-center">
+              <td colspan="6" class="px-4 py-8 text-gray-500 text-center">
                 <i class="fas fa-users text-3xl mb-2 text-gray-300"></i>
                 <p>Aucun utilisateur trouvé</p>
               </td>
             </tr>
-            <tr v-else v-for="user in users" :key="user.uid" class="hover:bg-gray-50 transition-colors">
+            <tr v-else v-for="user in userStore.users.rows" :key="user.uid" class="hover:bg-gray-50 transition-colors">
               <td class="px-4 py-3">
                 <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-semibold">
+                  <div
+                    class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-semibold">
                     {{ getInitials(user.name) }}
                   </div>
                   <div>
@@ -53,18 +55,19 @@
               </td>
               <td class="px-4 py-3 text-sm text-gray-700">{{ user.mail || '-' }}</td>
               <td class="px-4 py-3">
-                <span v-for="role in user.roles" :key="role" 
-                      :class="getRoleBadgeClass(role)"
-                      class="inline-block px-2 py-1 text-xs font-medium rounded-full mr-1">
+                <span v-for="role in user.roles" :key="role" :class="getRoleBadgeClass(role)"
+                  class="inline-block px-2 py-1 text-xs font-medium rounded-full mr-1">
                   {{ getRoleLabel(role) }}
                 </span>
               </td>
               <td class="px-4 py-3">
-                <span v-if="user.status === '1'" class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                <span v-if="user.status === '1'"
+                  class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
                   <i class="fas fa-check-circle"></i>
                   Actif
                 </span>
-                <span v-else class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                <span v-else
+                  class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
                   <i class="fas fa-times-circle"></i>
                   Inactif
                 </span>
@@ -72,14 +75,14 @@
               <td class="px-4 py-3 text-sm text-gray-700">{{ formatDate(user.created) }}</td>
               <td class="px-4 py-3">
                 <div class="flex items-center justify-center gap-2">
-                  <button @click="openEditModal(user)" 
-                          class="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded transition-colors"
-                          title="Modifier">
+                  <button @click="openEditModal(user)"
+                    class="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded transition-colors"
+                    title="Modifier">
                     <i class="fas fa-edit"></i>
                   </button>
-                  <button @click="confirmDelete(user)" 
-                          class="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded transition-colors"
-                          title="Supprimer">
+                  <button @click="confirmDelete(user)"
+                    class="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded transition-colors"
+                    title="Supprimer">
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -107,40 +110,41 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur *</label>
               <input v-model="formData.name" type="text" required
-                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                     placeholder="Entrez le nom d'utilisateur">
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="Entrez le nom d'utilisateur">
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input v-model="formData.mail" type="email"
-                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                     placeholder="email@example.com">
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="email@example.com">
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe {{ editingUser ? '' : '*' }}</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe {{ editingUser ? '' : '*'
+                }}</label>
               <input v-model="formData.pass" type="password" :required="!editingUser"
-                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                     :placeholder="editingUser ? 'Laisser vide pour ne pas changer' : 'Entrez le mot de passe'">
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                :placeholder="editingUser ? 'Laisser vide pour ne pas changer' : 'Entrez le mot de passe'">
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Rôles *</label>
               <div class="space-y-2">
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" value="administrator" v-model="formData.roles"
-                         class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
-                  <span class="text-sm text-gray-700">Administrateur</span>
+                  <input type="checkbox" value="gerant" v-model="formData.roles"
+                    class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                  <span class="text-sm text-gray-700">Gérant</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" value="docteur" v-model="formData.roles"
-                         class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                    class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
                   <span class="text-sm text-gray-700">Docteur</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" value="caissier" v-model="formData.roles"
-                         class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                    class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
                   <span class="text-sm text-gray-700">Caissier</span>
                 </label>
               </div>
@@ -150,7 +154,7 @@
               <label class="block text-sm font-medium text-gray-700 mb-2">Statut</label>
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" v-model="formData.status"
-                       class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                  class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
                 <span class="text-sm text-gray-700">Compte actif</span>
               </label>
             </div>
@@ -161,11 +165,11 @@
 
             <div class="flex gap-3 pt-4">
               <button type="button" @click="closeModal"
-                      class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                 Annuler
               </button>
               <button type="submit" :disabled="saving"
-                      class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50">
+                class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50">
                 <i v-if="saving" class="fas fa-spinner fa-spin mr-2"></i>
                 {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
               </button>
@@ -189,11 +193,11 @@
           </p>
           <div class="flex gap-3">
             <button @click="showDeleteModal = false"
-                    class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+              class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
               Annuler
             </button>
             <button @click="deleteUser" :disabled="deleting"
-                    class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50">
+              class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50">
               <i v-if="deleting" class="fas fa-spinner fa-spin mr-2"></i>
               {{ deleting ? 'Suppression...' : 'Supprimer' }}
             </button>
@@ -207,6 +211,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import { useUserStore } from '../stores/user/user.js';
 
 export default {
   name: 'UserManager',
@@ -220,20 +225,52 @@ export default {
     const saving = ref(false);
     const deleting = ref(false);
     const error = ref(null);
+    const userStore = useUserStore();
+
+    // Paramètres dynamiques de la requête
+    const queryOptions = ref({
+      fields: [
+        'uid',
+        'name',
+        'status',
+        'created',
+        'changed',
+        'access',
+        'mail',
+        'roles',
+      ],
+      sort: { val: 'uid', op: 'desc' },
+      filters: {
+        uid: {
+          val: 0,
+          op: '!=',
+        }
+      },
+      pager: 0,
+      offset: 25,
+    })
+
+
+    const updateFilter = (key, value, op = "=") => {
+      if (value === null || value === undefined || value === '') {
+        delete queryOptions.value.filters[key];
+      } else {
+        queryOptions.value.filters[key] = { val: value, op };
+      }
+    }
 
     const formData = ref({
       name: '',
       mail: '',
       pass: '',
       roles: [],
-      status: true
+      status: 1
     });
 
     const fetchUsers = async () => {
       loading.value = true;
       try {
-        const response = await axios.get('/crud/users');
-        users.value = response.data.users || [];
+        await userStore.fetchUsers(queryOptions.value);
       } catch (err) {
         console.error('Error fetching users:', err);
       } finally {
@@ -294,7 +331,7 @@ export default {
           payload.uid = formData.value.uid;
           await axios.post('/crud/user_edit', payload);
         } else {
-          await axios.post('/crud/user_create', payload);
+          await userStore.createUser(payload);
         }
 
         await fetchUsers();
@@ -339,6 +376,7 @@ export default {
     const getRoleLabel = (role) => {
       const labels = {
         'administrator': 'Admin',
+        'gerant': 'Gérant',
         'docteur': 'Docteur',
         'caissier': 'Caissier'
       };
@@ -348,6 +386,7 @@ export default {
     const getRoleBadgeClass = (role) => {
       const classes = {
         'administrator': 'bg-purple-100 text-purple-700',
+        'gerant': 'bg-yellow-100 text-yellow-700',
         'docteur': 'bg-blue-100 text-blue-700',
         'caissier': 'bg-green-100 text-green-700'
       };
@@ -388,7 +427,8 @@ export default {
       getInitials,
       getRoleLabel,
       getRoleBadgeClass,
-      formatDate
+      formatDate,
+      userStore,
     };
   }
 }
