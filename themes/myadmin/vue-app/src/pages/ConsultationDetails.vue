@@ -219,7 +219,7 @@
                                 <span>Programmer consultation</span>
                             </button>
                             <button v-if="consultation.field_consultation_status != 'completed'"
-                                 @click="editConsultation(consultation)"
+                                @click="editConsultation(consultation)"
                                 class="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2 !rounded-button whitespace-nowrap">
                                 <i class="ri-edit-line text-lg"></i>
                                 <span>Modifier consultation</span>
@@ -238,8 +238,12 @@
                         <div class="space-y-3">
                             <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                 <div class="flex items-center justify-between mb-2">
-                                    <h3 class="font-semibold text-blue-900">{{ consultation.field_type_de_suivi ?
-                                        consultation.field_type_de_suivi : '' }}</h3>
+                                    <h3 class="font-semibold text-blue-900">
+                                        <h3 class="font-semibold text-blue-900">
+                                            {{ consultation.field_type_de_suivi ?
+                                                getSuiviLabel(consultation.field_type_de_suivi) : '' }}
+                                        </h3>
+                                    </h3>
                                 </div>
                                 <p class="text-sm text-blue-700">{{
                                     formatDate(consultation.field_prochaine_consultation, null, "long") }}</p>
@@ -387,6 +391,17 @@ export default {
             offset: 1
         })
 
+        const suiviTypes = {
+            Controle_de_routine: "Contrôle de routine",
+            Resultats_d_examens: "Résultats d'examens",
+            Suivi_evolution: "Suivi évolution",
+            Consultation_urgente_si_besoin: "Consultation urgente si besoin"
+        };
+
+        const getSuiviLabel = (value) => {
+            return suiviTypes[value] || value;
+        };
+
         onMounted(async () => {
             await consultationsStore.fetchConsultations(queryOptions.value);
             consultation.value = consultationsStore.consultations.rows[0];
@@ -430,6 +445,7 @@ export default {
             createConsultation,
             print,
             editConsultation,
+            getSuiviLabel,
         };
     }
 }

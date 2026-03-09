@@ -2,14 +2,14 @@
     <div class="p-3 border-b border-gray-200">
         <div class="flex justify-between">
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Historique médical</h3>
-            <span class="text-xs text-primary" v-if="consultationsStore.consultations.rows.length > 1"
+            <span class="text-xs text-primary" v-if="consultationsStore.consultations.rows.length > 5"
                 @click="showAllHistory(consultationsStore.consultations.rows[0].field_client.nid)">voir plus</span>
         </div>
         <div class="space-y-1 max-h-48 overflow-y-auto" v-if="consultationsStore.consultations.rows.length">
             <div v-for="(cons, index) in consultationsStore.consultations.rows" :key="cons.nid"
                 @click="showConsultationDetails(cons)" class="p-2 rounded-lg cursor-pointer"
                 :class="[cons.field_consultation_status == 'draft' ? 'bg-orange-100 hover:bg-orange-200' : 'bg-green-100 hover:bg-green-200']">
-                <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center justify-between mb-1 gap-4">
                     <span class="text-xs flex-1 two-lines font-medium text-gray-900">{{ cons.field_motif }}</span>
                     <p class="text-xs text-green-500" v-if="cons.field_consultation_status == 'completed'"><i
                             class="ri-checkbox-circle-line"></i> Achevé</p>
@@ -23,7 +23,7 @@
                     <p>
                         <span v-if="index == 0 && cons.field_consultation_status != 'draft'"
                             @click.stop="rollbackConsultation(cons, index)" title="Revenir à une version ultérieure"
-                            class="cursor-pointer mr-2 text-green-600"><i class="ri-arrow-go-back-line"></i></span>
+                            class="cursor-pointer mr-2 text-green-600 hidden"><i class="ri-arrow-go-back-line"></i></span>
                         <span @click.stop="print(cons.nid)" title="Imprimer ordonnance"
                             class="cursor-pointer mr-2 text-green-600"><i class="ri-printer-line"></i></span>
                         <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short') }}</span>

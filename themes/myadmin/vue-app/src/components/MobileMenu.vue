@@ -27,6 +27,22 @@
             {{ menuItem.name }}
           </span>
         </router-link>
+        <!-- Dashboard -->
+        <router-link to="/dashboard" class="menu-item" :class="getMenuItemClass('/dashboard')" @click="closeMenu">
+          <i class="fas fa-chart-line menu-icon"></i>
+          <span class="menu-label">Dashboard</span>
+        </router-link>
+
+        <!-- Équipe -->
+        <router-link to="/users" class="menu-item" :class="getMenuItemClass('/users')" @click="closeMenu">
+          <i class="fas fa-users menu-icon"></i>
+          <span class="menu-label">Équipe</span>
+        </router-link>
+      </nav>
+
+      <!-- Extra Navigation -->
+      <nav class="menu-navigation pt-0">
+
       </nav>
 
       <!-- Status Footer -->
@@ -39,7 +55,8 @@
         </div>
 
         <div class="store-info">
-          <button @click="handleLogout" class="flex items-center border-0 bg-transparent cursor-pointer hover:opacity-80 transition-opacity p-0">
+          <button @click="handleLogout"
+            class="flex items-center border-0 bg-transparent cursor-pointer hover:opacity-80 transition-opacity p-0">
             <i class="fas fa-sign-out-alt text-red-500 text-sm"></i>
             <span class="text-sm text-red-500 ms-2 font-medium">Déconnexion</span>
           </button>

@@ -192,7 +192,13 @@
                 {{ client.field_phone }}
               </td>
               <td class="px-4 py-3 text-sm">
-                {{ formatDate(null, client.field_consultation?.created, 'short') }}
+                <div v-if="client.field_consultation"
+                  @click.stop="showConsultationDetails(client.field_consultation?.nid)">
+                  <p>
+                    {{ formatDate(null, client.field_consultation?.created, 'short') }}
+                  </p>
+                  <p class="text-secondary font-bold text-xs">Voir Consultation</p>
+                </div>
               </td>
               <td class="px-4 py-3 text-sm">
                 {{ formatDate(client.field_consultation?.field_prochaine_consultation, null, 'short') }}
@@ -256,7 +262,7 @@
       :clientToShow="clientToShow" @sendClient="sendClient" @openHistory="openHistory" ref="detailsRef" />
 
     <!-- History modal -->
-    <AllHistory v-if="isHistoryModalOpen" @closeHistory="closeHistory" :clientId="clientId"/>
+    <AllHistory v-if="isHistoryModalOpen" @closeHistory="closeHistory" :clientId="clientId" />
 
     <!-- modal -->
     <div v-if="isDeleteModalOpen" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -477,6 +483,15 @@ export default {
       isHistoryModalOpen.value = false
     }
 
+    const showConsultationDetails = (consultation) => {
+      router.push({
+        name: 'consultation.details',
+        query: {
+          id: consultation
+        }
+      });
+    };
+
     defineExpose({
       resetFilterUi,
     })
@@ -514,7 +529,8 @@ export default {
       isHistoryModalOpen,
       openHistory,
       closeHistory,
-      clientId
+      clientId,
+      showConsultationDetails
     }
   }
 }

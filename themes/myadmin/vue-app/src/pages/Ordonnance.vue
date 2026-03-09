@@ -593,6 +593,7 @@ export default {
                     // Mettre à jour les données patient
                     ordonnanceData.value.patient.nom = consultationsStore.consultation.field_client?.title || "";
                     ordonnanceData.value.patient.dossier = consultationsStore.consultation.nid || "";
+                    ordonnanceData.value.patient.age = consultationsStore.consultation.field_client?.field_age + ' ans' || "";
 
                     // Formater la date de création
                     if (consultationsStore.consultation.created) {
@@ -604,7 +605,7 @@ export default {
                     if (consultationsStore.consultation.field_medicaments?.length > 0) {
                         ordonnanceData.value.traitements = consultationsStore.consultation.field_medicaments.map(med => ({
                             nom: med.field_articles?.title || "Médicament",
-                            posologie: "Posologie et Durée à définir",
+                            posologie: med.field_description || "posologie à definir",
                             duree: "Durée à definir"
                         }));
                     }
@@ -613,7 +614,7 @@ export default {
                     if (consultationsStore.consultation.field_examens?.length > 0) {
                         ordonnanceData.value.examens = consultationsStore.consultation.field_examens.map(ex => ({
                             nom: ex.field_examen?.title || "Examen",
-                            description: `Inscriptions a suivre`
+                            description: ex.field_description || "Inscriptions a suivre"
                         }));
                     }
                 }
@@ -846,7 +847,7 @@ export default {
             const consultationId = route.query.key;
 
             // Récupérer la sauvegarde locale si elle existe
-            const saved = localStorage.getItem('ordonnance_sauvegarde');
+            const saved = localStorage.getItem('ordonnance_autosave');
             if (saved) {
                 try {
                     ordonnanceData.value = JSON.parse(saved);
