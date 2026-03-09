@@ -5,7 +5,7 @@
             <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Historique des consulatations</h3>
+                        <h3 class="text-lg font-semibold text-gray-900">Historique des consultations</h3>
                         <button @click="closeHistoryModal" class="text-gray-400 hover:text-gray-600">
                             <div class="w-6 h-6 flex items-center justify-center">
                                 <i class="ri-close-line text-xl"></i>
@@ -18,7 +18,8 @@
                                 class="w-4 h-4 flex items-center justify-center absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                                 <i class="ri-search-line text-sm"></i>
                             </div>
-                            <input type="text" placeholder="Rechercher une consultation" v-model="searchKeyword" @input="onSearch"
+                            <input type="text" placeholder="Rechercher une consultation" v-model="searchKeyword"
+                                @input="onSearch"
                                 class="w-full pl-10 pr-4 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
                         </div>
                     </div>
@@ -66,7 +67,7 @@
 </template>
 
 <script>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useConsultationStore } from '../../stores/index.js';
 import { formatDate } from '../../utils/formateDate.js';
 import { toast } from 'vue-sonner';
@@ -100,13 +101,15 @@ export default {
                 'field_consultation_status'
             ],
             sort: { val: 'nid', op: 'desc' },
-            filters: {},
+            filters: {
+            },
             pager: 0,
             offset: 1000
         })
 
         const fetchConsultations = async () => {
             loading.value = true;
+            console.log("Fetching consultations with options:", props.clientId);
             await consultationsStore.fetchConsultations(queryOptions.value);
             loading.value = false;
         }
@@ -120,10 +123,16 @@ export default {
             }
         }
 
-        onMounted(async () => {
-            updateFilter('field_client', props.clientId, "=");
-            await fetchConsultations();
-        })
+        watch(
+            () => props.clientId,
+            async (newVal) => {
+                if (!newVal) return;
+                console.log("Client ID changed:", newVal);
+                updateFilter('field_client', newVal, "=");
+                await fetchConsultations();
+            },
+            { immediate: true }
+        );
 
         // edit consulatation
         const editConsultation = (consultation) => {

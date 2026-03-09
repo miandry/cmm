@@ -17,6 +17,7 @@ import Stocks from "./pages/Stocks.vue";
 import Login from "./pages/Login.vue";
 import { hasAnyRole } from "./utils/auth.js";
 import { useAuthStore } from "./stores/auth.js";
+import ConsultationDetails from "./pages/ConsultationDetails.vue";
 
 blockZoom();
 
@@ -50,6 +51,12 @@ const routes = [
     path: "/consultations/:id/edit",
     name: "consultation.edit",
     component: Consultations,
+    meta: { roles: ["docteur", "administrator"] },
+  },
+  {
+    path: "/consultations/details",
+    name: "consultation.details",
+    component: ConsultationDetails,
     meta: { roles: ["docteur", "administrator"] },
   },
   {

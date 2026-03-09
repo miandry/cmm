@@ -102,11 +102,11 @@
                         <div class="space-y-1 max-h-48 overflow-y-auto"
                             v-if="consultationsStore.consultations.rows.length">
                             <div v-for="(cons, index) in consultationsStore.consultations.rows" :key="cons.nid"
-                                @click="editConsultation(cons)" class="p-2 rounded-lg cursor-pointer"
+                                @click="showConsultationDetails(cons)" class="p-2 rounded-lg cursor-pointer"
                                 :class="[cons.field_consultation_status == 'draft' ? 'bg-orange-100 hover:bg-orange-200' : 'bg-green-100 hover:bg-green-200']">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-xs flex-1 two-lines font-medium text-gray-900">{{ cons.field_motif
-                                    }}</span>
+                                        }}</span>
                                     <p class="text-xs text-green-500"
                                         v-if="cons.field_consultation_status == 'completed'"><i
                                             class="ri-checkbox-circle-line"></i> Payé</p>
@@ -127,7 +127,7 @@
                                             class="cursor-pointer mr-2 text-green-600"><i
                                                 class="ri-printer-line"></i></span>
                                         <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short')
-                                        }}</span>
+                                            }}</span>
                                     </p>
                                 </div>
                             </div>
@@ -242,19 +242,13 @@ export default {
             });
         }
 
-        // edit consulatation
-        const editConsultation = (consultation) => {
-            if (consultation.field_consultation_status == "draft") {
-                router.push({
-                    name: 'consultation.edit',
-                    params: {
-                        id: consultation.nid
-                    }
-                });
-                toast("Consultation chargé.", { class: "!bg-orange-100 !text-orange-700", });
-            } else {
-                toast("Consultation déja payé.", { class: "!bg-green-100 !text-green-700", });
-            }
+        const showConsultationDetails = (consultation) => {
+            router.push({
+                name: 'consultation.details',
+                query: {
+                    id: consultation.nid
+                }
+            });
         };
 
         const rollbackConsultation = (consultation, index) => {
@@ -290,10 +284,10 @@ export default {
             formatDate,
             sendClient,
             createConsultation,
-            editConsultation,
             showAllHistory,
             print,
-            rollbackConsultation
+            rollbackConsultation,
+            showConsultationDetails
         }
     }
 }

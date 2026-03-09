@@ -517,7 +517,9 @@ export default {
             openHistory,
             loadLastconsultation,
             closeHistory,
-            isHistoryModalOpen
+            isHistoryModalOpen,
+            clientId,
+            consultationReference,
         };
     }
 }

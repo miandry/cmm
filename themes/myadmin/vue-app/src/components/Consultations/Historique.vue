@@ -2,12 +2,12 @@
     <div class="p-3 border-b border-gray-200">
         <div class="flex justify-between">
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Historique médical</h3>
-            <span class="text-xs text-primary" v-if="consultationsStore.consultations.rows.length > 5"
+            <span class="text-xs text-primary" v-if="consultationsStore.consultations.rows.length > 1"
                 @click="showAllHistory(consultationsStore.consultations.rows[0].field_client.nid)">voir plus</span>
         </div>
         <div class="space-y-1 max-h-48 overflow-y-auto" v-if="consultationsStore.consultations.rows.length">
             <div v-for="(cons, index) in consultationsStore.consultations.rows" :key="cons.nid"
-                @click="editConsultation(cons)" class="p-2 rounded-lg cursor-pointer"
+                @click="showConsultationDetails(cons)" class="p-2 rounded-lg cursor-pointer"
                 :class="[cons.field_consultation_status == 'draft' ? 'bg-orange-100 hover:bg-orange-200' : 'bg-green-100 hover:bg-green-200']">
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-xs flex-1 two-lines font-medium text-gray-900">{{ cons.field_motif }}</span>
@@ -101,19 +101,13 @@ export default {
             { immediate: true } // Lance immédiatement si client.nid existe déjà
         );
 
-        // edit consulatation
-        const editConsultation = (consultation) => {
-            if (consultation.field_consultation_status == "draft") {
-                router.push({
-                    name: 'consultation.edit',
-                    params: {
-                        id: consultation.nid
-                    }
-                });
-                toast("Consultation chargé.", { class: "!bg-orange-100 !text-orange-700", });
-            } else {
-                toast("Consultation déja payé.", { class: "!bg-green-100 !text-green-700", });
-            }
+        const showConsultationDetails = (consultation) => {
+            router.push({
+                name: 'consultation.details',
+                query: {
+                    id: consultation.nid
+                }
+            });
         };
 
         const rollbackConsultation = (consultation, index) => {
@@ -144,10 +138,10 @@ export default {
         return {
             consultationsStore,
             formatDate,
-            editConsultation,
             rollbackConsultation,
             showAllHistory,
-            print
+            print,
+            showConsultationDetails
         }
     },
 }
