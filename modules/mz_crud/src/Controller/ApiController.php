@@ -54,6 +54,7 @@ class ApiController extends ControllerBase
         $json = ($id) ? ['item' => $id, 'status' => true] : ['message' => $message, 'status' => 'error'];
         return new JsonResponse($json);
     }
+
     public function register()
     {
         $service =  \Drupal::service('api.crud');
@@ -90,6 +91,7 @@ class ApiController extends ControllerBase
         }
         return new JsonResponse($json);
     }
+
     public function login()
     {
 
@@ -176,37 +178,63 @@ class ApiController extends ControllerBase
 
     public function user_edit()
     {
+        // allow editing by uid and update core properties and roles/password/status
         $service =  \Drupal::service('api.crud');
         $method = \Drupal::request()->getMethod();
+        $json = ['status' => false];
 
-        if ($method == "POST") {
+        if ($method === "POST") {
             $content = \Drupal::request()->getContent();
             if (!empty($content)) {
                 $data = json_decode($content, TRUE);
-                $json = ($data);
-                $json['status'] = false;
-                if ($data['name'] && $data['phone']) {
-                    $status =  $service->isUserNameExist($data['name']);
-                    if ($status) {
-                        $field_adress = [
-                            'field_adress' => $data['adress']['province'] . " - " . $data['adress']['city'] . " - " . $data['adress']['location'],
-                            'field_email' => $data['mail'],
-                            'field_phone' => $data['phone']
-                        ];
-                        $adress = \Drupal::service('crud')->save('paragraph', 'adress', $field_adress);
-                        $user = user_load_by_name($data['name']);
-                        // var_dump($user->id());
-                        $user->setEmail($data['mail']);
-                        //  $user->set("field_phone", $data['phone']);
-                        $user->set("field_adresse", $adress);
-                        /// $user->setUsername($data['name']); //This username must be unique and accept only a-Z,0-9, - _ @ .
-                        //   $user->addRole('authenticated'); //E.g: authenticated
-                        $json['status'] = $user->save();
+
+                // require uid to identify the user
+                if (!empty($data['uid'])) {
+                    $user = User::load($data['uid']);
+                    if (is_object($user)) {
+                        // optional: check for name change and uniqueness
+                        if (!empty($data['name']) && $data['name'] !== $user->getAccountName()) {
+                            if ($service->isUserNameExist($data['name'])) {
+                                $json['error'] = 'Le nom d\'utilisateur est déjà pris';
+                                return new JsonResponse($json);
+                            }
+                            $user->setUsername($data['name']);
+                        }
+
+                        if (isset($data['mail'])) {
+                            $user->setEmail($data['mail']);
+                        }
+                        if (isset($data['pass']) && $data['pass'] !== '') {
+                            $user->setPassword($data['pass']);
+                        }
+                        if (isset($data['status'])) {
+                            // accept 1/0 or true/false
+                            $user->set('status', $data['status'] ? 1 : 0);
+                        }
+                        if (!empty($data['roles']) && is_array($data['roles'])) {
+                            // set roles property directly; authenticated role stays automatically
+                            $user->set('roles', $data['roles']);
+                        }
+
+                        $saved = $user->save();
+                        $json['status'] = (bool) $saved;
                         $json['id'] = $user->id();
+                        $json['user'] = [
+                            'uid' => $user->id(),
+                            'name' => $user->getAccountName(),
+                            'mail' => $user->getEmail(),
+                            'roles' => $user->getRoles(),
+                            'status' => $user->isActive(),
+                        ];
+                    } else {
+                        $json['error'] = 'Utilisateur introuvable';
                     }
+                } else {
+                    $json['error'] = 'UID manquant';
                 }
             }
         }
+
         return new JsonResponse($json);
     }
 }

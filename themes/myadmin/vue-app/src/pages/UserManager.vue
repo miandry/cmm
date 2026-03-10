@@ -97,7 +97,7 @@
                     <i class="fas fa-edit"></i>
                   </button>
                   <button @click="confirmDelete(user)"
-                    class="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded transition-colors"
+                    class="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded transition-colors hidden"
                     title="Supprimer">
                     <i class="fas fa-trash"></i>
                   </button>
@@ -288,7 +288,7 @@ export default {
       filters: {
       },
       pager: 0,
-      offset: 20,
+      offset: 5,
     })
 
     const searchTerm = ref('');
@@ -320,7 +320,7 @@ export default {
 
     // Pagination
     const currentPage = ref(1);
-    const perPage = 20; // matches offset in queryOptions
+    const perPage = 5; // matches offset in queryOptions
 
     const totalPages = computed(() => Math.ceil(userStore.users.total / perPage));
 
@@ -428,7 +428,24 @@ export default {
 
         if (editingUser.value) {
           payload.uid = formData.value.uid;
-          await axios.post('/crud/user_edit', payload);
+          const resp = await userStore.editUser(payload);
+          if (resp?.status) {
+            // update local row without refetch
+            const idx = userStore.users.rows.findIndex(u => u.uid == payload.uid);
+            if (idx !== -1) {
+              userStore.users.rows[idx] = {
+                ...userStore.users.rows[idx],
+                name: payload.name,
+                mail: payload.mail,
+                roles: payload.roles,
+                status: payload.status,
+              };
+            }
+            toast.success('Utilisateur mis à jour avec succès.');
+            closeModal();
+          } else {
+            error.value = resp.error || 'Erreur lors de la modification';
+          }
         } else {
           await userStore.createUser(payload);
           if (userStore.error == 'Username existe déjà') {
@@ -442,9 +459,9 @@ export default {
             error.value = null; // Clear any previous errors
           }
           await fetchUsers();
+          toast.success('Utilisateur créé avec succès.');
+          closeModal();
         }
-        toast.success(`Utilisateur ${editingUser.value ? 'mis à jour' : 'créé'} avec succès.`);
-        closeModal();
       } catch (err) {
         console.error('Error saving user:', err);
         error.value = err.response?.data?.message || 'Erreur lors de l\'enregistrement';

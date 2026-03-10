@@ -13,14 +13,32 @@ export const useUserStore = defineStore("user", () => {
     try {
       // Implement the logic to create a new user using an API call
       const response = await axios.post("/crud/create_user", newUserData);
-      console.log("User created successfully:", response.data);
       if (response.data.status == false) {
         error.value = response.data.error;
       } else {
         error.value = null; // Clear any previous errors
       }
+      return response.data;
     } catch (err) {
       error.value = err;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function editUser(userData) {
+    try {
+      const response = await axios.post('/crud/user_edit', userData);
+      if (response.data.status == false) {
+        error.value = response.data.error;
+      } else {
+        error.value = null;
+      }
+      return response.data;
+    } catch (err) {
+      error.value = err;
+      throw err;
     } finally {
       loading.value = false;
     }
@@ -47,6 +65,7 @@ export const useUserStore = defineStore("user", () => {
     loading,
     error,
     createUser,
+    editUser,
     fetchUsers
   };
 });
