@@ -14,6 +14,11 @@ export const useUserStore = defineStore("user", () => {
       // Implement the logic to create a new user using an API call
       const response = await axios.post("/crud/create_user", newUserData);
       console.log("User created successfully:", response.data);
+      if (response.data.status == false) {
+        error.value = response.data.error;
+      } else {
+        error.value = null; // Clear any previous errors
+      }
     } catch (err) {
       error.value = err;
     } finally {
@@ -25,7 +30,9 @@ export const useUserStore = defineStore("user", () => {
     try {
       // Implement the logic to fetch users using an API call
       const query = buildQueryParams(options);
-      const response = await axios.get(`/api/v2/users?${query}`);
+      // Use the new list endpoint which supports filters/sort/pager
+      const response = await axios.get(`/api/v2/users/list?${query}`);
+      // API returns { rows: [...], total: n }
       users.value = response.data;
     } catch (err) {
       error.value = err;

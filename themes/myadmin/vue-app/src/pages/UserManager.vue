@@ -13,6 +13,22 @@
       </button>
     </div>
 
+    <!-- Search & Filters -->
+    <div class="mb-4 flex items-center space-x-3">
+      <input v-model="searchTerm" @input="updateSearch" type="text" placeholder="Rechercher un utilisateur..."
+        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
+
+      <!-- Status filter -->
+      <div>
+        <select v-model="statusFilter"
+          class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+          <option value="">Tous statuts</option>
+          <option value="1">Actif</option>
+          <option value="0">Bloqué</option>
+        </select>
+      </div>
+    </div>
+
     <!-- Users Table -->
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
@@ -29,7 +45,7 @@
           </thead>
           <tbody class="divide-y divide-gray-200">
             <tr v-if="loading" class="text-center">
-              <td colspan="6" class="px-4 py-8 text-gray-500">
+              <td colspan="6" class="px-4 py-8 text-gray-500 text-center">
                 <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
                 <p>Chargement...</p>
               </td>
@@ -91,6 +107,31 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="px-6 py-4 border-t border-gray-200 flex items-center justify-center">
+        <div class="flex items-center space-x-2">
+          <!-- Previous -->
+          <button @click="previousPage" :disabled="currentPage === 1"
+            class="px-3 py-2 text-gray-400 hover:text-gray-600 disabled:opacity-50">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+
+          <!-- Pages -->
+          <button v-for="page in visiblePages" :key="page" @click="goToPage(page)"
+            class="px-3 py-2 rounded-md transition-colors" :class="page === currentPage
+              ? 'bg-primary text-white'
+              : 'text-gray-600 hover:text-gray-900'">
+            {{ page }}
+          </button>
+
+          <!-- Next -->
+          <button @click="nextPage" :disabled="currentPage === totalPages"
+            class="px-3 py-2 text-gray-400 hover:text-gray-600 disabled:opacity-50">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Create/Edit Modal -->
@@ -108,7 +149,8 @@
 
           <form @submit.prevent="saveUser" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur <span
+                  class="text-red-500">*</span></label>
               <input v-model="formData.name" type="text" required
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Entrez le nom d'utilisateur">
@@ -122,15 +164,16 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe {{ editingUser ? '' : '*'
-                }}</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe <span class="text-red-500">{{
+                editingUser ? '' : '*'
+                  }}</span></label>
               <input v-model="formData.pass" type="password" :required="!editingUser"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 :placeholder="editingUser ? 'Laisser vide pour ne pas changer' : 'Entrez le mot de passe'">
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Rôles *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Rôles <span class="text-red-500">*</span></label>
               <div class="space-y-2">
                 <label class="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" value="gerant" v-model="formData.roles"
@@ -209,9 +252,11 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 import { useUserStore } from '../stores/user/user.js';
+import { debounce } from 'lodash';
+import { toast } from 'vue-sonner';
 
 export default {
   name: 'UserManager',
@@ -241,14 +286,59 @@ export default {
       ],
       sort: { val: 'uid', op: 'desc' },
       filters: {
-        uid: {
-          val: 0,
-          op: '!=',
-        }
       },
       pager: 0,
-      offset: 25,
+      offset: 20,
     })
+
+    const searchTerm = ref('');
+    const statusFilter = ref(''); // '' = all, '1' active, '0' inactive
+
+    const updateSearch = () => {
+      loading.value = true;
+      debouncedFetch();
+    };
+
+    const updateStatus = () => {
+      // update filter and fetch immediately
+      currentPage.value = 1; // Reset to first page when filter changes
+      queryOptions.value.pager = 0; // Reset pager
+      if (statusFilter.value === '') {
+        updateFilter('status', null);
+      } else {
+        updateFilter('status', statusFilter.value, '=');
+      }
+      fetchUsers();
+    };
+
+    const debouncedFetch = debounce(() => {
+      currentPage.value = 1; // Reset to first page on search
+      queryOptions.value.pager = 0; // Reset pager
+      updateFilter('name', searchTerm.value, 'CONTAINS');
+      fetchUsers();
+    }, 600);
+
+    // Pagination
+    const currentPage = ref(1);
+    const perPage = 20; // matches offset in queryOptions
+
+    const totalPages = computed(() => Math.ceil(userStore.users.total / perPage));
+
+    const visiblePages = computed(() => {
+      const pages = [];
+      const total = totalPages.value;
+      const current = currentPage.value;
+
+      if (total <= 3) {
+        for (let i = 1; i <= total; i++) pages.push(i);
+      } else {
+        if (current === 1) pages.push(1, 2, 3);
+        else if (current === total) pages.push(total - 2, total - 1, total);
+        else pages.push(current - 1, current, current + 1);
+      }
+
+      return pages;
+    });
 
 
     const updateFilter = (key, value, op = "=") => {
@@ -263,7 +353,8 @@ export default {
       name: '',
       mail: '',
       pass: '',
-      roles: [],
+      // default role selection (useful when opening create modal without resetting)
+      roles: ['caissier'],
       status: 1
     });
 
@@ -284,7 +375,8 @@ export default {
         name: '',
         mail: '',
         pass: '',
-        roles: [],
+        // choose caissier by default for new users
+        roles: ['caissier'],
         status: true
       };
       error.value = null;
@@ -315,6 +407,13 @@ export default {
       saving.value = true;
       error.value = null;
 
+      // simple front–end validation for required fields
+      if (!formData.value.roles || formData.value.roles.length === 0) {
+        error.value = 'Veuillez sélectionner au moins un rôle.';
+        saving.value = false;
+        return;
+      }
+
       try {
         const payload = {
           name: formData.value.name,
@@ -332,9 +431,19 @@ export default {
           await axios.post('/crud/user_edit', payload);
         } else {
           await userStore.createUser(payload);
+          if (userStore.error == 'Username existe déjà') {
+            error.value = 'Ce nom d\'utilisateur est déjà utilisé.';
+            return; // Stop further execution to show the error
+          } else if (userStore.error) {
+            error.value = userStore.error;
+            toast.error("Une erreur est survenue lors de la création de l'utilisateur.");
+            return;
+          } else {
+            error.value = null; // Clear any previous errors
+          }
+          await fetchUsers();
         }
-
-        await fetchUsers();
+        toast.success(`Utilisateur ${editingUser.value ? 'mis à jour' : 'créé'} avec succès.`);
         closeModal();
       } catch (err) {
         console.error('Error saving user:', err);
@@ -403,6 +512,38 @@ export default {
       });
     };
 
+    const onPagination = async (value) => {
+      queryOptions.value.pager = value - 1;
+      currentPage.value = value;
+      await fetchUsers();
+    };
+
+    const goToPage = (page) => {
+      if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page;
+        onPagination(currentPage.value);
+      }
+    };
+
+    const nextPage = () => {
+      if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+        onPagination(currentPage.value);
+      }
+    };
+
+    const previousPage = () => {
+      if (currentPage.value > 1) {
+        currentPage.value--;
+        onPagination(currentPage.value);
+      }
+    };
+
+    watch(statusFilter, () => {
+      // whenever status filter changes, update and reload
+      updateStatus();
+    });
+
     onMounted(() => {
       fetchUsers();
     });
@@ -429,6 +570,15 @@ export default {
       getRoleBadgeClass,
       formatDate,
       userStore,
+      searchTerm,
+      statusFilter,
+      updateSearch,
+      currentPage,
+      totalPages,
+      visiblePages,
+      goToPage,
+      nextPage,
+      previousPage,
     };
   }
 }
