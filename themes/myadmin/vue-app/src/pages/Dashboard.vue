@@ -28,7 +28,7 @@
           <div>
             <p class="text-xs text-gray-500 uppercase font-medium">Ventes</p>
             <p class="text-2xl font-bold text-gray-800 mt-1">{{ formatCurrency(todayStats.sales_total) }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ todayStats.sales_count || 0 }} commandes</p>
+            <p class="text-xs text-gray-500 mt-1">{{ todayStats.sales_count || 0 }} commandes aujourd'hui</p>
           </div>
           <div class="bg-green-50 p-3 rounded-lg">
             <i class="ri-shopping-cart-line text-2xl text-green-600"></i>

@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mt-4">
+  <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
     <h3 class="text-sm font-semibold text-gray-700 mb-4">Évolution des Ventes</h3>
     <div class="h-64 w-full relative">
       <Bar v-if="chartData.labels.length > 0" :data="chartData" :options="chartOptions" />
@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import {
   Chart as ChartJS,
   Title,
@@ -34,24 +34,45 @@ export default {
   },
   setup() {
     const orderStore = useOrderStore();
+    const queryOptions = ref({
+      fields: [
+        'nid',
+        'title',
+        'field_total_vente',
+        'created'
+      ],
+      sort: { val: 'nid', op: 'desc' },
+      filters: {},
+      values: {},
+      pager: 0,
+      offset: 100
+    })
+
+    const fetchOrders = async (append = false) => {
+      await orderStore.fetchOrders(queryOptions.value, append);
+    }
+
+    onMounted(() => {
+      fetchOrders(false);
+    })
 
     const chartData = computed(() => {
       const orders = orderStore.orders.rows || [];
-      
+
       // Grouper les ventes par date
       const salesByDate = {};
-      
+
       orders.forEach(order => {
         if (!order.created) return;
-        
+
         // Convertir le timestamp ou la date en format lisible (DD/MM)
         const dateObj = new Date(order.created * 1000); // Supposons timestamp unix
         // Si c'est une string ISO, new Date(order.created) fonctionne aussi
-        
+
         const dateKey = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
-        
+
         const amount = parseFloat(order.field_total_vente) || 0;
-        
+
         if (salesByDate[dateKey]) {
           salesByDate[dateKey] += amount;
         } else {
@@ -96,7 +117,7 @@ export default {
         },
         tooltip: {
           callbacks: {
-            label: function(context) {
+            label: function (context) {
               let label = context.dataset.label || '';
               if (label) {
                 label += ': ';

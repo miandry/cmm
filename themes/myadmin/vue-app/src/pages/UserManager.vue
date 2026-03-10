@@ -288,7 +288,7 @@ export default {
       filters: {
       },
       pager: 0,
-      offset: 5,
+      offset: 20,
     })
 
     const searchTerm = ref('');
@@ -320,7 +320,7 @@ export default {
 
     // Pagination
     const currentPage = ref(1);
-    const perPage = 5; // matches offset in queryOptions
+    const perPage = 20; // matches offset in queryOptions
 
     const totalPages = computed(() => Math.ceil(userStore.users.total / perPage));
 
