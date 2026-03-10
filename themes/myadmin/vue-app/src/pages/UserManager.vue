@@ -30,9 +30,9 @@
     </div>
 
     <!-- Users Table -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mt-8">
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full" id="teamTable">
           <thead class="bg-gray-50 border-b border-gray-200">
             <tr>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nom</th>
@@ -600,3 +600,10 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+#teamTable {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+</style>
