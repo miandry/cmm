@@ -18,6 +18,7 @@ import Login from "./pages/Login.vue";
 import { hasAnyRole } from "./utils/auth.js";
 import { useAuthStore } from "./stores/auth.js";
 import ConsultationDetails from "./pages/ConsultationDetails.vue";
+import { toast } from "vue-sonner";
 
 blockZoom();
 
@@ -142,11 +143,13 @@ router.beforeEach(async (to, from, next) => {
 
   // Si pas connecté
   if (!isAuthenticated && to.name !== "login") {
+    toast.error("Vous devez être connecté pour accéder à cette page.");
     return next({ name: "login" });
   }
 
   // Vérification des rôles
   if (requiredRoles.length && !hasAnyRole(requiredRoles)) {
+    toast.error("Vous n'avez pas les permissions nécessaires pour accéder à cette page.");
     return next({ name: "home" });
   }
 
