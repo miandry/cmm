@@ -56,7 +56,7 @@
                 </div>
             </div>
             <div class="hidden sm:block" v-if="order.field_articles?.length">
-                <h4 class="font-medium text-gray-900 mb-2">Produits commandés</h4>
+                <h4 class="font-medium text-gray-900 mb-2">Produits vendu</h4>
                 <div class="space-y-1 text-sm text-gray-600">
                     <div v-for="article in order.field_articles.slice(0, 3)" :key="article.nid"
                         class="flex justify-between">

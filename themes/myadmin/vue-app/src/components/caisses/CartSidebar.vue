@@ -101,7 +101,7 @@
                 <button
                     class="w-full py-2 bg-secondary hover:bg-green-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap"
                     @click="handleFinalizeSale">
-                    Finaliser la commande
+                    Finaliser la vente
                 </button>
             </div>
         </div>
@@ -213,7 +213,7 @@
                         <button
                             class="w-full py-2 bg-secondary hover:bg-green-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap"
                             @click="handleFinalizeSale">
-                            Finaliser la commande
+                            Finaliser la vente
                         </button>
                     </div>
                 </div>

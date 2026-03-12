@@ -27,10 +27,17 @@
             {{ menuItem.name }}
           </span>
         </router-link>
+
         <!-- Dashboard -->
         <router-link to="/dashboard" class="menu-item" :class="getMenuItemClass('/dashboard')" @click="closeMenu">
           <i class="fas fa-chart-line menu-icon"></i>
           <span class="menu-label">Dashboard</span>
+        </router-link>
+
+        <!-- Profil -->
+        <router-link to="/profile" class="menu-item" :class="getMenuItemClass('/profile')" @click="closeMenu">
+          <i class="fas fa-user menu-icon"></i>
+          <span class="menu-label">Profil</span>
         </router-link>
 
         <!-- Équipe -->

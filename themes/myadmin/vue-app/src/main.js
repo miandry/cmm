@@ -22,7 +22,7 @@ import ConsultationDetails from "./pages/ConsultationDetails.vue";
 blockZoom();
 
 const routes = [
-  { path: "/login", name: "login", component: Login, meta: { roles: [] } },
+  { path: "/login", name: "login", component: Login, meta: { hideHeader: true, roles: [] } },
   { path: "/", name: "home", component: Caisse, meta: { roles: ["caissier", "docteur", "administrator"] } },
   { path: "/caisse", name: "caisse", component: Caisse, meta: { roles: ["caissier", "docteur", "administrator"] } },
   { path: "/dashboard", name: "dashboard", component: Dashboard, meta: { roles: ["caissier", "docteur", "administrator"] } },
