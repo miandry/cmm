@@ -311,6 +311,7 @@ export default {
 
         // État des messages
         const messages = ref([])
+        const conversationHistory = ref([]) // Historique pour l'IA
         const currentMessage = ref('')
         const isTyping = ref(false)
         const selectedImage = ref(null)
@@ -492,6 +493,12 @@ export default {
             try {
                 const response = await generateAIResponse(message, imageToSend)
 
+                // Ajouter le message utilisateur à l'historique de conversation
+                conversationHistory.value.push({
+                    role: 'user',
+                    content: message
+                });
+
                 // Vérifier si la réponse contient la commande pour afficher le graphique
                 let content = response;
                 let hasChart = false;
@@ -500,6 +507,12 @@ export default {
                     hasChart = true;
                     content = content.replace('<SHOW_SALES_CHART>', '');
                 }
+
+                // Ajouter la réponse de l'IA à l'historique de conversation
+                conversationHistory.value.push({
+                    role: 'assistant',
+                    content: content
+                });
 
                 messages.value.push({
                     type: 'ai',
@@ -787,11 +800,19 @@ export default {
             - Termine tes conseils médicaux en rappelant que la décision finale revient au médecin.
             - Si on demande des statistiques ou graphiques de ventes, ajoute <SHOW_SALES_CHART> à la fin.
 
+            REQUÊTES SÉMANTIQUES ET FILTRAGE PAR ÂGE :
+            - Quand on demande "les enfants", "les pédiatriques", "les jeunes patients" : filtre les patients avec field_age < 18 ans
+            - Quand on demande "les adultes" : filtre les patients avec field_age >= 18 et < 65 ans
+            - Quand on demande "les personnes âgées", "les seniors" : filtre les patients avec field_age >= 65 ans
+            - Quand on demande "les femmes" : filtre les patients avec field_sexe = "Femme" ou "F"
+            - Quand on demande "les hommes" : filtre les patients avec field_sexe = "Homme" ou "M"
+            - IMPORTANT : Analyse la liste des patients fournie et applique ces filtres dans ta réponse
+
             STRUCTURE DES DONNÉES ET RELATIONS ENTRE ENTITÉS :
 
             1. RELATIONS CLIENT (PATIENT) :
             - Un CLIENT (patient) est identifié par son 'nid' (ID unique)
-            - Chaque CLIENT possède : title (nom), field_age (âge), field_sexe (sexe), field_allergies (allergies), field_phone (téléphone), field_assurance (assurance), field_adresse (adresse), field_contact_d_urgence (contact urgence), field_email (email), field_notes_medicales (notes médicales)
+            - Chaque CLIENT possède : title (nom), field_age (âge en années), field_sexe (sexe: Homme/Femme ou M/F), field_allergies (allergies), field_phone (téléphone), field_assurance (assurance), field_adresse (adresse), field_contact_d_urgence (contact urgence), field_email (email), field_notes_medicales (notes médicales)
 
             2. RELATIONS CONSULTATION :
             - Une CONSULTATION est liée à un CLIENT via la clé étrangère 'field_client' qui contient le 'nid' du client
@@ -852,6 +873,19 @@ export default {
                 ];
             }
 
+            // Construire l'historique des messages pour l'API
+            const apiMessages = [
+                { role: 'system', content: systemPrompt },
+                ...conversationHistory.value,
+                { role: 'user', content: userContent }
+            ];
+
+            // Limiter l'historique aux 10 derniers échanges (20 messages) pour éviter de dépasser les tokens
+            const maxHistoryMessages = 20;
+            if (apiMessages.length > maxHistoryMessages + 1) { // +1 pour le system prompt
+                apiMessages.splice(1, apiMessages.length - maxHistoryMessages - 1);
+            }
+
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -860,10 +894,7 @@ export default {
                 },
                 body: JSON.stringify({
                     model: 'gpt-4o-mini',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: userContent }
-                    ],
+                    messages: apiMessages,
                     max_tokens: 1000,
                     temperature: 0.7
                 })
