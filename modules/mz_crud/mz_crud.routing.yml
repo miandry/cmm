@@ -12,7 +12,7 @@ mz_crud.register:
     _controller: '\Drupal\mz_crud\Controller\ApiController::register'
     _title: 'crud insert'
   requirements:
-    _permission: 'access content'    
+    _access: 'TRUE'
 
 mz_crud.login:
   path: '/crud/login'
@@ -20,7 +20,7 @@ mz_crud.login:
     _controller: '\Drupal\mz_crud\Controller\ApiController::login'
     _title: 'crud insert'
   requirements:
-    _permission: 'access content'       
+    _access: 'TRUE'       
 
 mz_crud.user_edit:
   path: '/crud/user_edit'
