@@ -1,101 +1,113 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
+import { ref } from 'vue';
 
-export const useAuthStore = defineStore('auth', {
-    state: () => {
-        // Try to recover user from localStorage
-        const savedUser = localStorage.getItem('user_data');
-        const user = savedUser ? JSON.parse(savedUser) : (window.APP_DATA?.user || null);
+export const useAuthStore = defineStore('auth', () => {
+    // state refs
+    const user = ref(null);
+    const isAuthenticated = ref(false);
+    const loading = ref(false);
+    const error = ref(null);
 
-        // Sync to window.APP_DATA for legacy global access if needed
-        if (user && window.APP_DATA) {
-            window.APP_DATA.user = user;
+    // initialize from localStorage or window.APP_DATA
+    const savedUser = localStorage.getItem('user_data');
+    const initialUser = savedUser ? JSON.parse(savedUser) : (window.APP_DATA?.user || null);
+    if (initialUser) {
+        user.value = initialUser;
+        isAuthenticated.value = true;
+        if (window.APP_DATA) {
+            window.APP_DATA.user = initialUser;
             window.APP_DATA.isLoggedIn = true;
-            window.APP_DATA.username = user.name || user.username;
-            window.APP_DATA.roles = user.roles || [];
+            window.APP_DATA.username = initialUser.name || initialUser.username;
+            window.APP_DATA.roles = initialUser.roles || [];
         }
+    }
 
-        return {
-            user: user,
-            isAuthenticated: !!user,
-            loading: false,
-            error: null,
-        }
-    },
+    // actions
+    async function login(username, password) {
+        loading.value = true;
+        error.value = null;
 
-    actions: {
-        async login(username, password) {
-            this.loading = true;
-            this.error = null;
+        try {
+            const response = await axios.post('/crud/login', {
+                name: username,
+                password: password
+            });
 
-            try {
-                const response = await axios.post('/user/login?_format=json', {
-                    name: username,
-                    pass: password
-                });
-
-                if (response.status === 200) {
-                    const userData = response.data;
-                    this.user = userData.current_user;
-                    this.isAuthenticated = true;
-
+            if (response.status === 200) {
+                const data = response.data;
+                // Vérifier le status retourné par l'API
+                if (data.status === true) {
+                    // Construire l'objet utilisateur à partir de la réponse
+                    user.value = {
+                        id: data.id,
+                        name: data.name,
+                        mail: data.mail,
+                        roles: data.roles || [],
+                        token: data.token
+                    };
                     // Persist for page reloads
-                    localStorage.setItem('user_data', JSON.stringify(this.user));
+                    localStorage.setItem('user_data', JSON.stringify(user.value));
+                    isAuthenticated.value = true;
 
                     // Sync to window.APP_DATA
                     if (!window.APP_DATA) window.APP_DATA = {};
-                    window.APP_DATA.user = this.user;
+                    window.APP_DATA.user = user.value;
                     window.APP_DATA.isLoggedIn = true;
-                    window.APP_DATA.username = this.user.name || this.user.username;
-                    window.APP_DATA.roles = this.user.roles || [];
-
+                    window.APP_DATA.username = user.value.name;
+                    window.APP_DATA.roles = user.value.roles;
+                    window.APP_DATA.token = user.value.token;
                     return true;
-                }
-            } catch (err) {
-                console.error("Login error:", err);
-                if (err.response && err.response.data && err.response.data.message) {
-                    this.error = err.response.data.message;
                 } else {
-                    this.error = "Identifiants incorrects ou erreur serveur.";
+                    error.value = "Identifiants incorrects.";
+                    return false;
                 }
-                return false;
-            } finally {
-                this.loading = false;
             }
-        },
-
-        async logout() {
-            try {
-                await axios.get('/user/logout');
-            } catch (err) {
-                console.error("Logout error", err);
-            } finally {
-                this.user = null;
-                this.isAuthenticated = false;
-                localStorage.removeItem('user_data');
-
-                if (window.APP_DATA) {
-                    window.APP_DATA.user = null;
-                    window.APP_DATA.isLoggedIn = false;
-                }
-                window.location.href = '/user/login';
-            }
-        },
-
-        async checkAuth() {
-            if (this.isAuthenticated) return true;
-
-            try {
-                const response = await axios.get('/user/login_status?_format=json');
-                if (response.data === 1) {
-                    this.isAuthenticated = true;
-                    return true;
-                }
-            } catch (e) {
-                this.isAuthenticated = false;
-                localStorage.removeItem('user_data');
+        } catch (err) {
+            console.error("Login error:", err);
+            if (err.response && err.response.data && err.response.data.message) {
+                error.value = err.response.data.message;
+            } else {
+                error.value = "Erreur de connexion. Vérifiez vos identifiants.";
             }
             return false;
+        } finally {
+            loading.value = false;
         }
     }
+
+    function logout() {
+        // simply clear local state and storage, then redirect
+        user.value = null;
+        isAuthenticated.value = false;
+        localStorage.removeItem('user_data');
+
+        if (window.APP_DATA) {
+            window.APP_DATA.user = null;
+            window.APP_DATA.isLoggedIn = false;
+        }
+    }
+
+    function checkAuth() {
+        // Determine auth based on stored user data
+        if (isAuthenticated.value) return true;
+        const saved = localStorage.getItem('user_data');
+        if (saved) {
+            user.value = JSON.parse(saved);
+            isAuthenticated.value = true;
+            return true;
+        }
+        isAuthenticated.value = false;
+        return false;
+    }
+
+    return {
+        user,
+        isAuthenticated,
+        loading,
+        error,
+        login,
+        logout,
+        checkAuth
+    };
 });

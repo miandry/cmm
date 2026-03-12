@@ -74,6 +74,7 @@
 </template>
 
 <script>
+import { toast } from 'vue-sonner';
 import { useAuthStore } from '../stores/auth';
 
 export default {
@@ -172,7 +173,17 @@ export default {
     },
 
     async handleLogout() {
-      await this.authStore.logout();
+      try {
+        await this.authStore.logout();
+        if (this.authStore.isAuthenticated) {
+          toast.error("Une erreur est survenue lors de la déconnexion. Veuillez réessayer.");
+          return;
+        } else {
+          this.$router.push('/login');
+        }
+      } catch (error) {
+        console.error("Logout failed:", error);
+      }
     },
   },
 
