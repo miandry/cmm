@@ -9,13 +9,16 @@
 
       <!-- Filters -->
       <div class="flex items-center bg-white border border-gray-200 rounded-xl p-1 shadow-sm w-fit">
-        <button class="px-4 py-1.5 text-sm rounded-lg bg-blue-600 text-white font-medium">
+        <button @click="changePeriod('today')" class="px-4 py-1.5 text-sm rounded-lg transition-colors"
+          :class="currentPeriod === 'today' ? 'bg-blue-600 text-white font-medium' : 'text-gray-600 hover:bg-gray-100'">
           Aujourd'hui
         </button>
-        <button class="px-4 py-1.5 text-sm rounded-lg text-gray-600 hover:bg-gray-100">
+        <button @click="changePeriod('week')" class="px-4 py-1.5 text-sm rounded-lg transition-colors"
+          :class="currentPeriod === 'week' ? 'bg-blue-600 text-white font-medium' : 'text-gray-600 hover:bg-gray-100'">
           7 jours
         </button>
-        <button class="px-4 py-1.5 text-sm rounded-lg text-gray-600 hover:bg-gray-100">
+        <button @click="changePeriod('month')" class="px-4 py-1.5 text-sm rounded-lg transition-colors"
+          :class="currentPeriod === 'month' ? 'bg-blue-600 text-white font-medium' : 'text-gray-600 hover:bg-gray-100'">
           30 jours
         </button>
       </div>
@@ -31,7 +34,7 @@
           <div>
             <p class="text-xs uppercase opacity-80">Consultations</p>
             <p class="text-3xl font-bold mt-1">{{ todayStats.consultations_count || 0 }}</p>
-            <p class="text-xs opacity-80 mt-1">Aujourd'hui</p>
+            <p class="text-xs opacity-80 mt-1">{{ periodLabel }}</p>
           </div>
 
           <div class="bg-white/20 backdrop-blur p-3 rounded-xl">
@@ -62,8 +65,8 @@
         <div class="flex items-center justify-between font-bold">
           <div>
             <p class="text-xs uppercase opacity-80">Patients</p>
-            <p class="text-3xl font-bold mt-1">{{ totalPatients }}</p>
-            <p class="text-xs opacity-80 mt-1">Total enregistrés</p>
+            <p class="text-3xl font-bold mt-1">{{ todayStats.clients_count || 0 }}</p>
+            <p class="text-xs opacity-80 mt-1">Nouveaux patients</p>
           </div>
 
           <div class="bg-white/20 backdrop-blur p-3 rounded-xl">
@@ -190,26 +193,50 @@ export default {
     SalesChart
   },
   setup() {
+    const currentPeriod = ref('today');
     const todayStats = ref({
       consultations_count: 0,
       sales_count: 0,
       sales_total: 0,
+      clients_count: 0,
       low_stock_items: 0
     });
-    const totalPatients = ref(0);
     const lowStockItems = ref([]);
     const recentConsultations = ref([]);
     const consultationsData = ref([]);
 
-    const fetchTodayStats = async () => {
+    const periodLabel = computed(() => {
+      const labels = {
+        'today': "Aujourd'hui",
+        'week': "7 derniers jours",
+        'month': "30 derniers jours"
+      };
+      return labels[currentPeriod.value] || "Aujourd'hui";
+    });
+
+    const fetchStats = async (period = "today") => {
       try {
-        const response = await fetch('/api/rag/today');
+        const response = await fetch(`/api/rag/get-data?period=${period}`);
         const data = await response.json();
-        todayStats.value = data.stats || {};
-        recentConsultations.value = (data.consultations || []).slice(0, 10);
+
+        if (data.success) {
+          todayStats.value = {
+            consultations_count: data.stats?.consultations_count || 0,
+            sales_count: data.stats?.sales_count || 0,
+            sales_total: data.stats?.sales_total || 0,
+            clients_count: data.stats?.clients_count || 0,
+            low_stock_items: data.stats?.low_stock_items || 0
+          };
+          recentConsultations.value = (data.consultations || []).slice(0, 10);
+        }
       } catch (error) {
-        console.error('Error fetching today stats:', error);
+        console.error('Error fetching stats:', error);
       }
+    };
+
+    const changePeriod = (period) => {
+      currentPeriod.value = period;
+      fetchStats(period);
     };
 
     const fetchLowStock = async () => {
@@ -219,16 +246,6 @@ export default {
         lowStockItems.value = data.data || [];
       } catch (error) {
         console.error('Error fetching low stock:', error);
-      }
-    };
-
-    const fetchTotalPatients = async () => {
-      try {
-        const response = await fetch('/api/rag/patients?limit=1');
-        const data = await response.json();
-        totalPatients.value = data.count || 0;
-      } catch (error) {
-        console.error('Error fetching patients:', error);
       }
     };
 
@@ -269,8 +286,11 @@ export default {
         (a, b) => new Date(a[0]) - new Date(b[0])
       );
 
-      // limiter aux 14 derniers jours affichés
-      const recentEntries = sortedEntries.slice(-14);
+      let limit = 14;
+      if (currentPeriod.value === 'week') limit = 7;
+      if (currentPeriod.value === 'month') limit = 30;
+
+      const recentEntries = sortedEntries.slice(-limit);
 
       const labels = recentEntries.map(([date]) => {
         const d = new Date(date);
@@ -351,21 +371,22 @@ export default {
     };
 
     onMounted(() => {
-      fetchTodayStats();
+      fetchStats("today");
       fetchLowStock();
-      fetchTotalPatients();
       fetchConsultations();
     });
 
     return {
+      currentPeriod,
+      periodLabel,
       todayStats,
-      totalPatients,
       lowStockItems,
       recentConsultations,
       consultationsChartData,
       chartOptions,
       formatCurrency,
-      formatDate
+      formatDate,
+      changePeriod
     };
   }
 }
