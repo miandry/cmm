@@ -286,22 +286,17 @@ export default {
         (a, b) => new Date(a[0]) - new Date(b[0])
       );
 
-      let limit = 14;
-      if (currentPeriod.value === 'week') limit = 7;
-      if (currentPeriod.value === 'month') limit = 30;
+      const allEntries = sortedEntries;
 
-      const recentEntries = sortedEntries.slice(-limit);
-
-      const labels = recentEntries.map(([date]) => {
+      const labels = allEntries.map(([date]) => {
         const d = new Date(date);
-
         return d.toLocaleDateString("fr-FR", {
           day: "2-digit",
           month: "2-digit",
         });
       });
 
-      const data = recentEntries.map(([, total]) => total);
+      const data = allEntries.map(([, total]) => total);
 
       return {
         labels,
