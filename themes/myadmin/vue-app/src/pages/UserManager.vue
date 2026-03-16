@@ -158,7 +158,7 @@
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input v-model="formData.mail" type="email"
+              <input v-model="formData.mail" type="email" autocomplete="off"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="email@example.com">
             </div>
@@ -167,7 +167,7 @@
               <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe <span class="text-red-500">{{
                 editingUser ? '' : '*'
                   }}</span></label>
-              <input v-model="formData.pass" type="password" :required="!editingUser"
+              <input v-model="formData.pass" type="password" :required="!editingUser" autocomplete="off"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 :placeholder="editingUser ? 'Laisser vide pour ne pas changer' : 'Entrez le mot de passe'">
             </div>
