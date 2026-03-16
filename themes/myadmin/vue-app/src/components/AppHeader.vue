@@ -186,18 +186,15 @@ export default {
 
     async handleLogout() {
       try {
-        this.authStore.logout();
-        if (this.authStore.isAuthenticated) {
-          toast.error("Une erreur est survenue lors de la déconnexion. Veuillez réessayer.");
-          return;
-        } else {
-          this.$router.push('/login');
-        }
+        this.showUserMenu = false; // Fermer le menu
+        // Appeler logout avec le router pour la redirection
+        await this.authStore.logout('/login', this.$router);
+        
       } catch (error) {
         console.error("Logout failed:", error);
+        toast.error("Une erreur est survenue lors de la déconnexion. Veuillez réessayer.");
       }
-
-    },
+    }
   },
 };
 </script>

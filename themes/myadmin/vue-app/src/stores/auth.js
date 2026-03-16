@@ -8,23 +8,101 @@ export const useAuthStore = defineStore('auth', () => {
     const isAuthenticated = ref(false);
     const loading = ref(false);
     const error = ref(null);
+    const initialized = ref(false); // ← Nouveau flag
 
-    // initialize from localStorage or window.APP_DATA
-    const savedUser = localStorage.getItem('user_data');
-    const initialUser = savedUser ? JSON.parse(savedUser) : (window.APP_DATA?.user || null);
-    if (initialUser) {
-        user.value = initialUser;
-        isAuthenticated.value = true;
+    // IMPORTANT: Configurer axios pour envoyer les cookies
+    axios.defaults.withCredentials = true;
+    axios.defaults.withXSRFToken = true;
+
+    // Ne pas initialiser automatiquement au chargement du store
+    // On va le faire manuellement après la création du router
+
+    // Helper pour mettre à jour window.APP_DATA
+    function updateWindowAppData(userData) {
+        if (!window.APP_DATA) window.APP_DATA = {};
+        window.APP_DATA.user = userData;
+        window.APP_DATA.isLoggedIn = true;
+        window.APP_DATA.username = userData.name;
+        window.APP_DATA.roles = userData.roles || [];
+    }
+
+    // Helper pour nettoyer les données d'authentification
+    function clearAuthData() {
+        user.value = null;
+        isAuthenticated.value = false;
+        localStorage.removeItem('user_data');
+
         if (window.APP_DATA) {
-            window.APP_DATA.user = initialUser;
-            window.APP_DATA.isLoggedIn = true;
-            window.APP_DATA.username = initialUser.name || initialUser.username;
-            window.APP_DATA.roles = initialUser.roles || [];
+            window.APP_DATA.user = null;
+            window.APP_DATA.isLoggedIn = false;
+            window.APP_DATA.username = null;
+            window.APP_DATA.roles = [];
         }
     }
 
-    // actions
-    async function login(username, password) {
+    // Initialisation asynchrone (à appeler depuis App.vue)
+    async function initialize() {
+        if (initialized.value) return true;
+        
+        loading.value = true;
+        try {
+            // D'abord restaurer depuis localStorage
+            const savedUser = localStorage.getItem('user_data');
+            if (savedUser) {
+                const localUser = JSON.parse(savedUser);
+                user.value = localUser;
+                isAuthenticated.value = true;
+                updateWindowAppData(localUser);
+            }
+
+            // Puis vérifier avec le serveur
+            const authStatus = await checkAuthWithServer();
+            
+            if (authStatus.authenticated) {
+                // Mettre à jour avec les données du serveur
+                user.value = authStatus.user;
+                isAuthenticated.value = true;
+                
+                localStorage.setItem('user_data', JSON.stringify(authStatus.user));
+                updateWindowAppData(authStatus.user);
+            } else if (savedUser) {
+                // Le localStorage dit connecté mais le serveur dit non
+                // => Token invalide, on nettoie
+                console.log('Session invalide, nettoyage...');
+                clearAuthData();
+            }
+            
+            initialized.value = true;
+            return isAuthenticated.value;
+        } catch (error) {
+            console.error("Auth initialization error:", error);
+            clearAuthData();
+            initialized.value = true;
+            return false;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function checkAuthWithServer() {
+        try {
+            const response = await axios.get('/crud/check-auth');
+            if (response.status === 200 && response.data.authenticated) {
+                return {
+                    authenticated: true,
+                    user: response.data.user
+                };
+            }
+            return { authenticated: false };
+        } catch (err) {
+            if (err.response?.status !== 401) {
+                console.error("Check auth error:", err);
+            }
+            return { authenticated: false };
+        }
+    }
+
+    async function login(username, password, redirectTo = '/dashboard', router) {
         loading.value = true;
         error.value = null;
 
@@ -36,39 +114,42 @@ export const useAuthStore = defineStore('auth', () => {
 
             if (response.status === 200) {
                 const data = response.data;
-                // Vérifier le status retourné par l'API
+                
                 if (data.status === true) {
-                    // Construire l'objet utilisateur à partir de la réponse
                     user.value = {
-                        id: data.id,
-                        name: data.name,
-                        mail: data.mail,
-                        roles: data.roles || [],
-                        token: data.token
+                        id: data.user.id,
+                        name: data.user.name,
+                        mail: data.user.mail,
+                        roles: data.user.roles || []
                     };
-                    // Persist for page reloads
+                    
                     localStorage.setItem('user_data', JSON.stringify(user.value));
                     isAuthenticated.value = true;
 
-                    // Sync to window.APP_DATA
-                    if (!window.APP_DATA) window.APP_DATA = {};
-                    window.APP_DATA.user = user.value;
-                    window.APP_DATA.isLoggedIn = true;
-                    window.APP_DATA.username = user.value.name;
-                    window.APP_DATA.roles = user.value.roles;
-                    window.APP_DATA.token = user.value.token;
+                    updateWindowAppData(user.value);
+                    
+                    if (router) {
+                        router.push(redirectTo);
+                    }
+                    
                     return true;
                 } else {
-                    error.value = "Identifiants incorrects.";
+                    error.value = data.message || "Identifiants incorrects.";
                     return false;
                 }
             }
         } catch (err) {
             console.error("Login error:", err);
-            if (err.response && err.response.data && err.response.data.message) {
-                error.value = err.response.data.message;
+            if (err.response) {
+                if (err.response.status === 401) {
+                    error.value = "Identifiants incorrects.";
+                } else if (err.response.data && err.response.data.message) {
+                    error.value = err.response.data.message;
+                } else {
+                    error.value = "Erreur de connexion. Vérifiez vos identifiants.";
+                }
             } else {
-                error.value = "Erreur de connexion. Vérifiez vos identifiants.";
+                error.value = "Erreur de connexion au serveur.";
             }
             return false;
         } finally {
@@ -76,29 +157,45 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    function logout() {
-        // simply clear local state and storage, then redirect
-        user.value = null;
-        isAuthenticated.value = false;
-        localStorage.removeItem('user_data');
-
-        if (window.APP_DATA) {
-            window.APP_DATA.user = null;
-            window.APP_DATA.isLoggedIn = false;
+    async function logout(redirectTo = '/login', router) {
+        try {
+            await axios.post('/crud/logout');
+        } catch (err) {
+            console.error("Logout error:", err);
+        } finally {
+            clearAuthData();
+            
+            if (router) {
+                router.push(redirectTo);
+            }
         }
     }
 
-    function checkAuth() {
-        // Determine auth based on stored user data
-        if (isAuthenticated.value) return true;
-        const saved = localStorage.getItem('user_data');
-        if (saved) {
-            user.value = JSON.parse(saved);
-            isAuthenticated.value = true;
-            return true;
+    async function checkAuth() {
+        if (!initialized.value) {
+            await initialize();
         }
-        isAuthenticated.value = false;
-        return false;
+        return isAuthenticated.value;
+    }
+
+    // Fonction pour rediriger si non authentifié
+    async function requireAuth(to, from, next) {
+        await checkAuth();
+        if (isAuthenticated.value) {
+            next();
+        } else {
+            next('/login');
+        }
+    }
+
+    // Fonction pour rediriger si déjà authentifié
+    async function requireGuest(to, from, next) {
+        await checkAuth();
+        if (!isAuthenticated.value) {
+            next();
+        } else {
+            next('/caisse');
+        }
     }
 
     return {
@@ -106,8 +203,12 @@ export const useAuthStore = defineStore('auth', () => {
         isAuthenticated,
         loading,
         error,
+        initialized,
+        initialize,
         login,
         logout,
-        checkAuth
+        checkAuth,
+        requireAuth,
+        requireGuest
     };
 });
