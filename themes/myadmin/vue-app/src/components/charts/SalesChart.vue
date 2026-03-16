@@ -51,7 +51,12 @@ export default {
     const queryOptions = ref({
       fields: ["nid", "title", "field_total_vente", "created"],
       sort: { val: "nid", op: "desc" },
-      filters: {},
+      filters: {
+        status: {
+          val: 1,
+          op: "="
+        }
+      },
       values: {},
       pager: 0,
       offset: 100,

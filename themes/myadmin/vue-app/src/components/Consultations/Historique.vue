@@ -23,7 +23,8 @@
                     <p>
                         <span v-if="index == 0 && cons.field_consultation_status != 'draft'"
                             @click.stop="rollbackConsultation(cons, index)" title="Revenir à une version ultérieure"
-                            class="cursor-pointer mr-2 text-green-600 hidden"><i class="ri-arrow-go-back-line"></i></span>
+                            class="cursor-pointer mr-2 text-green-600 hidden"><i
+                                class="ri-arrow-go-back-line"></i></span>
                         <span @click.stop="print(cons.nid)" title="Imprimer ordonnance"
                             class="cursor-pointer mr-2 text-green-600"><i class="ri-printer-line"></i></span>
                         <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short') }}</span>
@@ -69,7 +70,12 @@ export default {
                 'field_montant',
             ],
             sort: { val: 'nid', op: 'desc' },
-            filters: {},
+            filters: {
+                status: {
+                    val: 1,
+                    op: "="
+                }
+            },
             pager: 0,
             offset: 5
         })

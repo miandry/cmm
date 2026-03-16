@@ -354,7 +354,12 @@ export default {
                 'field_quantite_stock',
             ],
             sort: { val: 'nid', op: 'desc' },
-            filters: {},
+            filters: {
+                status: {
+                    val: 1,
+                    op: "="
+                }
+            },
             pager: 0,
             offset: 10
         })

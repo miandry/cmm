@@ -458,7 +458,7 @@ class RagController extends ControllerBase
    * @Query parameter:
    * - period: today, week, month (default: today)
    */
-  public function searchToday(Request $request)
+  public function searchWithPeriod(Request $request)
   {
     $connection = Database::getConnection();
 
@@ -517,9 +517,14 @@ class RagController extends ControllerBase
       ->fetchField();
 
     // Low stock items (toujours actuel, indépendant de la période)
-    $lowStockQuery = $connection->select('node__field_quantite_stock', 's')
+    $lowStockQuery = $connection->select('node__field_quantite_stock', 's');
+    $lowStockQuery->join('node_field_data', 'n', 'n.nid = s.entity_id');
+    $lowStockQuery
+      ->condition('n.status', 1) // seulement publié
       ->condition('s.field_quantite_stock_value', [1, 10], 'BETWEEN');
+
     $lowStockQuery->addExpression('COUNT(*)', 'count');
+
     $lowStockCount = $lowStockQuery->execute()->fetchField();
 
     // Détails pour la période demandée
@@ -608,7 +613,7 @@ class RagController extends ControllerBase
       str_contains($queryLower, "aujourd'hui") || str_contains($queryLower, 'today') ||
       str_contains($queryLower, 'jour')
     ) {
-      $todayData = $this->searchToday($request);
+      $todayData = $this->searchWithPeriod($request);
       $todayContext = json_decode($todayData->getContent(), TRUE);
       $context['today'] = $todayContext;
     }

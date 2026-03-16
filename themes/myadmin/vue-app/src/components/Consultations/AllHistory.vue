@@ -37,7 +37,7 @@
                                 :class="[cons.field_consultation_status == 'draft' ? 'bg-orange-100 hover:bg-orange-200' : 'bg-green-100 hover:bg-green-200']">
                                 <div class="flex items-center justify-between mb-1 gap-4">
                                     <span class="text-xs flex-1 two-lines font-medium text-gray-900">{{ cons.field_motif
-                                    }}</span>
+                                        }}</span>
                                     <p class="text-xs text-green-500"
                                         v-if="cons.field_consultation_status == 'completed'">
                                         <i class="ri-checkbox-circle-line"></i> Payé
@@ -54,7 +54,7 @@
                                             class="cursor-pointer mr-2 text-green-600"><i
                                                 class="ri-printer-line"></i></span>
                                         <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short')
-                                        }}</span>
+                                            }}</span>
                                     </p>
                                 </div>
                             </div>
@@ -107,6 +107,10 @@ export default {
             ],
             sort: { val: 'nid', op: 'desc' },
             filters: {
+                status: {
+                    val: 1,
+                    op: "="
+                }
             },
             pager: 0,
             offset: 1000
@@ -114,7 +118,6 @@ export default {
 
         const fetchConsultations = async () => {
             loading.value = true;
-            console.log("Fetching consultations with options:", props.clientId);
             await consultationsStore.fetchConsultations(queryOptions.value);
             loading.value = false;
         }

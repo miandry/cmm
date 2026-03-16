@@ -2,7 +2,7 @@
     <div>
         <div class="flex items-center justify-between mb-4">
             <h4 class="text-base font-medium text-gray-900">Liste des examens</h4>
-            <button @click="isModalOpen = true"  v-if="!isEdit"
+            <button @click="isModalOpen = true" v-if="!isEdit"
                 class="px-3 py-2 bg-primary text-white !rounded-button text-sm font-medium whitespace-nowrap flex items-center space-x-2 cursor-pointer">
                 <div class="w-4 h-4 flex items-center justify-center">
                     <i class="ri-add-line"></i>
@@ -20,7 +20,7 @@
                 </div>
                 <div class="flex items-center">
                     <p class="text-xs text-green-600 font-medium">{{ Number(ex.field_prix).toLocaleString() }} Ar</p>
-                    <button @click="removeFromList(ex.nid, ex.field_prix)"  v-if="!isEdit"
+                    <button @click="removeFromList(ex.nid, ex.field_prix)" v-if="!isEdit"
                         class="text-red-500 hover:text-red-700 cursor-pointer">
                         <div class="w-5 h-5 flex items-center justify-center">
                             <i class="ri-delete-bin-line"></i>
@@ -210,7 +210,12 @@ export default {
                 'field_prix',
             ],
             sort: { val: 'nid', op: 'desc' },
-            filters: {},
+            filters: {
+                status: {
+                    val: 1,
+                    op: "="
+                }
+            },
             pager: 0,
             offset: 20
         })

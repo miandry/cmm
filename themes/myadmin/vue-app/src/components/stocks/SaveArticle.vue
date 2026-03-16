@@ -407,6 +407,12 @@ export default {
                 'name',
             ],
             sort: { val: 'name', op: 'asc' },
+            filters: {
+                status: {
+                    val: 1,
+                    op: "="
+                }
+            },
             pager: 0,
             offset: 1000
         })

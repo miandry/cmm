@@ -58,6 +58,7 @@
 <script>
 import { ref, computed, onMounted } from "vue";
 import { useClientStore } from "../../stores/index.js";
+import { filter } from "lodash";
 
 
 export default {
@@ -72,6 +73,12 @@ export default {
         'field_assurance',
         'created'
       ],
+      filters: {
+        status: {
+          val: 1,
+          op: "="
+        }
+      },
       pager: 0,
       offset: 2000
     })

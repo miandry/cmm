@@ -69,7 +69,7 @@
                   </div>
                 </div>
               </td>
-              <td class="px-4 py-3 text-sm text-gray-700">{{ user.mail || '-' }}</td>
+              <td class="px-4 py-3 text-sm text-gray-700">{{ displayEmail(user) }}</td>
               <td class="px-4 py-3">
                 <span v-for="role in user.roles" :key="role" :class="getRoleBadgeClass(role)"
                   class="inline-block px-2 py-1 text-xs font-medium rounded-full mr-1">
@@ -173,7 +173,8 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Rôles <span class="text-red-500">*</span></label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Rôles <span
+                  class="text-red-500">*</span></label>
               <div class="space-y-2">
                 <label class="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" value="gerant" v-model="formData.roles"
@@ -286,6 +287,10 @@ export default {
       ],
       sort: { val: 'uid', op: 'desc' },
       filters: {
+        roles: {
+          val: "administrator",
+          op: "<>"
+        }
       },
       pager: 0,
       offset: 20,
@@ -388,7 +393,7 @@ export default {
       formData.value = {
         uid: user.uid,
         name: user.name,
-        mail: user.mail || '',
+        mail: getEditableEmail(user),
         pass: '',
         roles: user.roles || [],
         status: user.status === '1'
@@ -407,6 +412,13 @@ export default {
       saving.value = true;
       error.value = null;
 
+      // validation username (one word only)
+      if (/\s/.test(formData.value.name)) {
+        error.value = "Le nom d'utilisateur ne doit pas contenir d'espace.";
+        saving.value = false;
+        return;
+      }
+
       // simple front–end validation for required fields
       if (!formData.value.roles || formData.value.roles.length === 0) {
         error.value = 'Veuillez sélectionner au moins un rôle.';
@@ -417,7 +429,9 @@ export default {
       try {
         const payload = {
           name: formData.value.name,
-          mail: formData.value.mail,
+          mail: formData.value.mail?.trim()
+            ? formData.value.mail
+            : `clinicuser${formData.value.name}@gmail.com`,
           roles: formData.value.roles,
           status: formData.value.status ? '1' : '0'
         };
@@ -511,7 +525,7 @@ export default {
 
     const getRoleBadgeClass = (role) => {
       const classes = {
-        'administrator': 'bg-purple-100 text-purple-700',
+        'administrator': 'bg-purple-100 text-purple-700 hidden',
         'gerant': 'bg-yellow-100 text-yellow-700',
         'docteur': 'bg-blue-100 text-blue-700',
         'caissier': 'bg-green-100 text-green-700'
@@ -556,6 +570,22 @@ export default {
       }
     };
 
+    const displayEmail = (user) => {
+      if (!user.mail) return '-';
+
+      const defaultEmail = `clinicuser${user.name.replace(/\s+/g, '')}@gmail.com`;
+
+      return user.mail === defaultEmail ? '-' : user.mail;
+    };
+
+    const getEditableEmail = (user) => {
+      if (!user.mail) return '';
+
+      const defaultEmail = `clinicuser${user.name.replace(/\s+/g, '')}@gmail.com`;
+
+      return user.mail === defaultEmail ? '' : user.mail;
+    };
+
     watch(statusFilter, () => {
       // whenever status filter changes, update and reload
       updateStatus();
@@ -596,6 +626,8 @@ export default {
       goToPage,
       nextPage,
       previousPage,
+      displayEmail,
+      getEditableEmail,
     };
   }
 }
