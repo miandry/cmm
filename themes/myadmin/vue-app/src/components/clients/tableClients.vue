@@ -16,7 +16,7 @@
         <!-- Filters + Ajouter -->
         <div class="flex flex-wrap items-center gap-2">
           <!-- Filtres -->
-          <div class="flex space-x-2">
+          <div class="flex gap-2 flex-wrap">
             <!-- Tous -->
             <button @click="filter('all')" :class="[
               'px-3 py-2 text-sm font-medium !rounded-button whitespace-nowrap filter-btn border',

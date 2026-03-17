@@ -5,9 +5,9 @@
                 <div class="lg:col-span-2 space-y-8">
                     <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <h2 class="text-xl font-semibold text-gray-900 mb-6">Informations du Patient</h2>
-                        <div class="flex items-start space-x-6">
+                        <div class="flex flex-col md:flex-row items-start gap-6">
                             <div
-                                class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                                class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mx-auto">
                                 <i class="ri-user-3-fill text-3xl text-blue-600"></i>
                             </div>
                             <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">

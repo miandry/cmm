@@ -1,27 +1,27 @@
 <template>
   <div class="min-h-screen bg-gray-50 p-4 md:p-6">
     <!-- Header -->
-    <div class="mb-6 flex items-center justify-between">
-      <div>
+    <div class="mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="w-full md:w-auto">
         <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Gestion des Utilisateurs</h1>
         <p class="text-gray-600 text-sm mt-1">Gérer les comptes utilisateurs de la clinique</p>
       </div>
       <button @click="openCreateModal"
-        class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2">
+        class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 w-full md:w-auto justify-center text-center">
         <i class="fas fa-plus"></i>
         <span>Nouvel Utilisateur</span>
       </button>
     </div>
 
     <!-- Search & Filters -->
-    <div class="mb-4 flex items-center space-x-3">
+    <div class="mb-4 flex flex-col md:flex-row items-center gap-2">
       <input v-model="searchTerm" @input="updateSearch" type="text" placeholder="Rechercher un utilisateur..."
-        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
+        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full md:w-auto" />
 
       <!-- Status filter -->
-      <div>
+      <div class="w-full md:w-auto">
         <select v-model="statusFilter"
-          class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+          class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full">
           <option value="">Tous statuts</option>
           <option value="1">Actif</option>
           <option value="0">Bloqué</option>
@@ -287,6 +287,10 @@ export default {
       ],
       sort: { val: 'uid', op: 'desc' },
       filters: {
+        uid: {
+          val: window.APP_DATA.user.id,
+          op: "<>"
+        },
         roles: {
           val: "administrator",
           op: "<>"

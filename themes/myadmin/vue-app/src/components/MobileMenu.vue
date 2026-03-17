@@ -29,7 +29,8 @@
         </router-link>
 
         <!-- Dashboard -->
-        <router-link to="/dashboard" class="menu-item" :class="getMenuItemClass('/dashboard')" @click="closeMenu">
+        <router-link to="/dashboard" v-if="roles.some(r => ['gerant', 'docteur', 'administrator'].includes(r))"
+          class="menu-item" :class="getMenuItemClass('/dashboard')" @click="closeMenu">
           <i class="fas fa-chart-line menu-icon"></i>
           <span class="menu-label">Dashboard</span>
         </router-link>
@@ -41,7 +42,8 @@
         </router-link>
 
         <!-- Équipe -->
-        <router-link to="/users" class="menu-item" :class="getMenuItemClass('/users')" @click="closeMenu">
+        <router-link to="/users" v-if="roles.some(r => ['gerant', 'administrator'].includes(r))" class="menu-item"
+          :class="getMenuItemClass('/users')" @click="closeMenu">
           <i class="fas fa-users menu-icon"></i>
           <span class="menu-label">Équipe</span>
         </router-link>
@@ -177,7 +179,7 @@ export default {
         this.showUserMenu = false; // Fermer le menu
         // Appeler logout avec le router pour la redirection
         await this.authStore.logout('/login', this.$router);
-        
+
       } catch (error) {
         console.error("Logout failed:", error);
         toast.error("Une erreur est survenue lors de la déconnexion. Veuillez réessayer.");
@@ -235,7 +237,8 @@ export default {
   top: 0;
   left: 0;
   width: 280px;
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: white;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   transform: translateX(-100%);
@@ -372,6 +375,10 @@ export default {
   font-size: 0.75rem;
   color: #4b5563;
   /* gray-600 */
+}
+
+.menu-item.hidden {
+  display: none !important;
 }
 
 /* Hide mobile menu on large screens */
