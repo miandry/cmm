@@ -17,58 +17,121 @@ import Stocks from "./pages/Stocks.vue";
 import Login from "./pages/Login.vue";
 import { hasAnyRole } from "./utils/auth.js";
 import { useAuthStore } from "./stores/auth.js";
+import ConsultationDetails from "./pages/ConsultationDetails.vue";
+import { toast } from "vue-sonner";
+import UserProfile from "./pages/UserProfile.vue";
 
 blockZoom();
 
 const routes = [
-  { path: "/login", name: "login", component: Login, meta: { roles: [] } },
-  { path: "/", name: "home", component: Caisse, meta: { roles: ["caissier", "docteur", "administrator"] } },
-  { path: "/caisse", name: "caisse", component: Caisse, meta: { roles: ["caissier", "docteur", "administrator"] } },
-  { path: "/dashboard", name: "dashboard", component: Dashboard, meta: { roles: ["caissier", "docteur", "administrator"] } },
-  { path: "/users", name: "users", component: UserManager, meta: { roles: ["administrator"] } },
-  { path: "/fr", name: "home-fr", component: Caisse, meta: { roles: ["caissier", "docteur", "administrator"] } },
-  { path: "/fr/frontdesk", name: "frontdesk", component: Caisse, meta: { roles: ["caissier", "docteur", "administrator"] } },
+  {
+    path: "/login",
+    name: "login",
+    component: Login,
+    meta: { hideHeader: true, roles: [] },
+  },
+  {
+    path: "/",
+    name: "home",
+    component: Caisse,
+    meta: { roles: ["caissier", "docteur", "gerant", "administrator"] },
+  },
+  {
+    path: "/caisse",
+    name: "caisse",
+    component: Caisse,
+    meta: { roles: ["caissier", "docteur", "gerant", "administrator"] },
+  },
+  {
+    path: "/dashboard",
+    name: "dashboard",
+    component: Dashboard,
+    meta: { roles: ["docteur", "gerant", "administrator"] },
+  },
+  {
+    path: "/users",
+    name: "users",
+    component: UserManager,
+    meta: { roles: ["gerant", "administrator"] },
+  },
+  {
+    path: "/fr",
+    name: "home-fr",
+    component: Caisse,
+    meta: { roles: ["caissier", "docteur", "gerant", "administrator"] },
+  },
+  {
+    path: "/fr/frontdesk",
+    name: "frontdesk",
+    component: Caisse,
+    meta: { roles: ["caissier", "docteur", "gerant", "administrator"] },
+  },
   {
     path: "/patients",
     name: "patients",
     component: Clients,
-    meta: { roles: ["docteur", "administrator"] },
+    meta: { roles: ["docteur", "gerant", "administrator"] },
   },
   {
     path: "/consultations",
     name: "consultations",
     component: Consultations,
-    meta: { roles: ["docteur", "administrator"] },
+    meta: { roles: ["docteur", "gerant", "administrator"] },
   },
   {
     path: "/assist",
     name: "assist",
     component: Assist,
-    meta: { roles: ["docteur", "administrator"] },
+    meta: { roles: ["docteur", "gerant", "administrator"] },
   },
   {
     path: "/consultations/:id/edit",
     name: "consultation.edit",
     component: Consultations,
-    meta: { roles: ["docteur", "administrator"] },
+    meta: { roles: ["docteur", "gerant", "administrator"] },
+  },
+  {
+    path: "/consultations/details",
+    name: "consultation.details",
+    component: ConsultationDetails,
+    meta: { roles: ["docteur", "gerant", "administrator"] },
   },
   {
     path: "/facture",
     name: "facture",
     component: Facture,
-    meta: { hideHeader: true, roles: ["caissier", "docteur", "administrator"] },
+    meta: {
+      hideHeader: true,
+      roles: ["caissier", "docteur", "gerant", "administrator"],
+    },
   },
   {
     path: "/ordonnance",
     name: "ordonnance",
     component: Ordonnance,
-    meta: { hideHeader: true, roles: ["docteur", "administrator"] },
+    meta: { hideHeader: true, roles: ["docteur", "gerant", "administrator"] },
   },
-  { path: "/commandes", name: "commandes", component: Order, meta: { roles: ["caissier", "docteur", "administrator"] } },
-  { path: "/stocks", name: "stocks", component: Stocks, meta: { roles: ["caissier", "docteur", "administrator"] } },
+  {
+    path: "/commandes",
+    name: "commandes",
+    component: Order,
+    meta: { roles: ["caissier", "docteur", "gerant", "administrator"] },
+  },
+  {
+    path: "/stocks",
+    name: "stocks",
+    component: Stocks,
+    meta: { roles: ["docteur", "gerant", "administrator"] },
+  },
+  {
+    path: "/user-profil",
+    name: "user.profil",
+    component: UserProfile,
+    meta: { roles: ["caissier", "docteur", "gerant", "administrator"] },
+  },
 ];
 
-const router = createRouter({
+export const router = createRouter({
   history: createWebHistory(),
   routes,
 });
@@ -76,42 +139,33 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
-  // Vérifier l'état de l'authentification au premier chargement si nécessaire
   if (!authStore.user) {
-    await authStore.checkAuth();
+    authStore.checkAuth();
   }
 
   const isAuthenticated = authStore.isAuthenticated;
-  const requiredRoles = to.meta.roles;
+  const requiredRoles = to.meta.roles || [];
 
-  // Si on va vers login et qu'on est déjà connecté -> redirect vers home
-  if (to.name === 'login' && isAuthenticated) {
-    return next({ name: 'home' });
+  // Si connecté et va sur login
+  if (to.name === "login" && isAuthenticated) {
+    return next({ name: "home" });
   }
 
-  // Si la route nécessite une authentification (roles définis et non vide)
-  // Note: dans ce projet, toutes les routes semblent protégées sauf login potentiellement
-  if (to.name !== 'login' && !isAuthenticated) {
-    return next({ name: 'login' });
+  // Si pas connecté
+  if (!isAuthenticated && to.name !== "login") {
+    toast.error("Vous devez être connecté pour accéder à cette page.");
+    return next({ name: "login" });
   }
 
   // Vérification des rôles
-  if (requiredRoles && requiredRoles.length > 0 && isAuthenticated) {
-    // Ici, on pourrait utiliser authStore.user.roles si disponible, ou window.APP_DATA
-    // Pour l'instant on garde la logique existante via utils/auth.js ou on adapte avec le store
-    // Supposons que authStore.user contient les rôles ou qu'on utilise hasAnyRole
-    if (!hasAnyRole(requiredRoles)) {
-      // Redirection si pas le bon rôle, ou laisser passer si c'est juste une vérif permissive
-      // return next("/"); 
-    }
-  }
-  if (to.matched.length === 0) {
-    // Route non trouvée
-    next('/caisse');
+  if (requiredRoles.length && !hasAnyRole(requiredRoles)) {
+    toast.error(
+      "Vous n'avez pas les permissions nécessaires pour accéder à cette page.",
+    );
+    return next({ name: "home" });
   }
 
   next();
-
 });
 
 const pinia = createPinia();

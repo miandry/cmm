@@ -40,61 +40,79 @@
         <!-- Alertes de Stock -->
         <div v-if="stockStore.stockRapport.rows.length"
             class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center justify-between">
+
+            <!-- Rupture -->
+            <div
+                class="relative overflow-hidden rounded-2xl p-6 shadow-lg bg-gradient-to-r from-red-500 to-rose-600 text-white">
+                <div class="flex items-center justify-between font-bold">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Produits en Rupture</p>
-                        <p class="text-3xl font-bold text-red-600">{{
-                            stockStore.stockRapport.rows[0]?.field_article_rupture?.[0]?.value || 0 }}</p>
+                        <p class="text-xs uppercase opacity-80">Produits en Rupture</p>
+                        <p class="text-3xl font-bold mt-1">
+                            {{ stockStore.stockRapport.rows[0]?.field_article_rupture?.[0]?.value || 0 }}
+                        </p>
+                        <p class="text-xs opacity-80 mt-1">Action requise</p>
                     </div>
-                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                        <i class="ri-error-warning-line text-red-600 text-2xl"></i>
+
+                    <div class="bg-white/20 backdrop-blur p-3 rounded-xl">
+                        <i class="ri-error-warning-line text-white text-2xl"></i>
                     </div>
-                </div>
-                <div class="mt-4 text-sm text-red-600 font-medium">Action requise</div>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Stock Faible</p>
-                        <p class="text-3xl font-bold text-orange-600">{{
-                            stockStore.stockRapport.rows[0]?.field_article_stock_faible?.[0]?.value || 0 }}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                        <i class="ri-alert-line text-orange-600 text-2xl"></i>
-                    </div>
-                </div>
-                <div class="mt-4 text-sm text-orange-600 font-medium">Réapprovisionner bientôt</div>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Expirant sous 30j</p>
-                        <p class="text-3xl font-bold text-yellow-600">{{
-                            stockStore.stockRapport.rows[0]?.field_article_expirant?.[0]?.value || 0 }}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                        <i class="ri-time-line text-yellow-600 text-2xl"></i>
-                    </div>
-                </div>
-                <div class="mt-4 text-sm text-yellow-600 font-medium">Vérifier les dates</div>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Valeur Totale Stock</p>
-                        <p class="text-3xl font-bold text-green-600">Ar {{
-                            formatNumber(stockStore.stockRapport.rows[0]?.field_total_stock?.[0]?.value || 0) }}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                        <i class="ri-money-euro-circle-line text-green-600 text-2xl"></i>
-                    </div>
-                </div>
-                <div class="mt-4 flex items-center text-sm hidden">
-                    <span class="text-green-600 font-medium">+5.2%</span>
-                    <span class="text-gray-500 ml-2">vs mois dernier</span>
                 </div>
             </div>
+
+            <!-- Stock Faible -->
+            <div
+                class="relative overflow-hidden rounded-2xl p-6 shadow-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white">
+                <div class="flex items-center justify-between font-bold">
+                    <div>
+                        <p class="text-xs uppercase opacity-80">Stock Faible</p>
+                        <p class="text-3xl font-bold mt-1">
+                            {{ stockStore.stockRapport.rows[0]?.field_article_stock_faible?.[0]?.value || 0 }}
+                        </p>
+                        <p class="text-xs opacity-80 mt-1">Réapprovisionner bientôt</p>
+                    </div>
+
+                    <div class="bg-white/20 backdrop-blur p-3 rounded-xl">
+                        <i class="ri-alert-line text-white text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expiration -->
+            <div
+                class="relative overflow-hidden rounded-2xl p-6 shadow-lg bg-gradient-to-r from-yellow-400 to-yellow-600 text-white">
+                <div class="flex items-center justify-between font-bold">
+                    <div>
+                        <p class="text-xs uppercase opacity-80">Expirant sous 30j</p>
+                        <p class="text-3xl font-bold mt-1">
+                            {{ stockStore.stockRapport.rows[0]?.field_article_expirant?.[0]?.value || 0 }}
+                        </p>
+                        <p class="text-xs opacity-80 mt-1">Vérifier les dates</p>
+                    </div>
+
+                    <div class="bg-white/20 backdrop-blur p-3 rounded-xl">
+                        <i class="ri-time-line text-white text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Valeur Stock -->
+            <div
+                class="relative overflow-hidden rounded-2xl p-6 shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+                <div class="flex items-center justify-between font-bold">
+                    <div>
+                        <p class="text-xs uppercase opacity-80">Valeur Totale Stock</p>
+                        <p class="text-3xl font-bold mt-1">
+                            Ar {{ formatNumber(stockStore.stockRapport.rows[0]?.field_total_stock?.[0]?.value || 0) }}
+                        </p>
+                        <p class="text-xs opacity-80 mt-1">Valeur actuelle</p>
+                    </div>
+
+                    <div class="bg-white/20 backdrop-blur p-3 rounded-xl">
+                        <i class="ri-money-dollar-circle-line text-white text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
         </div>
         <!-- Recherche, Filtres et Tableau Principal -->
         <Articles :openModal="openSaveArticleModal" @openModal="openEditModal" @close="openSaveArticleModal = false"

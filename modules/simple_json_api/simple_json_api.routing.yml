@@ -1,0 +1,94 @@
+/simple_json_api.content.term:
+  path: '/api/v1/term/{vid}'
+  defaults:
+    _langcode: 'en'
+    _controller: '\Drupal\simple_json_api\Controller\JsonContentController::apiTerm'
+  requirements:
+    _custom_access: '\Drupal\simple_json_api\Controller\JsonContentController::apiJsonAccess'
+
+
+simple_json_api.uploader:
+  path: '/action/uploader'
+  defaults:
+    _langcode: 'en'
+    _controller: '\Drupal\simple_json_api\Controller\JsonContentController::uploader'
+  requirements:
+    _permission: 'access content'
+
+simple_json_api.content.menuapi_json:
+  path: '/api/v1/menu'
+  defaults:
+    _langcode: 'en'
+    _controller: '\Drupal\simple_json_api\Controller\JsonContentController::apiMenu'
+  requirements:
+    _custom_access: '\Drupal\simple_json_api\Controller\JsonContentController::apiJsonAccess'
+
+simple_json_api.list.api_json:
+  path: '/api/v1/list'
+  defaults:
+    _langcode: 'en'
+    _controller: '\Drupal\simple_json_api\Controller\JsonContentController::apiListJson'
+  requirements:
+    _custom_access: '\Drupal\simple_json_api\Controller\JsonContentController::apiJsonAccess'
+
+simple_json_api.login:
+  path: '/api/user/login'
+  defaults:
+    _langcode: 'en'
+    _controller: '\Drupal\simple_json_api\Controller\JsonContentController::login'
+  requirements:
+    _custom_access: '\Drupal\simple_json_api\Controller\JsonContentController::apiJsonAccess'
+
+simple_json_api.register:
+  path: '/api/user/register'
+  defaults:
+    _langcode: 'en'
+    _controller: '\Drupal\simple_json_api\Controller\JsonContentController::register'
+  requirements:
+    _custom_access: '\Drupal\simple_json_api\Controller\JsonContentController::apiJsonAccess'
+
+simple_json_api.user_edit:
+  path: '/api/user/edit'
+  defaults:
+    _langcode: 'en'
+    _controller: '\Drupal\simple_json_api\Controller\JsonContentController::userEdit'
+  requirements:
+    _custom_access: '\Drupal\simple_json_api\Controller\JsonContentController::apiJsonAccess'
+simple_json_api.send_reset_email:
+  path: '/api/user/forgot-password'
+  defaults:
+    _controller: '\Drupal\simple_json_api\Controller\JsonContentController::sendResetEmail'
+    _title: 'Forgot Password API'
+  requirements:
+    _custom_access: '\Drupal\simple_json_api\Controller\JsonContentController::apiJsonAccess'
+
+simple_json_api.content.apiListJsonV2:
+  path: '/api/v2/{entitype}/{bundle}'
+  defaults:
+    _langcode: 'en'
+    _controller: '\Drupal\simple_json_api\Controller\JsonContentController::apiListJsonV2'
+  requirements:
+    _custom_access: '\Drupal\simple_json_api\Controller\JsonContentController::apiJsonAccess'
+simple_json_api.details.apiDetailsJsonV2:
+  path: '/api/v2/{entitype}/{bundle}/{id}'
+  defaults:
+    _langcode: 'en'
+    _controller: '\Drupal\simple_json_api\Controller\JsonContentController::apiDetailsJsonV2'
+  requirements:
+    _custom_access: '\Drupal\simple_json_api\Controller\JsonContentController::apiJsonAccess'
+
+simple_json_api.users:
+  path: '/api/v2/users'
+  defaults:
+    _langcode: 'en'
+    _controller: '\Drupal\simple_json_api\Controller\JsonContentController::apiUserList'
+  requirements:
+    _custom_access: '\Drupal\simple_json_api\Controller\JsonContentController::apiJsonAccess'
+
+simple_json_api.users_v2:
+  path: '/api/v2/users/list'
+  defaults:
+    _langcode: 'en'
+    _controller: '\Drupal\simple_json_api\Controller\JsonContentController::apiUserListV2'
+  requirements:
+    _custom_access: '\Drupal\simple_json_api\Controller\JsonContentController::apiJsonAccess'

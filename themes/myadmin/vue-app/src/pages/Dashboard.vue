@@ -1,68 +1,96 @@
 <template>
   <div class="min-h-screen bg-gray-50 p-4 md:p-6">
     <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Tableau de Bord</h1>
-      <p class="text-gray-600 text-sm mt-1">Vue d'ensemble de la clinique</p>
+    <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Tableau de Bord</h1>
+        <p class="text-gray-500 text-sm mt-1">Vue d'ensemble de la clinique</p>
+      </div>
+
+      <!-- Filters -->
+      <div class="flex items-center bg-white border border-gray-200 rounded-xl p-1 shadow-sm w-fit">
+        <button @click="changePeriod('today')" class="px-4 py-1.5 text-sm rounded-lg transition-colors"
+          :class="currentPeriod === 'today' ? 'bg-blue-600 text-white font-medium' : 'text-gray-600 hover:bg-gray-100'">
+          Aujourd'hui
+        </button>
+        <button @click="changePeriod('week')" class="px-4 py-1.5 text-sm rounded-lg transition-colors"
+          :class="currentPeriod === 'week' ? 'bg-blue-600 text-white font-medium' : 'text-gray-600 hover:bg-gray-100'">
+          7 jours
+        </button>
+        <button @click="changePeriod('month')" class="px-4 py-1.5 text-sm rounded-lg transition-colors"
+          :class="currentPeriod === 'month' ? 'bg-blue-600 text-white font-medium' : 'text-gray-600 hover:bg-gray-100'">
+          30 jours
+        </button>
+      </div>
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <!-- Today's Consultations -->
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-        <div class="flex items-center justify-between">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+
+      <!-- Consultations -->
+      <div
+        class="relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+        <div class="flex items-center justify-between font-bold">
           <div>
-            <p class="text-xs text-gray-500 uppercase font-medium">Consultations</p>
-            <p class="text-2xl font-bold text-gray-800 mt-1">{{ todayStats.consultations_count || 0 }}</p>
-            <p class="text-xs text-gray-500 mt-1">Aujourd'hui</p>
+            <p class="text-xs uppercase opacity-80">Consultations</p>
+            <p class="text-3xl font-bold mt-1">{{ todayStats.consultations_count || 0 }}</p>
+            <p class="text-xs opacity-80 mt-1">{{ periodLabel }}</p>
           </div>
-          <div class="bg-blue-50 p-3 rounded-lg">
-            <i class="ri-stethoscope-line text-2xl text-blue-600"></i>
+
+          <div class="bg-white/20 backdrop-blur p-3 rounded-xl">
+            <i class="ri-stethoscope-line text-2xl text-white"></i>
           </div>
         </div>
       </div>
 
-      <!-- Today's Sales -->
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-        <div class="flex items-center justify-between">
+      <!-- Sales -->
+      <div
+        class="relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+        <div class="flex items-center justify-between font-bold">
           <div>
-            <p class="text-xs text-gray-500 uppercase font-medium">Ventes</p>
-            <p class="text-2xl font-bold text-gray-800 mt-1">{{ formatCurrency(todayStats.sales_total) }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ todayStats.sales_count || 0 }} commandes</p>
+            <p class="text-xs uppercase opacity-80">Ventes</p>
+            <p class="text-2xl font-bold mt-1">{{ formatCurrency(todayStats.sales_total) }}</p>
+            <p class="text-xs opacity-80 mt-1">{{ todayStats.sales_count || 0 }} commandes</p>
           </div>
-          <div class="bg-green-50 p-3 rounded-lg">
-            <i class="ri-shopping-cart-line text-2xl text-green-600"></i>
+
+          <div class="bg-white/20 backdrop-blur p-3 rounded-xl">
+            <i class="ri-shopping-cart-line text-2xl text-white"></i>
           </div>
         </div>
       </div>
 
-      <!-- Total Patients -->
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-        <div class="flex items-center justify-between">
+      <!-- Patients -->
+      <div
+        class="relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white">
+        <div class="flex items-center justify-between font-bold">
           <div>
-            <p class="text-xs text-gray-500 uppercase font-medium">Patients</p>
-            <p class="text-2xl font-bold text-gray-800 mt-1">{{ totalPatients }}</p>
-            <p class="text-xs text-gray-500 mt-1">Total enregistrés</p>
+            <p class="text-xs uppercase opacity-80">Patients</p>
+            <p class="text-3xl font-bold mt-1">{{ todayStats.clients_count || 0 }}</p>
+            <p class="text-xs opacity-80 mt-1">Nouveaux patients</p>
           </div>
-          <div class="bg-purple-50 p-3 rounded-lg">
-            <i class="ri-user-heart-line text-2xl text-purple-600"></i>
+
+          <div class="bg-white/20 backdrop-blur p-3 rounded-xl">
+            <i class="ri-user-heart-line text-2xl text-white"></i>
           </div>
         </div>
       </div>
 
-      <!-- Low Stock Items -->
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-        <div class="flex items-center justify-between">
+      <!-- Low Stock -->
+      <div
+        class="relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-orange-500 to-red-500 text-white">
+        <div class="flex items-center justify-between font-bold">
           <div>
-            <p class="text-xs text-gray-500 uppercase font-medium">Stock Bas</p>
-            <p class="text-2xl font-bold text-gray-800 mt-1">{{ todayStats.low_stock_items || 0 }}</p>
-            <p class="text-xs text-gray-500 mt-1">Articles critiques</p>
+            <p class="text-xs uppercase opacity-80">Stock Bas</p>
+            <p class="text-3xl font-bold mt-1">{{ todayStats.low_stock_items || 0 }}</p>
+            <p class="text-xs opacity-80 mt-1">Articles critiques</p>
           </div>
-          <div class="bg-red-50 p-3 rounded-lg">
-            <i class="ri-alert-line text-2xl text-red-600"></i>
+
+          <div class="bg-white/20 backdrop-blur p-3 rounded-xl">
+            <i class="ri-alert-line text-2xl text-white"></i>
           </div>
         </div>
       </div>
+
     </div>
 
     <!-- Charts Row -->
@@ -97,8 +125,8 @@
             <p>Tous les stocks sont suffisants</p>
           </div>
           <div v-else class="space-y-2">
-            <div v-for="item in lowStockItems" :key="item.nid" 
-                 class="flex items-center justify-between p-3 bg-red-50 border border-red-100 rounded-lg">
+            <div v-for="item in lowStockItems" :key="item.nid"
+              class="flex items-center justify-between p-3 bg-red-50 border border-red-100 rounded-lg">
               <div class="flex-1">
                 <p class="text-sm font-medium text-gray-800">{{ item.title }}</p>
                 <p class="text-xs text-gray-500">{{ item.dci || 'N/A' }}</p>
@@ -124,8 +152,8 @@
             <p>Aucune consultation récente</p>
           </div>
           <div v-else class="space-y-2">
-            <div v-for="consult in recentConsultations" :key="consult.nid" 
-                 class="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-lg">
+            <div v-for="consult in recentConsultations" :key="consult.nid"
+              class="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-lg">
               <div class="flex-1">
                 <p class="text-sm font-medium text-gray-800">{{ consult.patient_name || 'Anonyme' }}</p>
                 <p class="text-xs text-gray-500">{{ consult.motif || 'Consultation générale' }}</p>
@@ -165,26 +193,50 @@ export default {
     SalesChart
   },
   setup() {
+    const currentPeriod = ref('today');
     const todayStats = ref({
       consultations_count: 0,
       sales_count: 0,
       sales_total: 0,
+      clients_count: 0,
       low_stock_items: 0
     });
-    const totalPatients = ref(0);
     const lowStockItems = ref([]);
     const recentConsultations = ref([]);
     const consultationsData = ref([]);
 
-    const fetchTodayStats = async () => {
+    const periodLabel = computed(() => {
+      const labels = {
+        'today': "Aujourd'hui",
+        'week': "7 derniers jours",
+        'month': "30 derniers jours"
+      };
+      return labels[currentPeriod.value] || "Aujourd'hui";
+    });
+
+    const fetchStats = async (period = "today") => {
       try {
-        const response = await fetch('/api/rag/today');
+        const response = await fetch(`/api/rag/get-data?period=${period}`);
         const data = await response.json();
-        todayStats.value = data.stats || {};
-        recentConsultations.value = (data.consultations || []).slice(0, 10);
+
+        if (data.success) {
+          todayStats.value = {
+            consultations_count: data.stats?.consultations_count || 0,
+            sales_count: data.stats?.sales_count || 0,
+            sales_total: data.stats?.sales_total || 0,
+            clients_count: data.stats?.clients_count || 0,
+            low_stock_items: data.stats?.low_stock_items || 0
+          };
+          recentConsultations.value = (data.consultations || []).slice(0, 10);
+        }
       } catch (error) {
-        console.error('Error fetching today stats:', error);
+        console.error('Error fetching stats:', error);
       }
+    };
+
+    const changePeriod = (period) => {
+      currentPeriod.value = period;
+      fetchStats(period);
     };
 
     const fetchLowStock = async () => {
@@ -194,16 +246,6 @@ export default {
         lowStockItems.value = data.data || [];
       } catch (error) {
         console.error('Error fetching low stock:', error);
-      }
-    };
-
-    const fetchTotalPatients = async () => {
-      try {
-        const response = await fetch('/api/rag/patients?limit=1');
-        const data = await response.json();
-        totalPatients.value = data.count || 0;
-      } catch (error) {
-        console.error('Error fetching patients:', error);
       }
     };
 
@@ -218,38 +260,55 @@ export default {
     };
 
     const consultationsChartData = computed(() => {
+      const consults = consultationsData.value || [];
+
       const consultsByDate = {};
-      
-      consultationsData.value.forEach(consult => {
+
+      consults.forEach((consult) => {
         if (!consult.created) return;
-        
-        const dateObj = new Date(consult.created * 1000);
-        const dateKey = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
-        
-        consultsByDate[dateKey] = (consultsByDate[dateKey] || 0) + 1;
+
+        const dateObj = new Date(parseInt(consult.created) * 1000);
+
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const day = String(dateObj.getDate()).padStart(2, "0");
+
+        const key = `${year}-${month}-${day}`;
+
+        if (!consultsByDate[key]) {
+          consultsByDate[key] = 0;
+        }
+
+        consultsByDate[key] += 1;
       });
 
-      const sortedEntries = Object.entries(consultsByDate).sort((a, b) => {
-        const [d1, m1] = a[0].split('/');
-        const [d2, m2] = b[0].split('/');
-        const year = new Date().getFullYear();
-        return new Date(year, parseInt(m1) - 1, parseInt(d1)) - new Date(year, parseInt(m2) - 1, parseInt(d2));
+      const sortedEntries = Object.entries(consultsByDate).sort(
+        (a, b) => new Date(a[0]) - new Date(b[0])
+      );
+
+      const allEntries = sortedEntries;
+
+      const labels = allEntries.map(([date]) => {
+        const d = new Date(date);
+        return d.toLocaleDateString("fr-FR", {
+          day: "2-digit",
+          month: "2-digit",
+        });
       });
 
-      const recentEntries = sortedEntries.slice(-14);
-      const labels = recentEntries.map(e => e[0]);
-      const data = recentEntries.map(e => e[1]);
+      const data = allEntries.map(([, total]) => total);
 
       return {
-        labels: labels,
+        labels,
         datasets: [
           {
-            label: 'Consultations',
-            backgroundColor: '#8b5cf6',
+            label: "Consultations",
+            backgroundColor: "#8b5cf6",
             borderRadius: 6,
-            data: data
-          }
-        ]
+            maxBarThickness: 80,
+            data: data,
+          },
+        ],
       };
     });
 
@@ -288,8 +347,8 @@ export default {
     };
 
     const formatCurrency = (value) => {
-      return new Intl.NumberFormat('fr-MG', { 
-        style: 'currency', 
+      return new Intl.NumberFormat('fr-MG', {
+        style: 'currency',
         currency: 'MGA',
         minimumFractionDigits: 0
       }).format(value || 0);
@@ -298,8 +357,8 @@ export default {
     const formatDate = (timestamp) => {
       if (!timestamp) return '';
       const date = new Date(timestamp * 1000);
-      return date.toLocaleDateString('fr-FR', { 
-        day: '2-digit', 
+      return date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
         month: 'short',
         hour: '2-digit',
         minute: '2-digit'
@@ -307,21 +366,22 @@ export default {
     };
 
     onMounted(() => {
-      fetchTodayStats();
+      fetchStats("today");
       fetchLowStock();
-      fetchTotalPatients();
       fetchConsultations();
     });
 
     return {
+      currentPeriod,
+      periodLabel,
       todayStats,
-      totalPatients,
       lowStockItems,
       recentConsultations,
       consultationsChartData,
       chartOptions,
       formatCurrency,
-      formatDate
+      formatDate,
+      changePeriod
     };
   }
 }

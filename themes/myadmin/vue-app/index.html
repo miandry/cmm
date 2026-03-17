@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Mon App Vue</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <script src="https://cdn.tailwindcss.com/3.4.16"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -48,14 +48,14 @@
 
 <body class="bg-gray-50 min-h-screen">
   <script>
-    window.APP_DATA = []; // static var
+    window.APP_DATA = {}; // static var
     window.APP_DATA.menu = [
       { id: 2, name: "Caisses", path: "/", icon: "fas fa-shopping-cart", paths: ["/", "/caisse", "/fr", "/fr/frontdesk"] },
-      { id: 5, name: "Commandes", path: "/commandes", icon: "fas fa-users" },
+      { id: 5, name: "Ventes", path: "/commandes", icon: "fas fa-users" },
       { id: 3, name: "Patients", path: "/patients", icon: "fas fa-users" },
-      { id: 4, name: "Consulter", path: "/consultations", icon: "fas fa-stethoscope", paths: ["/consultations", "/consultations/edit"]  },
+      { id: 4, name: "Consulter", path: "/consultations", icon: "fas fa-stethoscope", paths: ["/consultations", "/consultations/edit"] },
       { id: 6, name: "Stocks", path: "/stocks", icon: "fas fa-boxes" },
-      { id: 7, name: "Assist", path: "/assist", icon: "fas fa-boxes" },
+      { id: 7, name: "Assistant IA", path: "/assist", icon: "ri-robot-2-line", roles: ["docteur", "administrator"] },
     ];
     window.APP_DATA.baseUrl = "http://www.pharmacy.full";
   </script>

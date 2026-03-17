@@ -30,7 +30,7 @@ export default {
     const tableClientRef = ref(null);
     const tableKey = ref(0);
     const patientToEdit = ref({});
-    
+
     // Paramètres dynamiques de la requête
     const queryOptions = ref({
       fields: [
@@ -50,9 +50,14 @@ export default {
         'field_last_consultation_status'
       ],
       sort: { val: 'nid', op: 'desc' },
-      filters: {},
+      filters: {
+        status: {
+          val: 1,
+          op: "="
+        }
+      },
       values: {
-        field_consultation: ['title', 'nid', 'field_consultation_status', 'created', 'field_prochaine_consultation' ]
+        field_consultation: ['title', 'nid', 'field_consultation_status', 'created', 'field_prochaine_consultation']
       },
       pager: 0,
       offset: 10

@@ -1,11 +1,37 @@
 import axios from "axios";
+import { toast } from "vue-sonner";
+import { router } from "../main.js"; // ← Import du router Vue
 
 const api = axios.create({
   baseURL: window.APP_DATA.baseUrl,
   headers: {
     Accept: "application/json",
+    "Content-Type": "application/json",
   },
+  withCredentials: true, // ← Envoie les cookies automatiquement
 });
+
+// Intercepteur pour gérer les erreurs 401 (non authentifié)
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      // Afficher UNIQUEMENT un toast, PAS de redirection automatique
+      toast.error("Votre session a expiré. Veuillez vous reconnecter.", {
+        action: {
+          label: 'Se connecter',
+          onClick: () => {
+            // Redirection avec Vue Router (pas de rechargement de page)
+            router.push('/login');
+          }
+        }
+      });
+      
+      console.warn("Session expirée - Action non autorisée");
+    }
+    return Promise.reject(error);
+  }
+);
 
 // /api/v2/[entity]/[content_type]
 

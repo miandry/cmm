@@ -33,7 +33,7 @@ export const useConsultationStore = defineStore("consultation", () => {
 
   async function fetchConsultation(id) {
     loading.value = true;
-    const query = `filters[nid][val]=${id}`;
+    const query = `values[field_client][]=field_age&values[field_client][]=title&values[field_client][]=nid&filters[nid][val]=${id}`;
     try {
       const response = await getConsultations(query);
       consultation.value = response.data.rows[0];

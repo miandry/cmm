@@ -15,14 +15,15 @@
                     <form @submit.prevent="submitClientForm" id="add-customer-form" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nom complet *</label>
-                            <input type="text" v-model="form.title" required
-                                class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                            <input type="text" v-model="form.title" @input="validateTitle" required :class="['w-full px-3 py-2 border !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm',
+                                titleError ? 'border-red-500' : 'border-gray-300']"
                                 placeholder="Ex: Rakoto Andry">
+                            <p v-if="titleError" class="mt-1 text-sm text-red-500">{{ titleError }}</p>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-                            <input type="tel" v-model="form.field_phone" required
+                            <input type="tel" v-model="form.field_phone"
                                 class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                                 placeholder="Ex: +261 34 12 345 67">
                         </div>
@@ -40,8 +41,8 @@
                                 class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 !rounded-button font-medium whitespace-nowrap">
                                 Annuler
                             </button>
-                            <button type="submit"
-                                class="flex-1 px-4 py-2 bg-secondary text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap">
+                            <button type="submit" :disabled="!!titleError || !form.title"
+                                class="flex-1 px-4 py-2 bg-secondary text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
                                 Enregistrer
                             </button>
                         </div>
@@ -56,13 +57,14 @@
 </template>
 
 <script>
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
 import { useClientStore } from "../../stores/index.js";
 import { toast } from "vue-sonner";
 
 export default {
     setup(props, { emit }) {
         const store = useClientStore();
+        const titleError = ref("");
 
         const form = reactive({
             entity_type: "node",
@@ -73,7 +75,22 @@ export default {
             status: 1,
         });
 
+        const validateTitle = () => {
+            if (!form.title.trim()) {
+                titleError.value = "Le nom complet est requis";
+            } else {
+                titleError.value = "";
+            }
+        };
+
         const submitClientForm = async () => {
+            // Valider avant soumission
+            validateTitle();
+
+            if (titleError.value) {
+                return;
+            }
+
             store.loading = true;
             await store.createClient(form);
 
@@ -85,6 +102,7 @@ export default {
             // reset form
             form.title = "";
             form.field_phone = "";
+            titleError.value = ""; // Reset error
             // fermer modal si c'est ok
             emit('close-add-customer-modal');
             emit('close-client-modal');
@@ -92,7 +110,7 @@ export default {
             store.loading = false;
         };
 
-        return { form, submitClientForm, store };
+        return { form, submitClientForm, store, titleError, validateTitle };
     },
 };
 </script>

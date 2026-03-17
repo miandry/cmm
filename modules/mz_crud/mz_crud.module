@@ -22,3 +22,15 @@ function mz_crud_help($route_name, RouteMatchInterface $route_match) {
         default:
     }
 }
+
+/**
+ * Implements hook_cron().
+ */
+function mz_crud_cron() {
+  $service = \Drupal::service('api.crud');
+  $deleted = $service->cleanupExpiredTokens();
+  
+  if ($deleted > 0) {
+    \Drupal::logger('mz_crud')->notice('Nettoyage : @count tokens expirés supprimés', ['@count' => $deleted]);
+  }
+}

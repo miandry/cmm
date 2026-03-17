@@ -5,7 +5,7 @@
             <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Historique des consulatations</h3>
+                        <h3 class="text-lg font-semibold text-gray-900">Historique des consultations</h3>
                         <button @click="closeHistoryModal" class="text-gray-400 hover:text-gray-600">
                             <div class="w-6 h-6 flex items-center justify-center">
                                 <i class="ri-close-line text-xl"></i>
@@ -18,7 +18,8 @@
                                 class="w-4 h-4 flex items-center justify-center absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                                 <i class="ri-search-line text-sm"></i>
                             </div>
-                            <input type="text" placeholder="Rechercher une consultation" v-model="searchKeyword" @input="onSearch"
+                            <input type="text" placeholder="Rechercher une consultation" v-model="searchKeyword"
+                                @input="onSearch"
                                 class="w-full pl-10 pr-4 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
                         </div>
                     </div>
@@ -32,9 +33,9 @@
                         <div class="space-y-1 max-h-48 overflow-y-auto"
                             v-if="consultationsStore.consultations.rows.length">
                             <div v-for="cons in consultationsStore.consultations.rows" :key="cons.nid"
-                                @click="editConsultation(cons)" class="p-2 rounded-lg cursor-pointer"
+                                @click="showConsultationDetails(cons)" class="p-2 rounded-lg cursor-pointer"
                                 :class="[cons.field_consultation_status == 'draft' ? 'bg-orange-100 hover:bg-orange-200' : 'bg-green-100 hover:bg-green-200']">
-                                <div class="flex items-center justify-between mb-1">
+                                <div class="flex items-center justify-between mb-1 gap-4">
                                     <span class="text-xs flex-1 two-lines font-medium text-gray-900">{{ cons.field_motif
                                         }}</span>
                                     <p class="text-xs text-green-500"
@@ -48,8 +49,13 @@
                                         <span>{{ cons.field_temperature }}°C </span>
                                         <span> - {{ cons.field_tension_arterielle }} mmHg</span>
                                     </p>
-                                    <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short')
-                                        }}</span>
+                                    <p>
+                                        <span @click.stop="print(cons.nid)" title="Imprimer ordonnance"
+                                            class="cursor-pointer mr-2 text-green-600"><i
+                                                class="ri-printer-line"></i></span>
+                                        <span class="text-xs text-gray-500"> {{ formatDate(null, cons.created, 'short')
+                                            }}</span>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -66,7 +72,7 @@
 </template>
 
 <script>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useConsultationStore } from '../../stores/index.js';
 import { formatDate } from '../../utils/formateDate.js';
 import { toast } from 'vue-sonner';
@@ -100,7 +106,12 @@ export default {
                 'field_consultation_status'
             ],
             sort: { val: 'nid', op: 'desc' },
-            filters: {},
+            filters: {
+                status: {
+                    val: 1,
+                    op: "="
+                }
+            },
             pager: 0,
             offset: 1000
         })
@@ -120,25 +131,16 @@ export default {
             }
         }
 
-        onMounted(async () => {
-            updateFilter('field_client', props.clientId, "=");
-            await fetchConsultations();
-        })
-
-        // edit consulatation
-        const editConsultation = (consultation) => {
-            if (consultation.field_consultation_status == "draft") {
-                router.push({
-                    name: 'consultation.edit',
-                    params: {
-                        id: consultation.nid
-                    }
-                });
-                toast("Consultation chargé.", { class: "!bg-orange-100 !text-orange-700", });
-            } else {
-                toast("Consultation déja payé.", { class: "!bg-green-100 !text-green-700", });
-            }
-        };
+        watch(
+            () => props.clientId,
+            async (newVal) => {
+                if (!newVal) return;
+                console.log("Client ID changed:", newVal);
+                updateFilter('field_client', newVal, "=");
+                await fetchConsultations();
+            },
+            { immediate: true }
+        );
 
         const onSearch = () => {
             loading.value = true;
@@ -159,14 +161,33 @@ export default {
             emit('closeHistory')
         }
 
+        const showConsultationDetails = (consultation) => {
+            router.push({
+                name: 'consultation.details',
+                query: {
+                    id: consultation.nid
+                }
+            });
+        };
+
+        const print = (nid) => {
+            router.push({
+                name: 'ordonnance',
+                query: {
+                    key: nid,
+                }
+            })
+        }
+
         return {
             consultationsStore,
             formatDate,
             loading,
-            editConsultation,
             searchKeyword,
             onSearch,
-            closeHistoryModal
+            closeHistoryModal,
+            showConsultationDetails,
+            print,
         }
     }
 }

@@ -118,13 +118,50 @@ document.addEventListener('touchend', function (event) {
     <script>
     window.APP_DATA = {}; // static var
     window.APP_DATA.menu = [
-      { id: 2, name: "Caisses", path: "/", icon: "fas fa-shopping-cart", paths: ["/", "/caisse", "/fr", "/fr/frontdesk"] },
-      { id: 5, name: "Commandes", path: "/commandes", icon: "fas fa-users" },
-      { id: 3, name: "Patients", path: "/patients", icon: "fas fa-users" },
-      { id: 4, name: "Consulter", path: "/consultations", icon: "fas fa-stethoscope", paths: ["/consultations", "/consultations/edit"] },
-      { id: 6, name: "Stocks", path: "/stocks", icon: "fas fa-boxes" },
-      { id: 7, name: "Assistant IA", path: "/assist", icon: "ri-robot-2-line"},
-      { id: 8, name: "Equipes", path: "/users", icon: "fas fa-users"},
+      { 
+        id: 2,
+        name: "Caisses",
+        path: "/",
+        icon: "fas fa-shopping-cart",
+        paths: ["/", "/caisse", "/fr", "/fr/frontdesk"],
+        roles: ["caissier","docteur", "gerant", "administrator"]
+      },
+      { 
+        id: 5,
+        name: "Ventes",
+        path: "/commandes",
+        icon: "fas fa-users",
+        roles: ["caissier","docteur", "gerant", "administrator"]
+      },
+      { 
+        id: 3,
+        name: "Patients",
+        path: "/patients",
+        icon: "fas fa-users",
+        roles: ["docteur", "gerant", "administrator"]
+      },
+      { 
+        id: 4,
+        name: "Consulter",
+        path: "/consultations",
+        icon: "fas fa-stethoscope",
+        paths: ["/consultations", "/consultations/edit"],
+        roles: ["docteur", "gerant", "administrator"]
+      },
+      { 
+        id: 6,
+        name: "Stocks",
+        path: "/stocks",
+        icon: "fas fa-boxes",
+        roles: ["docteur", "gerant", "administrator"]
+      },
+      { 
+        id: 7,
+        name: "Assistant IA",
+        path: "/assist",
+        icon: "ri-robot-2-line",
+        roles: ["docteur", "gerant", "administrator"]
+      }
     ];
     window.APP_DATA.baseUrl = "/";
     </script>

@@ -1,45 +1,55 @@
 <template>
   <div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-      <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+
+      <!-- Total Patients -->
+      <div
+        class="relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+        <div class="flex items-center justify-between font-bold">
           <div>
-            <p class="text-sm text-gray-600">Total Patients</p>
-            <p class="text-2xl font-bold text-gray-900">{{ clientStore.allClients.total }}</p>
+            <p class="text-xs uppercase opacity-80">Total Patients</p>
+            <p class="text-3xl font-bold mt-1">{{ clientStore.allClients.total }}</p>
+            <p class="text-xs opacity-80 mt-1">Patients enregistrés</p>
           </div>
-          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <div class="w-6 h-6 flex items-center justify-center">
-              <i class="ri-user-line text-primary text-xl"></i>
-            </div>
+
+          <div class="bg-white/20 backdrop-blur p-3 rounded-xl">
+            <i class="ri-user-line text-2xl text-white"></i>
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between">
+
+      <!-- New This Month -->
+      <div
+        class="relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+        <div class="flex items-center justify-between font-bold">
           <div>
-            <p class="text-sm text-gray-600">Nouveaux ce mois</p>
-            <p class="text-2xl font-bold text-secondary">{{ countThisMonth }}</p>
+            <p class="text-xs uppercase opacity-80">Nouveaux ce mois</p>
+            <p class="text-3xl font-bold mt-1">{{ countThisMonth }}</p>
+            <p class="text-xs opacity-80 mt-1">Patients ajoutés</p>
           </div>
-          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-            <div class="w-6 h-6 flex items-center justify-center">
-              <i class="ri-user-add-line text-secondary text-xl"></i>
-            </div>
+
+          <div class="bg-white/20 backdrop-blur p-3 rounded-xl">
+            <i class="ri-user-add-line text-2xl text-white"></i>
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between">
+
+      <!-- With Insurance -->
+      <div
+        class="relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-orange-500 to-red-500 text-white">
+        <div class="flex items-center justify-between font-bold">
           <div>
-            <p class="text-sm text-gray-600">Avec assurance</p>
-            <p class="text-2xl font-bold text-orange-600">{{ withInsurance }}</p>
+            <p class="text-xs uppercase opacity-80">Avec assurance</p>
+            <p class="text-3xl font-bold mt-1">{{ withInsurance }}</p>
+            <p class="text-xs opacity-80 mt-1">Patients assurés</p>
           </div>
-          <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-            <div class="w-6 h-6 flex items-center justify-center">
-              <i class="ri-shield-check-line text-orange-600 text-xl"></i>
-            </div>
+
+          <div class="bg-white/20 backdrop-blur p-3 rounded-xl">
+            <i class="ri-shield-check-line text-2xl text-white"></i>
           </div>
         </div>
       </div>
+
     </div>
 
   </div>
@@ -48,6 +58,7 @@
 <script>
 import { ref, computed, onMounted } from "vue";
 import { useClientStore } from "../../stores/index.js";
+import { filter } from "lodash";
 
 
 export default {
@@ -62,6 +73,12 @@ export default {
         'field_assurance',
         'created'
       ],
+      filters: {
+        status: {
+          val: 1,
+          op: "="
+        }
+      },
       pager: 0,
       offset: 2000
     })

@@ -93,18 +93,19 @@
         </div>
 
         <!-- Popup de confirmation pour nouvelle page -->
-        <div v-if="showConfirmPopup" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] no-print">
+        <div v-if="showConfirmPopup"
+            class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] no-print">
             <div class="bg-white rounded-lg shadow-xl max-w-md w-[90%] mx-4 overflow-hidden">
                 <div class="p-5">
                     <p class="text-center text-gray-600 mb-4">
                         Voulez-vous créer une nouvelle page pour ajouter cet élément ?
                     </p>
                     <div class="flex gap-3 justify-center mt-6">
-                        <button @click="cancelAddItem" 
+                        <button @click="cancelAddItem"
                             class="flex-1 text-sm px-4 py-2 bg-gray-500 text-white hover:bg-gray-600 !rounded-button font-medium whitespace-nowrap">
                             Annuler
                         </button>
-                        <button @click="confirmAddItem" 
+                        <button @click="confirmAddItem"
                             class="flex-1 text-sm px-4 py-2 bg-green-500 text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap">
                             Continuer
                         </button>
@@ -466,7 +467,8 @@ export default {
         };
 
         // Données de la facture
-        const cabinet = ref({
+        // Configuration réelle
+        const realCabinet = {
             ville: "Tsiroanomandidy",
             nom: "Pharmacie / CENTRE MÉDICAL VONJY AINA",
             titre: "Facturation et Paiements",
@@ -474,7 +476,26 @@ export default {
             adresse: "3TH3 Tsarahonena, Tsiroanomandidy",
             contact: "033 24 427 30 – 034 06 015 13",
             immat: "NIF: 30024 555 38 / STAT: 65201 14 2016 0 00199"
-        });
+        };
+
+        // Configuration fictive (tests)
+        const fakeCabinet = {
+            ville: "Antananarivo",
+            nom: "Pharmacie / Centre Médical Test Santé",
+            titre: "Facturation et Paiements",
+            centre: "VENTE PHARMACEUTIQUE",
+            adresse: "45 Avenue de l'Indépendance",
+            contact: "032 12 345 67 – 034 98 765 43",
+            immat: "NIF: 12345 678 90 / STAT: 98765 43 2024 0 00001"
+        };
+
+        const hostname = window.location.hostname;
+
+        const cabinet = ref(
+            hostname === "vonjyaina.platforme.site"
+                ? realCabinet
+                : fakeCabinet
+        );
 
         const patient = ref({
             nom: "",
@@ -506,10 +527,10 @@ export default {
 
         // Vérifie si la page actuelle est pleine
         const isCurrentPageFull = computed(() => {
-            const itemsCount = showMedicaments.value ? 
+            const itemsCount = showMedicaments.value ?
                 articles.value.length - ((currentPage.value - 1) * itemsPerPage.value) :
                 examens.value.length - ((currentPage.value - 1) * itemsPerPage.value);
-            
+
             return itemsCount >= itemsPerPage.value;
         });
 
@@ -983,13 +1004,13 @@ export default {
         // Fonction appelée quand l'utilisateur confirme l'ajout
         const confirmAddItem = () => {
             showConfirmPopup.value = false;
-            
+
             if (pendingItemType.value === 'article') {
                 addArticle();
             } else if (pendingItemType.value === 'examen') {
                 addExamen();
             }
-            
+
             pendingItemType.value = null;
         };
 

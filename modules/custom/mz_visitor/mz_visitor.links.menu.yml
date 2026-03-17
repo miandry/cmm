@@ -11,10 +11,3 @@ mz_visitor.create_form:
   parent: user.admin_index
   route_name: mz_visitor.create_form
   weight: 10
-
-mz_visitor.block_schedule:
-  title: 'User Block Schedule'
-  description: 'Manage user blocking during scheduled times.'
-  parent: user.admin_index
-  route_name: mz_visitor.block_schedule
-  weight: 15

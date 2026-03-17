@@ -27,6 +27,31 @@
             {{ menuItem.name }}
           </span>
         </router-link>
+
+        <!-- Dashboard -->
+        <router-link to="/dashboard" v-if="roles.some(r => ['gerant', 'docteur', 'administrator'].includes(r))"
+          class="menu-item" :class="getMenuItemClass('/dashboard')" @click="closeMenu">
+          <i class="fas fa-chart-line menu-icon"></i>
+          <span class="menu-label">Dashboard</span>
+        </router-link>
+
+        <!-- Profil -->
+        <router-link to="/user-profil" class="menu-item hidden" :class="getMenuItemClass('/user-profil')" @click="closeMenu">
+          <i class="fas fa-user menu-icon"></i>
+          <span class="menu-label">Profil</span>
+        </router-link>
+
+        <!-- Équipe -->
+        <router-link to="/users" v-if="roles.some(r => ['gerant', 'administrator'].includes(r))" class="menu-item"
+          :class="getMenuItemClass('/users')" @click="closeMenu">
+          <i class="fas fa-users menu-icon"></i>
+          <span class="menu-label">Équipe</span>
+        </router-link>
+      </nav>
+
+      <!-- Extra Navigation -->
+      <nav class="menu-navigation pt-0">
+
       </nav>
 
       <!-- Status Footer -->
@@ -39,7 +64,8 @@
         </div>
 
         <div class="store-info">
-          <button @click="handleLogout" class="flex items-center border-0 bg-transparent cursor-pointer hover:opacity-80 transition-opacity p-0">
+          <button @click="handleLogout"
+            class="flex items-center border-0 bg-transparent cursor-pointer hover:opacity-80 transition-opacity p-0">
             <i class="fas fa-sign-out-alt text-red-500 text-sm"></i>
             <span class="text-sm text-red-500 ms-2 font-medium">Déconnexion</span>
           </button>
@@ -50,6 +76,7 @@
 </template>
 
 <script>
+import { toast } from 'vue-sonner';
 import { useAuthStore } from '../stores/auth';
 
 export default {
@@ -148,8 +175,16 @@ export default {
     },
 
     async handleLogout() {
-      await this.authStore.logout();
-    },
+      try {
+        this.showUserMenu = false; // Fermer le menu
+        // Appeler logout avec le router pour la redirection
+        await this.authStore.logout('/login', this.$router);
+
+      } catch (error) {
+        console.error("Logout failed:", error);
+        toast.error("Une erreur est survenue lors de la déconnexion. Veuillez réessayer.");
+      }
+    }
   },
 
   watch: {
@@ -202,7 +237,8 @@ export default {
   top: 0;
   left: 0;
   width: 280px;
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: white;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   transform: translateX(-100%);
@@ -339,6 +375,10 @@ export default {
   font-size: 0.75rem;
   color: #4b5563;
   /* gray-600 */
+}
+
+.menu-item.hidden {
+  display: none !important;
 }
 
 /* Hide mobile menu on large screens */

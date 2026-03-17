@@ -10,12 +10,14 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * RAG API Controller for AI database access.
  */
-class RagController extends ControllerBase {
+class RagController extends ControllerBase
+{
 
   /**
    * Search patients by name, phone, email, or other criteria.
    */
-  public function searchPatients(Request $request) {
+  public function searchPatients(Request $request)
+  {
     $params = $this->getParams($request);
     $query = $params['query'] ?? '';
     $limit = (int) ($params['limit'] ?? 20);
@@ -109,7 +111,8 @@ class RagController extends ControllerBase {
   /**
    * Search medications/medicines by name or stock status.
    */
-  public function searchMedications(Request $request) {
+  public function searchMedications(Request $request)
+  {
     $params = $this->getParams($request);
     $query = $params['query'] ?? '';
     $limit = (int) ($params['limit'] ?? 50);
@@ -231,7 +234,8 @@ class RagController extends ControllerBase {
   /**
    * Search consultations by patient, date, or motif.
    */
-  public function searchConsultations(Request $request) {
+  public function searchConsultations(Request $request)
+  {
     $params = $this->getParams($request);
     $query = $params['query'] ?? '';
     $patientId = $params['patient_id'] ?? null;
@@ -242,14 +246,14 @@ class RagController extends ControllerBase {
 
     try {
       $connection = Database::getConnection();
-      
+
       // Check if consultations type exists
       $typeExists = $connection->select('node_field_data', 'n')
         ->condition('n.type', 'consultations')
         ->countQuery()
         ->execute()
         ->fetchField();
-      
+
       if (!$typeExists) {
         return new JsonResponse([
           'success' => TRUE,
@@ -258,7 +262,7 @@ class RagController extends ControllerBase {
           'message' => 'No consultations found',
         ]);
       }
-      
+
       $queryBuilder = $connection->select('node_field_data', 'n')
         ->fields('n', ['nid', 'title', 'created'])
         ->condition('n.type', 'consultations')
@@ -268,27 +272,32 @@ class RagController extends ControllerBase {
       try {
         $queryBuilder->leftJoin('node__field_client', 'client', 'client.entity_id = n.nid');
         $queryBuilder->fields('client', ['field_client_target_id']);
-      } catch (\Exception $e) {}
-      
+      } catch (\Exception $e) {
+      }
+
       try {
         $queryBuilder->leftJoin('node__field_motif', 'motif', 'motif.entity_id = n.nid');
         $queryBuilder->fields('motif', ['field_motif_value']);
-      } catch (\Exception $e) {}
-      
+      } catch (\Exception $e) {
+      }
+
       try {
         $queryBuilder->leftJoin('node__field_temperature', 'temp', 'temp.entity_id = n.nid');
         $queryBuilder->fields('temp', ['field_temperature_value']);
-      } catch (\Exception $e) {}
-      
+      } catch (\Exception $e) {
+      }
+
       try {
         $queryBuilder->leftJoin('node__field_tension_arterielle', 'tension', 'tension.entity_id = n.nid');
         $queryBuilder->fields('tension', ['field_tension_arterielle_value']);
-      } catch (\Exception $e) {}
-      
+      } catch (\Exception $e) {
+      }
+
       try {
         $queryBuilder->leftJoin('node__field_poids', 'poids', 'poids.entity_id = n.nid');
         $queryBuilder->fields('poids', ['field_poids_value']);
-      } catch (\Exception $e) {}
+      } catch (\Exception $e) {
+      }
 
       // Get patient name via join
       $queryBuilder->leftJoin('node_field_data', 'patient', 'patient.nid = client.field_client_target_id');
@@ -360,7 +369,8 @@ class RagController extends ControllerBase {
   /**
    * Search sales/orders by client, date, or product.
    */
-  public function searchSales(Request $request) {
+  public function searchSales(Request $request)
+  {
     $params = $this->getParams($request);
     $query = $params['query'] ?? '';
     $clientId = $params['client_id'] ?? null;
@@ -443,59 +453,104 @@ class RagController extends ControllerBase {
   }
 
   /**
-   * Get today's data: consultations, sales, stats.
+   * Get statistics for a specific period: today, last 7 days, or last 30 days.
+   * 
+   * @Query parameter:
+   * - period: today, week, month (default: today)
    */
-  public function searchToday(Request $request) {
+  public function searchWithPeriod(Request $request)
+  {
     $connection = Database::getConnection();
-    $todayStart = strtotime('today midnight');
-    $todayEnd = $todayStart + 86400;
 
-    // Today's consultations
+    // Récupérer la période depuis la requête (GET ou POST)
+    $params = $this->getParams($request);
+    $period = $params['period'] ?? 'today';
+
+    // Définir les dates en fonction de la période demandée
+    switch ($period) {
+      case 'week':
+        $start = strtotime('-7 days midnight');
+        $end = strtotime('now');
+        $label = '7 derniers jours';
+        break;
+
+      case 'month':
+        $start = strtotime('-30 days midnight');
+        $end = strtotime('now');
+        $label = '30 derniers jours';
+        break;
+
+      case 'today':
+      default:
+        $start = strtotime('today midnight');
+        $end = $start + 86400;
+        $label = 'Aujourd\'hui';
+        break;
+    }
+
+    // Consultations count for the period
     $consultationsQuery = $connection->select('node_field_data', 'n')
       ->condition('n.type', 'consultations')
       ->condition('n.status', 1)
-      ->condition('n.created', [$todayStart, $todayEnd], 'BETWEEN')
+      ->condition('n.created', [$start, $end], 'BETWEEN')
       ->countQuery()
       ->execute()
       ->fetchField();
 
-    // Today's sales
+    // Sales for the period
     $salesQuery = $connection->select('node_field_data', 'n');
     $salesQuery->leftJoin('node__field_total_vente', 'total', 'total.entity_id = n.nid');
     $salesQuery->condition('n.type', 'commande')
       ->condition('n.status', 1)
-      ->condition('n.created', [$todayStart, $todayEnd], 'BETWEEN');
+      ->condition('n.created', [$start, $end], 'BETWEEN');
     $salesQuery->addExpression('COUNT(*)', 'count');
     $salesQuery->addExpression('SUM(total.field_total_vente_value)', 'total_amount');
     $salesResult = $salesQuery->execute()->fetchObject();
 
-    // Low stock items
-    $lowStockQuery = $connection->select('node__field_quantite_stock', 's')
+    // Clients count for the period
+    $clientsQuery = $connection->select('node_field_data', 'n')
+      ->condition('n.type', 'client')
+      ->condition('n.status', 1)
+      ->condition('n.created', [$start, $end], 'BETWEEN')
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+
+    // Low stock items (toujours actuel, indépendant de la période)
+    $lowStockQuery = $connection->select('node__field_quantite_stock', 's');
+    $lowStockQuery->join('node_field_data', 'n', 'n.nid = s.entity_id');
+    $lowStockQuery
+      ->condition('n.status', 1) // seulement publié
       ->condition('s.field_quantite_stock_value', [1, 10], 'BETWEEN');
+
     $lowStockQuery->addExpression('COUNT(*)', 'count');
+
     $lowStockCount = $lowStockQuery->execute()->fetchField();
 
-    // Detailed today's consultations
+    // Détails pour la période demandée
     $consultRequest = new Request();
-    $consultRequest->request->set('date_from', date('Y-m-d'));
-    $consultRequest->request->set('date_to', date('Y-m-d'));
-    $todayConsultations = $this->searchConsultations($consultRequest);
-    $consultationsData = json_decode($todayConsultations->getContent(), TRUE);
+    $consultRequest->request->set('date_from', date('Y-m-d', $start));
+    $consultRequest->request->set('date_to', date('Y-m-d', ($period === 'today' ? $start : $end)));
+    $periodConsultations = $this->searchConsultations($consultRequest);
+    $consultationsData = json_decode($periodConsultations->getContent(), TRUE);
 
-    // Detailed today's sales
     $salesRequest = new Request();
-    $salesRequest->request->set('date_from', date('Y-m-d'));
-    $salesRequest->request->set('date_to', date('Y-m-d'));
-    $todaySales = $this->searchSales($salesRequest);
-    $salesData = json_decode($todaySales->getContent(), TRUE);
+    $salesRequest->request->set('date_from', date('Y-m-d', $start));
+    $salesRequest->request->set('date_to', date('Y-m-d', ($period === 'today' ? $start : $end)));
+    $periodSales = $this->searchSales($salesRequest);
+    $salesData = json_decode($periodSales->getContent(), TRUE);
 
     return new JsonResponse([
       'success' => TRUE,
-      'date' => date('Y-m-d'),
+      'period' => $label,
+      'period_key' => $period,
+      'date_from' => date('Y-m-d H:i:s', $start),
+      'date_to' => date('Y-m-d H:i:s', $end),
       'stats' => [
         'consultations_count' => (int) $consultationsQuery,
         'sales_count' => (int) ($salesResult->count ?? 0),
         'sales_total' => (float) ($salesResult->total_amount ?? 0),
+        'clients_count' => (int) $clientsQuery,
         'low_stock_items' => (int) $lowStockCount,
       ],
       'consultations' => $consultationsData['data'] ?? [],
@@ -506,7 +561,8 @@ class RagController extends ControllerBase {
   /**
    * RAG Query - Intelligent context builder for AI.
    */
-  public function ragQuery(Request $request) {
+  public function ragQuery(Request $request)
+  {
     $params = json_decode($request->getContent(), TRUE) ?: [];
     $query = $params['query'] ?? '';
     $context = [];
@@ -523,8 +579,10 @@ class RagController extends ControllerBase {
     }
 
     // Medication/stock queries
-    if (str_contains($queryLower, 'medicament') || str_contains($queryLower, 'médicament') || 
-        str_contains($queryLower, 'stock') || str_contains($queryLower, 'article')) {
+    if (
+      str_contains($queryLower, 'medicament') || str_contains($queryLower, 'médicament') ||
+      str_contains($queryLower, 'stock') || str_contains($queryLower, 'article')
+    ) {
       $medRequest = new Request();
       $medRequest->request->set('query', $query);
       $medSearch = $this->searchMedications($medRequest);
@@ -540,8 +598,10 @@ class RagController extends ControllerBase {
     }
 
     // Sales queries
-    if (str_contains($queryLower, 'vente') || str_contains($queryLower, 'commande') || 
-        str_contains($queryLower, 'chiffre') || str_contains($queryLower, 'total')) {
+    if (
+      str_contains($queryLower, 'vente') || str_contains($queryLower, 'commande') ||
+      str_contains($queryLower, 'chiffre') || str_contains($queryLower, 'total')
+    ) {
       $salesRequest = new Request();
       $salesRequest->request->set('query', $query);
       $salesSearch = $this->searchSales($salesRequest);
@@ -549,9 +609,11 @@ class RagController extends ControllerBase {
     }
 
     // Today queries
-    if (str_contains($queryLower, "aujourd'hui") || str_contains($queryLower, 'today') || 
-        str_contains($queryLower, 'jour')) {
-      $todayData = $this->searchToday($request);
+    if (
+      str_contains($queryLower, "aujourd'hui") || str_contains($queryLower, 'today') ||
+      str_contains($queryLower, 'jour')
+    ) {
+      $todayData = $this->searchWithPeriod($request);
       $todayContext = json_decode($todayData->getContent(), TRUE);
       $context['today'] = $todayContext;
     }
@@ -566,7 +628,8 @@ class RagController extends ControllerBase {
   /**
    * Semantic search - Full-text search across all entities.
    */
-  public function semanticSearch(Request $request) {
+  public function semanticSearch(Request $request)
+  {
     $params = json_decode($request->getContent(), TRUE) ?: [];
     $query = $params['query'] ?? '';
     $types = $params['types'] ?? ['patient', 'medication', 'consultation', 'sale'];
@@ -616,7 +679,8 @@ class RagController extends ControllerBase {
   /**
    * Helper: Get medications for a consultation.
    */
-  private function getConsultationMedications($consultationId) {
+  private function getConsultationMedications($consultationId)
+  {
     try {
       $connection = Database::getConnection();
       $query = $connection->select('node__field_medicaments', 'm')
@@ -653,7 +717,8 @@ class RagController extends ControllerBase {
   /**
    * Helper: Get exams for a consultation.
    */
-  private function getConsultationExams($consultationId) {
+  private function getConsultationExams($consultationId)
+  {
     try {
       $connection = Database::getConnection();
       $query = $connection->select('node__field_examens', 'e')
@@ -687,7 +752,8 @@ class RagController extends ControllerBase {
   /**
    * Helper: Get products for an order.
    */
-  private function getOrderProducts($orderId) {
+  private function getOrderProducts($orderId)
+  {
     $connection = Database::getConnection();
     $query = $connection->select('node__field_articles', 'a')
       ->condition('a.entity_id', $orderId);
@@ -716,7 +782,8 @@ class RagController extends ControllerBase {
   /**
    * Helper: Get exams for an order.
    */
-  private function getOrderExams($orderId) {
+  private function getOrderExams($orderId)
+  {
     $connection = Database::getConnection();
     $query = $connection->select('node__field_examens_order', 'e')
       ->condition('e.entity_id', $orderId);
@@ -737,11 +804,11 @@ class RagController extends ControllerBase {
   /**
    * Helper: Get params from GET or POST.
    */
-  private function getParams(Request $request) {
+  private function getParams(Request $request)
+  {
     if ($request->getMethod() === 'POST') {
       return json_decode($request->getContent(), TRUE) ?: [];
     }
     return $request->query->all();
   }
-
 }

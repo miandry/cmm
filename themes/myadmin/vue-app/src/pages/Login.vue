@@ -63,6 +63,7 @@
 import { ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
+import { toast } from 'vue-sonner';
 
 export default {
   name: 'Login',
@@ -74,15 +75,13 @@ export default {
     const password = ref('');
 
     const handleLogin = async () => {
-      // Basic validation
       if (!username.value || !password.value) return;
-
-      const success = await authStore.login(username.value, password.value);
-      
-      if (success) {
-        // Force une actualisation complète pour que les composants se rechargent avec les nouvelles données
-        window.location.href = '/';
-      }
+      try {
+        await authStore.login(username.value, password.value);
+        router.push('/caisse');
+      } catch (error) {
+        toast.error('un problème est survenu lors de la connexion. Veuillez réessayer.');
+      } 
     };
 
     return {

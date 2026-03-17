@@ -35,10 +35,10 @@ rag_api.search_sales:
     _permission: 'access content'
 
 rag_api.search_today:
-  path: '/api/rag/today'
+  path: '/api/rag/get-data'
   methods: [GET]
   defaults:
-    _controller: '\Drupal\rag_api\Controller\RagController::searchToday'
+    _controller: '\Drupal\rag_api\Controller\RagController::searchWithPeriod'
     _format: 'json'
   requirements:
     _permission: 'access content'

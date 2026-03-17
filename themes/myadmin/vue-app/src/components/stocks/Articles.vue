@@ -122,7 +122,7 @@
                             <td class="px-6 py-4 text-sm whitespace-nowrap">
                                 <div>
                                     Achat: <span class="text-green-500">{{ formatDate(stock.field_date, null, 'short')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div>
                                     Péremption: <span class="text-red-500">{{ formatDate(stock.field_peremption, null,
@@ -255,7 +255,12 @@ export default {
                 'field_quantite',
             ],
             sort: { val: 'nid', op: 'desc' },
-            filters: {},
+            filters: {
+                status: {
+                    val: 1,
+                    op: "="
+                }
+            },
             pager: 0,
             offset: 15
         })
@@ -266,7 +271,12 @@ export default {
                 'title'
             ],
             sort: { val: 'nid', op: 'desc' },
-            filters: {},
+            filters: {
+                status: {
+                    val: 1,
+                    op: "="
+                }
+            },
             pager: 0,
             offset: 10
         })
@@ -277,6 +287,12 @@ export default {
                 'title',
             ],
             sort: { val: 'title', op: 'asc' },
+            filters: {
+                status: {
+                    val: 1,
+                    op: "="
+                }
+            },
             pager: 0,
             offset: 1000
         })

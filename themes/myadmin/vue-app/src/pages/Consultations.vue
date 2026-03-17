@@ -380,6 +380,10 @@ export default {
                             field_consultation_nid: {
                                 val: consultationReference.value,
                                 op: '=',
+                            },
+                            status: {
+                                val: 1,
+                                op: "="
                             }
                         }
                     })
@@ -517,7 +521,9 @@ export default {
             openHistory,
             loadLastconsultation,
             closeHistory,
-            isHistoryModalOpen
+            isHistoryModalOpen,
+            clientId,
+            consultationReference,
         };
     }
 }

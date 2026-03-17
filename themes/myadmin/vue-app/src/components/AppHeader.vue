@@ -24,8 +24,33 @@
 
           <!-- DROP DOWN -->
           <div v-if="showUserMenu"
-            class="absolute right-0 mt-2 w-40 bg-white shadow-lg border rounded-md py-2 z-50 animate-fade">
-            <button @click="handleLogout" class="flex items-center w-full px-3 py-2 text-left hover:bg-red-50 text-sm border-0 bg-transparent cursor-pointer transition-colors">
+            class="absolute right-0 mt-2 min-w-max bg-white shadow-lg border rounded-md py-2 z-50 animate-fade">
+            <!-- Dashboard -->
+            <router-link to="/dashboard" v-if="roles.some(r => ['gerant', 'docteur', 'administrator'].includes(r))"
+              class="flex items-center w-full px-3 py-2 text-left hover:bg-gray-50 text-sm cursor-pointer transition-colors">
+              <i class="fas fa-chart-line text-gray-500 mr-2 text-xs"></i>
+              <span class="text-gray-700 font-medium">Dashboard</span>
+            </router-link>
+
+            <!-- Profil -->
+            <router-link to="/user-profil"
+              class="flex items-center w-full px-3 py-2 text-left hover:bg-gray-50 text-sm cursor-pointer transition-colors hidden">
+              <i class="fas fa-user text-gray-500 mr-2 text-xs"></i>
+              <span class="text-gray-700 font-medium">Profil</span>
+            </router-link>
+
+            <!-- Équipe -->
+            <router-link to="/users" v-if="roles.some(r => ['gerant', 'administrator'].includes(r))"
+              class="flex items-center w-full px-3 py-2 text-left hover:bg-gray-50 text-sm cursor-pointer transition-colors">
+              <i class="fas fa-users text-gray-500 mr-2 text-xs"></i>
+              <span class="text-gray-700 font-medium">Équipe</span>
+            </router-link>
+
+            <!-- séparation -->
+            <div class="border-t my-1"></div>
+
+            <button @click="handleLogout"
+              class="flex items-center w-full px-3 py-2 text-left hover:bg-red-50 text-sm border-0 bg-transparent cursor-pointer transition-colors">
               <i class="fas fa-sign-out-alt text-red-500 mr-2 text-xs"></i>
               <span class="text-red-500 font-medium">Déconnexion</span>
             </button>
@@ -52,6 +77,7 @@
 </template>
 
 <script>
+import { toast } from 'vue-sonner';
 import { useAuthStore } from '../stores/auth';
 
 export default {
@@ -94,19 +120,22 @@ export default {
 
     // MENU FILTRÉ SELON LES RÔLES
     menuItems() {
-      const menu = this.authStore.user?.menu || window.APP_DATA?.menu || [];
+      const menu = window.APP_DATA?.menu || [];
+      const userRoles = this.roles;
+
       return menu.filter(item => {
+
         // menu public
         if (!item.roles || item.roles.length === 0) {
           return true;
         }
 
-        // au moins un rôle commun
+        // vérifier si le user possède un rôle autorisé
         return item.roles.some(role =>
-          this.roles.includes(role)
+          userRoles.includes(role)
         );
       });
-    },
+    }
   },
 
   mounted() {
@@ -156,8 +185,16 @@ export default {
     },
 
     async handleLogout() {
-      await this.authStore.logout();
-    },
+      try {
+        this.showUserMenu = false; // Fermer le menu
+        // Appeler logout avec le router pour la redirection
+        await this.authStore.logout('/login', this.$router);
+        
+      } catch (error) {
+        console.error("Logout failed:", error);
+        toast.error("Une erreur est survenue lors de la déconnexion. Veuillez réessayer.");
+      }
+    }
   },
 };
 </script>
