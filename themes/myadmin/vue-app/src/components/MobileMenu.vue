@@ -36,7 +36,7 @@
         </router-link>
 
         <!-- Profil -->
-        <router-link to="/profile" class="menu-item hidden" :class="getMenuItemClass('/profile')" @click="closeMenu">
+        <router-link to="/user-profil" class="menu-item hidden" :class="getMenuItemClass('/user-profil')" @click="closeMenu">
           <i class="fas fa-user menu-icon"></i>
           <span class="menu-label">Profil</span>
         </router-link>

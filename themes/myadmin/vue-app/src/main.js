@@ -19,6 +19,7 @@ import { hasAnyRole } from "./utils/auth.js";
 import { useAuthStore } from "./stores/auth.js";
 import ConsultationDetails from "./pages/ConsultationDetails.vue";
 import { toast } from "vue-sonner";
+import UserProfile from "./pages/UserProfile.vue";
 
 blockZoom();
 
@@ -99,7 +100,10 @@ const routes = [
     path: "/facture",
     name: "facture",
     component: Facture,
-    meta: { hideHeader: true, roles: ["caissier", "docteur", "gerant", "administrator"] },
+    meta: {
+      hideHeader: true,
+      roles: ["caissier", "docteur", "gerant", "administrator"],
+    },
   },
   {
     path: "/ordonnance",
@@ -118,6 +122,12 @@ const routes = [
     name: "stocks",
     component: Stocks,
     meta: { roles: ["docteur", "gerant", "administrator"] },
+  },
+  {
+    path: "/user-profil",
+    name: "user.profil",
+    component: UserProfile,
+    meta: { roles: ["caissier", "docteur", "gerant", "administrator"] },
   },
 ];
 
@@ -149,13 +159,14 @@ router.beforeEach(async (to, from, next) => {
 
   // Vérification des rôles
   if (requiredRoles.length && !hasAnyRole(requiredRoles)) {
-    toast.error("Vous n'avez pas les permissions nécessaires pour accéder à cette page.");
+    toast.error(
+      "Vous n'avez pas les permissions nécessaires pour accéder à cette page.",
+    );
     return next({ name: "home" });
   }
 
   next();
 });
-
 
 const pinia = createPinia();
 

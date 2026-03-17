@@ -21,18 +21,19 @@
         </div>
 
         <!-- Popup de confirmation pour nouvelle page -->
-        <div v-if="showConfirmPopup" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] no-print">
+        <div v-if="showConfirmPopup"
+            class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] no-print">
             <div class="bg-white rounded-lg shadow-xl max-w-md w-[90%] mx-4 overflow-hidden">
                 <div class="p-5">
                     <p class="text-center text-gray-600 mb-4">
                         Voulez-vous créer une nouvelle page pour ajouter cet élément ?
                     </p>
                     <div class="flex gap-3 justify-center mt-6">
-                        <button @click="cancelAddItem" 
+                        <button @click="cancelAddItem"
                             class="flex-1 text-sm px-4 py-2 bg-gray-500 text-white hover:bg-gray-600 !rounded-button font-medium whitespace-nowrap">
                             Annuler
                         </button>
-                        <button @click="confirmAddItem" 
+                        <button @click="confirmAddItem"
                             class="flex-1 text-sm px-4 py-2 bg-green-500 text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap">
                             Continuer
                         </button>
@@ -141,10 +142,10 @@
                         <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm items-end leading-snug">
                             <div class="min-w-[100px] flex items-baseline">
                                 <span class="font-sans font-bold text-medical-blue text-xs inline-block">Nom :</span>
-                                <span class="font-bold text-base text-xs patient-nom editable-field" contenteditable="true"
-                                    @blur="updateField('patient.nom', $event)" @keydown.enter="saveAndBlur($event)"
-                                    @focus="handleFocus($event, 'patientNom')" @input="preventVueUpdate($event)"
-                                    ref="patientNomField">
+                                <span class="font-bold text-base text-xs patient-nom editable-field"
+                                    contenteditable="true" @blur="updateField('patient.nom', $event)"
+                                    @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'patientNom')"
+                                    @input="preventVueUpdate($event)" ref="patientNomField">
                                     {{ ordonnanceData.patient.nom }}
                                 </span>
                             </div>
@@ -322,9 +323,10 @@
                         <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm items-end leading-snug">
                             <div class="min-w-[100px] flex items-baseline">
                                 <span class="font-sans font-bold text-medical-blue inline-block text-xs">Nom :</span>
-                                <span class="font-bold text-base patient-nom editable-field text-xs" contenteditable="true"
-                                    @blur="updateField('patient.nom', $event)" @keydown.enter="saveAndBlur($event)"
-                                    @focus="handleFocus($event, 'patientNom')" @input="preventVueUpdate($event)">
+                                <span class="font-bold text-base patient-nom editable-field text-xs"
+                                    contenteditable="true" @blur="updateField('patient.nom', $event)"
+                                    @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'patientNom')"
+                                    @input="preventVueUpdate($event)">
                                     {{ ordonnanceData.patient.nom }}
                                 </span>
                             </div>
@@ -479,7 +481,7 @@ export default {
         const editingValues = ref({});
 
         // Données par défaut de l'ordonnance
-        const defaultOrdonnanceData = {
+        const realOrdonnanceData = {
             date: new Date().toLocaleDateString('fr-FR'),
             cabinet: {
                 ville: "Tsiroanomandidy",
@@ -504,6 +506,39 @@ export default {
                 "Prochain rendez-vous : "
             ]
         };
+
+        const fakeOrdonnanceData = {
+            date: new Date().toLocaleDateString('fr-FR'),
+            cabinet: {
+                ville: "Tsiroanomandidy",
+            },
+            medecin: {
+                nom: "Dr. Jean Dupont",
+                titre: "Médecin Généraliste",
+                centre: "Centre Médical Santé Plus",
+                adresse: "12 Rue des Lilas, Tsiroanomandidy",
+                contact: "032 12 345 67 – 034 98 765 43",
+                immat: "NIF: 12345 678 90 / STAT: 98765 43 2024 0 00001"
+            },
+            patient: {
+                nom: "",
+                age: "",
+                mois: "",
+                dossier: ""
+            },
+            traitements: [],
+            examens: [],
+            instructions: [
+                "Prochain rendez-vous : "
+            ]
+        };
+
+        const hostname = window.location.hostname;
+
+        const defaultOrdonnanceData =
+            hostname === "vonjyaina.platforme.site"
+                ? realOrdonnanceData
+                : fakeOrdonnanceData;
 
         // Données réactives de l'ordonnance
         const ordonnanceData = ref(JSON.parse(JSON.stringify(defaultOrdonnanceData)));
@@ -772,7 +807,7 @@ export default {
         // Fonction appelée quand l'utilisateur confirme l'ajout
         function confirmAddItem() {
             showConfirmPopup.value = false;
-            
+
             if (pendingItemType.value === 'medicament') {
                 addTraitement();
                 // Aller automatiquement à la dernière page (nouvelle page)
@@ -790,7 +825,7 @@ export default {
                     }
                 });
             }
-            
+
             pendingItemType.value = null;
         }
 
