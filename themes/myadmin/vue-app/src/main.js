@@ -153,7 +153,7 @@ router.beforeEach(async (to, from, next) => {
 
   // Si pas connecté
   if (!isAuthenticated && to.name !== "login") {
-    toast.error("Vous devez être connecté pour accéder à cette page.");
+    // toast.error("Vous devez être connecté pour accéder à cette page.");
     return next({ name: "login" });
   }
 

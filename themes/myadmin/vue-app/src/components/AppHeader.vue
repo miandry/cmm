@@ -34,7 +34,7 @@
 
             <!-- Profil -->
             <router-link to="/user-profil"
-              class="flex items-center w-full px-3 py-2 text-left hover:bg-gray-50 text-sm cursor-pointer transition-colors hidden">
+              class="flex items-center w-full px-3 py-2 text-left hover:bg-gray-50 text-sm cursor-pointer transition-colors">
               <i class="fas fa-user text-gray-500 mr-2 text-xs"></i>
               <span class="text-gray-700 font-medium">Profil</span>
             </router-link>

@@ -548,4 +548,129 @@ class ApiController extends ControllerBase
             return $response;
         }
     }
+
+    /**
+     * Change user password.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function changePassword(Request $request)
+    {
+        // Vérifier l'authentification
+        $token = $request->cookies->get('auth_token');
+
+        if (!$token) {
+            return new JsonResponse([
+                'status' => false,
+                'error' => 'Non authentifié'
+            ], 401);
+        }
+
+        $service = \Drupal::service('api.crud');
+        $current_user = $service->validateBearerToken($token);
+
+        if (!$current_user) {
+            $response = new JsonResponse([
+                'status' => false,
+                'error' => 'Session expirée'
+            ], 401);
+            $response->headers->clearCookie('auth_token', '/');
+            return $response;
+        }
+
+        $method = $request->getMethod();
+
+        if ($method === "POST") {
+            $content = $request->getContent();
+            if (!empty($content)) {
+                $data = json_decode($content, TRUE);
+
+                // Vérifier les champs requis
+                if (empty($data['current_password']) || empty($data['new_password'])) {
+                    return new JsonResponse([
+                        'status' => false,
+                        'error' => 'Mot de passe actuel et nouveau mot de passe requis'
+                    ], 400);
+                }
+
+                // Vérifier que le nouveau mot de passe est différent
+                if ($data['current_password'] === $data['new_password']) {
+                    return new JsonResponse([
+                        'status' => false,
+                        'error' => 'Le nouveau mot de passe doit être différent de l\'ancien'
+                    ], 400);
+                }
+
+                // Vérifier l'ancien mot de passe
+                $password_hasher = \Drupal::service('password');
+                $current_hashed_password = $current_user->getPassword();
+
+                if (!$password_hasher->check($data['current_password'], $current_hashed_password)) {
+                    return new JsonResponse([
+                        'status' => false,
+                        'error' => 'Mot de passe actuel incorrect'
+                    ], 401);
+                }
+
+                // Valider la force du nouveau mot de passe (optionnel)
+                if (strlen($data['new_password']) < 6) {
+                    return new JsonResponse([
+                        'status' => false,
+                        'error' => 'Le nouveau mot de passe doit contenir au moins 6 caractères'
+                    ], 400);
+                }
+
+                // Changer le mot de passe
+                $current_user->setPassword($data['new_password']);
+                $saved = $current_user->save();
+
+                if ($saved) {
+                    // Invalider l'ancien token
+                    $service->invalidateBearerToken($token);
+
+                    // Générer un nouveau token
+                    $new_token = $service->generateBearerToken($current_user);
+
+                    // Créer la réponse avec le nouveau cookie
+                    $response = new JsonResponse([
+                        'status' => true,
+                        'message' => 'Mot de passe changé avec succès. Veuillez vous reconnecter.',
+                        'user' => [
+                            'id' => $current_user->id(),
+                            'name' => $current_user->getAccountName(),
+                            'mail' => $current_user->getEmail()
+                        ]
+                    ]);
+
+                    // Créer un nouveau cookie HTTP-Only avec le nouveau token
+                    $cookie = new Cookie(
+                        'auth_token',
+                        $new_token,
+                        time() + 3600,
+                        '/',
+                        null,
+                        false,
+                        true,
+                        false,
+                        'Lax'
+                    );
+
+                    $response->headers->setCookie($cookie);
+
+                    return $response;
+                } else {
+                    return new JsonResponse([
+                        'status' => false,
+                        'error' => 'Erreur lors du changement de mot de passe'
+                    ], 500);
+                }
+            }
+        }
+
+        return new JsonResponse([
+            'status' => false,
+            'error' => 'Méthode non autorisée'
+        ], 405);
+    }
 }

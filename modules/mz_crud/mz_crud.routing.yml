@@ -74,3 +74,14 @@ mz_crud.createUser:
     _access: "TRUE"
   options:
     no_cache: TRUE
+
+mz_crud.change_password:
+  path: "/crud/change-password"
+  defaults:
+    _controller: '\Drupal\mz_crud\Controller\ApiController::changePassword'
+    _title: "Change password"
+  methods: [POST]
+  requirements:
+    _access: "TRUE"
+  options:
+    no_cache: TRUE

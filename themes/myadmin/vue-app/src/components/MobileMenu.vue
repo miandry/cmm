@@ -36,7 +36,7 @@
         </router-link>
 
         <!-- Profil -->
-        <router-link to="/user-profil" class="menu-item hidden" :class="getMenuItemClass('/user-profil')" @click="closeMenu">
+        <router-link to="/user-profil" class="menu-item" :class="getMenuItemClass('/user-profil')" @click="closeMenu">
           <i class="fas fa-user menu-icon"></i>
           <span class="menu-label">Profil</span>
         </router-link>
@@ -377,9 +377,6 @@ export default {
   /* gray-600 */
 }
 
-.menu-item.hidden {
-  display: none !important;
-}
 
 /* Hide mobile menu on large screens */
 @media (min-width: 1024px) {
