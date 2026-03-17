@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the mz_visitor module.
+ */
+
+
+
+/**
+ * Create the mz_visitor_block_schedule table.
+ */
+function mz_visitor_update_8001() {
+  $schema = mz_visitor_schema();
+  $database = \Drupal::database();
+  
+  if (!$database->schema()->tableExists('mz_visitor_block_schedule')) {
+    $database->schema()->createTable('mz_visitor_block_schedule', $schema['mz_visitor_block_schedule']);
+  }
+}

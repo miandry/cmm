@@ -1,0 +1,31 @@
+mz_visitor.settings:
+  path: '/admin/config/people/visitor-settings'
+  defaults:
+    _form: '\Drupal\mz_visitor\Form\VisitorConfigForm'
+    _title: 'Visitor User Settings'
+  requirements:
+    _permission: 'administer site configuration'
+
+mz_visitor.create_form:
+  path: '/admin/people/create-visitor'
+  defaults:
+    _form: '\Drupal\mz_visitor\Form\CreateVisitorForm'
+    _title: 'Create Visitor User'
+  requirements:
+    _permission: 'administer users'
+
+mz_visitor.request_form:
+  path: '/request/visitor'
+  defaults:
+    _form: '\Drupal\mz_visitor\Form\VisitorRequestForm'
+    _title: 'Request Visitor Access'
+  requirements:
+    _access: 'TRUE'
+
+mz_visitor.block_schedule:
+  path: '/admin/people/visitor-block-schedule'
+  defaults:
+    _form: '\Drupal\mz_visitor\Form\BlockScheduleForm'
+    _title: 'User Block Schedule'
+  requirements:
+    _permission: 'administer users'
