@@ -21,3 +21,11 @@ mz_visitor.request_form:
     _title: 'Request Visitor Access'
   requirements:
     _access: 'TRUE'
+
+mz_visitor.block_schedule:
+  path: '/admin/people/visitor-block-schedule'
+  defaults:
+    _form: '\Drupal\mz_visitor\Form\BlockScheduleForm'
+    _title: 'User Block Schedule'
+  requirements:
+    _permission: 'administer users'

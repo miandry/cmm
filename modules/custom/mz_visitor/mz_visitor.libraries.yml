@@ -3,6 +3,11 @@ visitor-request-styling:
     theme:
       css/visitor-request.css: {}
 
+block_schedule:
+  css:
+    theme:
+      css/block_schedule.css: {}
+
 three-js-animation:
   js:
     https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js: { type: external, minified: true }

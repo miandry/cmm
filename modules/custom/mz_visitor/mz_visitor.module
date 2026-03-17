@@ -8,6 +8,92 @@
 use Drupal\user\Entity\User;
 
 /**
+ * Implements hook_schema().
+ */
+function _mz_visitor_schema() {
+  $schema['mz_visitor_block_schedule'] = [
+    'description' => 'Stores user blocking schedules.',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique schedule ID.',
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The user ID to be blocked.',
+      ],
+      'schedule_type' => [
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Type of schedule: daily, weekly, or date_range.',
+      ],
+      'start_time' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => FALSE,
+        'description' => 'Start time for daily/weekly schedules (HH:MM format).',
+      ],
+      'end_time' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => FALSE,
+        'description' => 'End time for daily/weekly schedules (HH:MM format).',
+      ],
+      'days_of_week' => [
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => FALSE,
+        'description' => 'Comma-separated days of week (0-6) for weekly schedules.',
+      ],
+      'start_datetime' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'Start timestamp for date_range schedules.',
+      ],
+      'end_datetime' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'End timestamp for date_range schedules.',
+      ],
+      'reason' => [
+        'type' => 'text',
+        'not null' => FALSE,
+        'description' => 'Reason for blocking the user.',
+      ],
+      'active' => [
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => 'Whether this schedule is active (1) or inactive (0).',
+      ],
+      'created' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Timestamp when the schedule was created.',
+      ],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'uid' => ['uid'],
+      'active' => ['active'],
+      'schedule_type' => ['schedule_type'],
+    ],
+  ];
+
+  return $schema;
+}
+/**
  * Implements hook_cron().
  *
  * Automatically block visitor users whose expiration date has passed.
@@ -60,4 +146,105 @@ function mz_visitor_mail($key, &$message, $params)
             $message['body'][] = t('Ce compte expirera le @date.', ['@date' => $params['expiration']], $options);
             break;
     }
+}
+
+/**
+ * Implements hook_user_login().
+ *
+ * Check if user should be blocked based on scheduled times.
+ */
+function mz_visitor_user_login($account) {
+  if (_mz_visitor_is_user_blocked_by_schedule($account->id())) {
+    // Get the block reason
+    $reason = _mz_visitor_get_block_reason($account->id());
+    
+    // Log the user out
+    user_logout();
+    
+    // Display message
+    \Drupal::messenger()->addError(t('Access denied. @reason', [
+      '@reason' => $reason ?: t('You are blocked during this scheduled time.'),
+    ]));
+    
+    // Redirect to login page
+    $response = new \Symfony\Component\HttpFoundation\RedirectResponse('/user/login');
+    $response->send();
+    exit;
+  }
+}
+
+/**
+ * Check if a user is currently blocked by schedule.
+ */
+function _mz_visitor_is_user_blocked_by_schedule($uid) {
+  $connection = \Drupal\Core\Database\Database::getConnection();
+  
+  $query = $connection->select('mz_visitor_block_schedule', 'bs')
+    ->fields('bs')
+    ->condition('uid', $uid)
+    ->condition('active', 1);
+  
+  $schedules = $query->execute()->fetchAll();
+  
+  if (empty($schedules)) {
+    return FALSE;
+  }
+  
+  $current_time = time();
+  $current_hour_min = date('H:i');
+  $current_day_of_week = date('w'); // 0 (Sunday) to 6 (Saturday)
+  
+  foreach ($schedules as $schedule) {
+    $is_blocked = FALSE;
+    
+    switch ($schedule->schedule_type) {
+      case 'daily':
+        // Check if current time is within the blocked time range
+        if ($current_hour_min >= $schedule->start_time && $current_hour_min <= $schedule->end_time) {
+          $is_blocked = TRUE;
+        }
+        break;
+        
+      case 'weekly':
+        // Check if today is one of the blocked days
+        $blocked_days = explode(',', $schedule->days_of_week);
+        if (in_array($current_day_of_week, $blocked_days)) {
+          // Check if current time is within the blocked time range
+          if ($current_hour_min >= $schedule->start_time && $current_hour_min <= $schedule->end_time) {
+            $is_blocked = TRUE;
+          }
+        }
+        break;
+        
+      case 'date_range':
+        // Check if current timestamp is within the blocked date range
+        if ($current_time >= $schedule->start_datetime && $current_time <= $schedule->end_datetime) {
+          $is_blocked = TRUE;
+        }
+        break;
+    }
+    
+    if ($is_blocked) {
+      return TRUE;
+    }
+  }
+  
+  return FALSE;
+}
+
+/**
+ * Get the block reason for a user.
+ */
+function _mz_visitor_get_block_reason($uid) {
+  $connection = \Drupal\Core\Database\Database::getConnection();
+  
+  $query = $connection->select('mz_visitor_block_schedule', 'bs')
+    ->fields('bs', ['reason'])
+    ->condition('uid', $uid)
+    ->condition('active', 1)
+    ->range(0, 1);
+  
+  $result = $query->execute()->fetchField();
+  
+  return $result ?: '';
 }
