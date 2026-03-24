@@ -2,18 +2,20 @@
 
 namespace Drupal\simple_json_api\Controller;
 
-use Drupal\simple_json_api\ApiJsonParser;
-use Drupal\Core\Controller\ControllerBase;
+use Drupal;
 use Drupal\Component\Utility\Xss;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\CacheableJsonResponse;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Render\RendererInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Access\AccessResult;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use Drupal\simple_json_api\ApiJsonParser;
 use Drupal\user\Entity\User;
-use Drupal\Core\Cache\CacheableJsonResponse;
-use Drupal\Core\Cache\CacheableMetadata;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 
 /**
@@ -39,6 +41,13 @@ class JsonContentController extends ControllerBase implements ContainerInjection
     protected $renderer;
 
     /**
+     * The API JSON parser service.
+     *
+     * @var \Drupal\simple_json_api\ApiJsonParser
+     */
+    protected $apiJsonParser;
+
+    /**
      * Constructs a NodeController object.
      *
      * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
@@ -50,6 +59,7 @@ class JsonContentController extends ControllerBase implements ContainerInjection
     {
         $this->dateFormatter = $date_formatter;
         $this->renderer = $renderer;
+        $this->apiJsonParser = new ApiJsonParser();
     }
 
     /**
@@ -212,144 +222,6 @@ class JsonContentController extends ControllerBase implements ContainerInjection
         return $response;
     }
 
-
-
-
-    public function userEdit()
-    {
-        $parser_node_json = new ApiJsonParser();
-        $method = \Drupal::request()->getMethod();
-
-        if ($method == "POST") {
-            $content = \Drupal::request()->getContent();
-            if (!empty($content)) {
-                $data = json_decode($content, TRUE);
-                $json = ($data);
-                $json['status'] = false;
-                if ($data['name'] && $data['phone']) {
-                    $status = $parser_node_json->isUserNameExist($data['name']);
-                    if ($status) {
-                        $field_adress = [
-                            'field_adress' => $data['adress']['province'] . " - " . $data['adress']['city'] . " - " . $data['adress']['location'],
-                            'field_email' => $data['mail'],
-                            'field_phone' => $data['phone']
-                        ];
-
-                        $adress = \Drupal::service('crud')->save('paragraph', 'adress', $field_adress);
-                        $user = user_load_by_name($data['name']);
-                        // var_dump($user->id());
-                        $user->setEmail($data['mail']);
-                        //  $user->set("field_phone", $data['phone']);
-                        $user->set("field_adresse", $adress);
-                        /// $user->setUsername($data['name']); //This username must be unique and accept only a-Z,0-9, - _ @ .
-                        //   $user->addRole('authenticated'); //E.g: authenticated
-                        $json['status'] = $user->save();
-                        $json['id'] = $user->id();
-
-                    }
-                }
-            }
-        }
-        return new JsonResponse($json);
-    }
-
-    public function register()
-    {
-        $parser_node_json = new ApiJsonParser();
-        $method = \Drupal::request()->getMethod();
-        $json['status'] = false;
-
-        if ($method == "POST") {
-            $content = \Drupal::request()->getContent();
-
-            if (!empty($content)) {
-                $data = json_decode($content, TRUE);
-                if ($data['name'] && $data['pass']) {
-
-                    $status = $parser_node_json->isUserNameExist($data['name']);
-
-                    if ($status) {
-                        $json['name'] = $data['name'];
-                        $json['error'] = 'Username exist deja';
-                        $json['status'] = false;
-                    } else {
-                        $json['name'] = $data['name'];
-                        $user = User::create();
-                        $user->setPassword($data['pass']);
-                        $user->enforceIsNew();
-                        $user->setEmail("email@yahoo.fr");
-                        $user->set('status', 1);
-                        $user->setUsername($data['name']); //This username must be unique and accept only a-Z,0-9, - _ @ .
-                        if (isset($data['role'])) {
-                            $user->addRole($data['role']); //E.g: authenticated
-                        }
-
-                        $json['status'] = $user->save();
-                        $json['token'] = $parser_node_json->generateToken($user);
-                        $json['id'] = $user->id();
-                        //                        $json['mail'] = ($data['mail'])? $data['mail'] : "" ;
-//                        $json['adress']  = [
-//                                'city' => ($data['city'])? $data['city']: "",
-//                                'location' => ($data['location'])? $data['location']: "",
-//                                'province' => ($data['province'])? $data['province']: ""
-//                        ];
-//                        $json['phone'] = ($data['phone'])? $data['phone'] : "" ;
-                    }
-                }
-            }
-        }
-        return new JsonResponse($json);
-    }
-
-    public function login()
-    {
-
-        $method = \Drupal::request()->getMethod();
-        $json['status'] = false;
-        if ($method == "POST") {
-            $content = \Drupal::request()->getContent();
-            if (!empty($content)) {
-                $data = json_decode($content, TRUE);
-                $json['name'] = $data['name'];
-                $user = user_load_by_name($data['name']);
-                if (is_object($user)) {
-                    $user_array = \Drupal::service('entity_parser.manager')->user_parser($user);
-                    $hashed_password = $user->getPassword();
-                    $password_hasher = \Drupal::service('password');
-                    $password = $data['pass'];
-                    $json['mail'] = $user_array['mail'];
-                    $json['token'] = \Drupal\Component\Utility\Crypt::hashBase64($hashed_password);
-                    $json['status'] = ($password_hasher->check($password, $hashed_password));
-
-
-                    if ($json['status']) {
-                        if ($user_array['field_adresse']) {
-                            $adress = array_values($user_array['field_adresse'])[0];
-                            $adress_array = explode('-', $adress['field_adress']);
-                            $json['adress'] = [
-                                'city' => ($adress_array) ? $adress_array[1] : "",
-                                'location' => ($adress_array) ? $adress_array[2] : "",
-                                'province' => ($adress_array) ? $adress_array[0] : ""
-                            ];
-                            $json['phone'] = ($adress['field_phone']) ? $adress['field_phone'] : "";
-                        }
-                        $json['id'] = $user->id();
-                        $json['data'] = $user_array;
-                    } else {
-                        $json = [];
-                        $json['mail'] = $user_array['mail'];
-                        $json['name'] = $data['name'];
-                        $json['status'] = false;
-                        $json['error'] = "Failed Authentification";
-                    }
-                }
-            }
-        }
-
-        return new JsonResponse($json);
-    }
-
-
     public function apiMenu()
     {
         $menu = \Drupal::service('simplify_menu.menu_items')->getMenuTree();
@@ -409,7 +281,6 @@ class JsonContentController extends ControllerBase implements ContainerInjection
                     'status' => 'error',
                     'message' => 'Failed to send password reset email.'
                 ]);
-
             }
         }
         return new JsonResponse([
@@ -420,45 +291,70 @@ class JsonContentController extends ControllerBase implements ContainerInjection
 
 
     /**
-     * Custom access funciton
+     * Custom access function for protected API routes.
      *
-     * @return Drupal\Core\Access\AccessResult
+     * @return \Drupal\Core\Access\AccessResult
      */
     public function apiJsonAccess()
     {
-        return AccessResult::allowed();
+        // Initialiser ApiJsonParser si nécessaire
+        if (!isset($this->apiJsonParser)) {
+            $this->apiJsonParser = new ApiJsonParser();
+        }
+
+        // Récupérer la requête courante
+        $request = \Drupal::request();
+
+        // Vérifier si c'est une requête API (vérifier le chemin ou le format)
+        $is_api_request = strpos($request->getPathInfo(), '/api/') === 0;
+
+        $user = $this->apiJsonParser->authenticate($request);
+
+        if ($user) {
+            return AccessResult::allowed();
+        }
+
+        // Pour les requêtes API, retourner un accès interdit sans redirection
+        if ($is_api_request) {
+            // Utiliser AccessResult::forbidden() pour éviter la redirection
+            return AccessResult::forbidden('Authentication required')->setCacheMaxAge(0);
+        }
+
+        // Pour les requêtes normales, laisser Drupal gérer
+        return AccessResult::forbidden();
     }
-    
-    public function apiUserList(){
 
-            // Simple legacy list, kept for backward compatibility.
-            // This method does not support filtering or fields; clients
-            // should use apiUserListV2 instead if they need more control.
-            $page = 2;
-            $limit = 10;
-            $offset = ($page - 1) * $limit;
 
-            $query = \Drupal::entityTypeManager()
-                ->getStorage('user')
-                ->getQuery()
-                ->condition('status', 1) // Only active users
-                ->condition('uid', 0, '<>'); // Exclude anonymous
-            $query->range($offset, $limit);
+    public function apiUserList()
+    {
 
-            // Note: $filters was undefined in the original implementation, so
-            // it produced a PHP notice.  We intentionally do not attempt to
-            // add filtering here to preserve original behavior.
-            $uids = $query->execute();
+        // Simple legacy list, kept for backward compatibility.
+        // This method does not support filtering or fields; clients
+        // should use apiUserListV2 instead if they need more control.
+        $page = 2;
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
 
-            $results = [];
-            $users = \Drupal::entityTypeManager()->getStorage('user')->loadMultiple($uids);
-            foreach ($users as $user) {
-                $results[] = \Drupal::service('entity_parser.manager')->user_parser($user->id());
-            }
+        $query = \Drupal::entityTypeManager()
+            ->getStorage('user')
+            ->getQuery()
+            ->condition('status', 1) // Only active users
+            ->condition('uid', 0, '<>'); // Exclude anonymous
+        $query->range($offset, $limit);
 
-            $ouput = ["rows" => $results , "total" =>  sizeof($results)];
-            return new JsonResponse( $ouput);
+        // Note: $filters was undefined in the original implementation, so
+        // it produced a PHP notice.  We intentionally do not attempt to
+        // add filtering here to preserve original behavior.
+        $uids = $query->execute();
 
+        $results = [];
+        $users = \Drupal::entityTypeManager()->getStorage('user')->loadMultiple($uids);
+        foreach ($users as $user) {
+            $results[] = \Drupal::service('entity_parser.manager')->user_parser($user->id());
+        }
+
+        $ouput = ["rows" => $results, "total" =>  sizeof($results)];
+        return new JsonResponse($ouput);
     }
 
     /**
@@ -552,17 +448,30 @@ class JsonContentController extends ControllerBase implements ContainerInjection
         $ouput = ['rows' => $results, 'total' => $total];
         return new JsonResponse($ouput);
     }
-    public function apiListJsonV2($entitype, $bundle)
+
+
+    /**
+     * API List V2 avec authentification.
+     */
+    public function apiListJsonV2(Request $request, $entitype, $bundle)
     {
+        // Vérifier l'authentification
+        $user = $this->apiJsonParser->authenticate($request);
 
-        $fields = \Drupal::request()->get('fields');
-        $changes = \Drupal::request()->get('changes'); // change name field ouput
-        $values = \Drupal::request()->get('values'); // change name field ouput
+        if (!$user) {
+            return $this->apiJsonParser->unauthorizedResponse();
+        }
 
-        $jsons = \Drupal::service('simple_json_api.manager')->listQueryExecute($entitype, $bundle);
+        $fields = $request->get('fields');
+        $changes = $request->get('changes');
+        $values = $request->get('values');
+
+        // Utiliser la méthode modifiée avec le paramètre Request
+        $jsons = $this->apiJsonParser->listQueryExecute($entitype, $bundle, $request);
         $results = [];
         $options = [];
         $json = $jsons["rows"];
+
         foreach ($json as $key => $id) {
             if (is_array($fields)) {
                 $results[] = \Drupal::service('entity_parser.manager')->loader_entity_by_type($id, $entitype, $fields, $options);
@@ -570,6 +479,7 @@ class JsonContentController extends ControllerBase implements ContainerInjection
                 $results[] = \Drupal::service('entity_parser.manager')->loader_entity_by_type($id, $entitype);
             }
         }
+
         if ($values) {
             foreach ($results as $key => $item) {
                 foreach ($item as $key_field => $value_field) {
@@ -581,6 +491,7 @@ class JsonContentController extends ControllerBase implements ContainerInjection
                 }
             }
         }
+
         if ($changes) {
             foreach ($results as $key => $item) {
                 foreach ($item as $key_field => $value_field) {
@@ -589,13 +500,11 @@ class JsonContentController extends ControllerBase implements ContainerInjection
                         unset($results[$key][$key_field]);
                     }
                 }
-
             }
         }
 
-        $ouput = ["rows" => $results, "total" => $jsons["total"]];
-        return new JsonResponse($ouput);
-        // return $this->responseCacheableJson($results);     
+        $output = ["rows" => $results, "total" => $jsons["total"]];
+        return new JsonResponse($output);
     }
 
     private function getValueArray($item, $key_field)
@@ -615,7 +524,6 @@ class JsonContentController extends ControllerBase implements ContainerInjection
                         if (isset($value_child["#object"])) {
                             $output[] = $this->getValue($value_child["#object"], $field);
                         } else {
-
                         }
                     }
                 }
@@ -635,20 +543,31 @@ class JsonContentController extends ControllerBase implements ContainerInjection
             }
         }
         return $output;
-
     }
 
-    public function apiDetailsJsonV2($entitype, $bundle, $id)
+    /**
+     * API Details V2 avec authentification.
+     */
+    public function apiDetailsJsonV2(Request $request, $entitype, $bundle, $id)
     {
-        $fields = \Drupal::request()->get('fields');
-        $changes = \Drupal::request()->get('changes'); // change name field ouput
-        $values = \Drupal::request()->get('values'); // change name field ouput
+        // Vérifier l'authentification
+        $user = $this->apiJsonParser->authenticate($request);
+
+        if (!$user) {
+            return $this->apiJsonParser->unauthorizedResponse();
+        }
+
+        $fields = $request->get('fields');
+        $changes = $request->get('changes');
+        $values = $request->get('values');
         $options = [];
+
         if (is_array($fields)) {
             $item = \Drupal::service('entity_parser.manager')->loader_entity_by_type($id, $entitype, $fields, $options);
         } else {
             $item = \Drupal::service('entity_parser.manager')->loader_entity_by_type($id, $entitype);
         }
+
         if ($values) {
             foreach ($item as $key_field => $value_field) {
                 if (isset($values[$key_field])) {
@@ -658,6 +577,7 @@ class JsonContentController extends ControllerBase implements ContainerInjection
                 }
             }
         }
+
         if ($changes) {
             foreach ($item as $key_field => $value_field) {
                 if (isset($changes[$key_field])) {
@@ -666,8 +586,7 @@ class JsonContentController extends ControllerBase implements ContainerInjection
                 }
             }
         }
+
         return new JsonResponse($item);
     }
-
-
 }

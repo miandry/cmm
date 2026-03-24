@@ -60,7 +60,7 @@ export function getDetails(entity, content_type, id, parameters = null) {
 }
 
 export function saveItem(newItem) {
-  let path = "/crud/save";
+  let path = "/api/crud/save";
   return api.post(path, newItem);
 }
 

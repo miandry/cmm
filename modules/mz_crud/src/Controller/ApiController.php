@@ -253,7 +253,7 @@ class ApiController extends ControllerBase
                 $message = "Données non trouvées";
             }
         } else {
-            $message = "Méthode non autorisée. Utilisez POST";
+            $message = "Méthode non autorisée.";
         }
 
         return new JsonResponse([
@@ -283,7 +283,9 @@ class ApiController extends ControllerBase
         $admin_user = $service->validateBearerToken($token);
 
         // Vérifier si l'utilisateur a le rôle admin
-        if (!$admin_user || !in_array('administrator', $admin_user->getRoles())) {
+        $allowed_roles = ['administrator', 'webmaster'];
+
+        if (!$admin_user || !array_intersect($allowed_roles, $admin_user->getRoles())) {
             return new JsonResponse([
                 'status' => false,
                 'error' => 'Accès non autorisé'
@@ -367,6 +369,7 @@ class ApiController extends ControllerBase
 
         $service = \Drupal::service('api.crud');
         $current_user = $service->validateBearerToken($token);
+        $allowed_roles = ['administrator', 'webmaster'];
 
         if (!$current_user) {
             $response = new JsonResponse([
@@ -386,8 +389,8 @@ class ApiController extends ControllerBase
 
                 // require uid to identify the user
                 if (!empty($data['uid'])) {
-                    // Vérifier que l'utilisateur édite son propre compte ou est admin
-                    if ($data['uid'] != $current_user->id() && !in_array('administrator', $current_user->getRoles())) {
+                    // Vérifier que l'utilisateur édite son propre compte ou est admin, webmaster
+                    if ($data['uid'] != $current_user->id() && !array_intersect($allowed_roles, $current_user->getRoles())) {
                         return new JsonResponse([
                             'status' => false,
                             'error' => 'Vous ne pouvez modifier que votre propre compte'
@@ -415,12 +418,12 @@ class ApiController extends ControllerBase
                             $user->setPassword($data['pass']);
                         }
 
-                        if (isset($data['status']) && in_array('administrator', $current_user->getRoles())) {
+                        if (isset($data['status']) && array_intersect($allowed_roles, $current_user->getRoles())) {
                             // Seul l'admin peut changer le statut
                             $user->set('status', $data['status'] ? 1 : 0);
                         }
 
-                        if (!empty($data['roles']) && is_array($data['roles']) && in_array('administrator', $current_user->getRoles())) {
+                        if (!empty($data['roles']) && is_array($data['roles']) && array_intersect($allowed_roles, $current_user->getRoles())) {
                             // Seul l'admin peut changer les rôles
                             $user->set('roles', $data['roles']);
                         }

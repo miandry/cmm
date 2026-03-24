@@ -40,7 +40,7 @@
             </router-link>
 
             <!-- Équipe -->
-            <router-link to="/users" v-if="roles.some(r => ['gerant', 'administrator'].includes(r))"
+            <router-link to="/users" v-if="roles.some(r => ['webmaster', 'administrator'].includes(r))"
               class="flex items-center w-full px-3 py-2 text-left hover:bg-gray-50 text-sm cursor-pointer transition-colors">
               <i class="fas fa-users text-gray-500 mr-2 text-xs"></i>
               <span class="text-gray-700 font-medium">Équipe</span>

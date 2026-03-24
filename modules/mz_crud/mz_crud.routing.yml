@@ -1,5 +1,5 @@
 mz_crud.save:
-  path: "/crud/save"
+  path: "/api/crud/save"
   defaults:
     _controller: '\Drupal\mz_crud\Controller\ApiController::save'
     _title: "Save content"
@@ -10,7 +10,7 @@ mz_crud.save:
     no_cache: TRUE
 
 mz_crud.register:
-  path: "/crud/register"
+  path: "/api/crud/register"
   defaults:
     _controller: '\Drupal\mz_crud\Controller\ApiController::register'
     _title: "Register user"
@@ -21,7 +21,7 @@ mz_crud.register:
     no_cache: TRUE
 
 mz_crud.login:
-  path: "/crud/login"
+  path: "/api/crud/login"
   defaults:
     _controller: '\Drupal\mz_crud\Controller\ApiController::login'
     _title: "Login user"
@@ -32,7 +32,7 @@ mz_crud.login:
     no_cache: TRUE
 
 mz_crud.logout:
-  path: "/crud/logout"
+  path: "/api/crud/logout"
   defaults:
     _controller: '\Drupal\mz_crud\Controller\ApiController::logout'
     _title: "Logout user"
@@ -43,7 +43,7 @@ mz_crud.logout:
     no_cache: TRUE
 
 mz_crud.check_auth:
-  path: "/crud/check-auth"
+  path: "/api/crud/check-auth"
   defaults:
     _controller: '\Drupal\mz_crud\Controller\ApiController::checkAuth'
     _title: "Check authentication"
@@ -54,7 +54,7 @@ mz_crud.check_auth:
     no_cache: TRUE
 
 mz_crud.user_edit:
-  path: "/crud/user_edit"
+  path: "/api/crud/user_edit"
   defaults:
     _controller: '\Drupal\mz_crud\Controller\ApiController::user_edit'
     _title: "Edit user"
@@ -65,7 +65,7 @@ mz_crud.user_edit:
     no_cache: TRUE
 
 mz_crud.createUser:
-  path: "/crud/create_user"
+  path: "/api/crud/create_user"
   defaults:
     _controller: '\Drupal\mz_crud\Controller\ApiController::createUser'
     _title: "Create user"
@@ -76,7 +76,7 @@ mz_crud.createUser:
     no_cache: TRUE
 
 mz_crud.change_password:
-  path: "/crud/change-password"
+  path: "/api/crud/change-password"
   defaults:
     _controller: '\Drupal\mz_crud\Controller\ApiController::changePassword'
     _title: "Change password"

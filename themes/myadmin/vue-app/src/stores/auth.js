@@ -78,7 +78,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   async function checkAuthWithServer() {
     try {
-      const response = await axios.get("/crud/check-auth");
+      const response = await axios.get("/api/crud/check-auth");
       if (response.status === 200 && response.data.authenticated) {
         return {
           authenticated: true,
@@ -99,7 +99,7 @@ export const useAuthStore = defineStore("auth", () => {
     error.value = null;
 
     try {
-      const response = await axios.post("/crud/login", {
+      const response = await axios.post("/api/crud/login", {
         name: username,
         password: password,
       });
@@ -151,7 +151,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   async function logout(redirectTo = "/login", router) {
     try {
-      await axios.post("/crud/logout");
+      await axios.post("/api/crud/logout");
     } catch (err) {
       console.error("Logout error:", err);
     } finally {
@@ -194,7 +194,7 @@ export const useAuthStore = defineStore("auth", () => {
     }
 
     try {
-      const response = await axios.post("/crud/change-password", {
+      const response = await axios.post("/api/crud/change-password", {
         current_password: currentPassword,
         new_password: newPassword,
       });

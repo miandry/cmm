@@ -294,6 +294,10 @@ export default {
         roles: {
           val: "administrator",
           op: "<>"
+        },
+        roles: {
+          val: "webmaster",
+          op: "<>"
         }
       },
       pager: 0,
@@ -496,7 +500,7 @@ export default {
     const deleteUser = async () => {
       deleting.value = true;
       try {
-        await axios.post('/crud/user_delete', { uid: userToDelete.value.uid });
+        await axios.post('/api/crud/user_delete', { uid: userToDelete.value.uid });
         await fetchUsers();
         showDeleteModal.value = false;
         userToDelete.value = null;

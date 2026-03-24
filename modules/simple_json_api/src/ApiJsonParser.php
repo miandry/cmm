@@ -8,6 +8,7 @@ use Drupal\drupal_helper\DrupalHelper;
 use Drupal\entity_parser\EntityParser;
 use Drupal\file\Entity\File;
 use Drupal\image\Entity\ImageStyle;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Same concept as Entity Parser  module.
@@ -65,7 +66,8 @@ class ApiJsonParser extends EntityParser
         }
         return false;
     }
-    public function getFieldExclude($options,$exclude = []){
+    public function getFieldExclude($options, $exclude = [])
+    {
         $options["#fields_exclude"] = [
             'path',
             'revision_log',
@@ -97,9 +99,9 @@ class ApiJsonParser extends EntityParser
             'archived',
             'access',
         ];
-        $options["#fields_exclude"] = array_merge($options["#fields_exclude"],$exclude);
+        $options["#fields_exclude"] = array_merge($options["#fields_exclude"], $exclude);
         return $options;
-    } 
+    }
     public function urlMapper($url, $options)
     {
         // $options['#entity_parser_extend'] = 'Drupal\base\APIFormatter';
@@ -153,7 +155,7 @@ class ApiJsonParser extends EntityParser
             }
         }
 
-//    if(in_array('node',$url_array)){
+        //    if(in_array('node',$url_array)){
         //      $options['#hook_alias'] = 'node_jsonapi' ;
         //      $entity = $parser->node_parser($id,[],$options);
         //    }
@@ -234,7 +236,6 @@ class ApiJsonParser extends EntityParser
                     $img['url'] = file_create_url($file->getFileUri());
                     $img_result[] = $img;
                 }
-
             }
             $is_multple = $entity->get($field)->getFieldDefinition()->getFieldStorageDefinition()->isMultiple();
             if (!$is_multple && count($img_result) == 1) {
@@ -245,7 +246,8 @@ class ApiJsonParser extends EntityParser
         return $img_result;
     }
     public function imageFullUrl($entity, $field)
-    {$bool = \Drupal::service('drupal.helper')->helper->is_field_ready($entity, $field);
+    {
+        $bool = \Drupal::service('drupal.helper')->helper->is_field_ready($entity, $field);
         if ($bool) {
             $body = $entity->{$field}->value;
             global $base_url;
@@ -262,11 +264,10 @@ class ApiJsonParser extends EntityParser
         }
 
         return [];
-
     }
     public function formatTermManager($tid, $param)
-    {  
-        $options = $this->getFieldExclude($options,['revision_created','default_langcode']);
+    {
+        $options = $this->getFieldExclude($options, ['revision_created', 'default_langcode']);
         //taxonomy_term
         $taxonomy_term = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->load($tid);
         $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
@@ -275,25 +276,24 @@ class ApiJsonParser extends EntityParser
         }
         $term = false;
         if (is_object($taxonomy_term)) {
-            $term = $this->parser($taxonomy_term,[],$options);
+            $term = $this->parser($taxonomy_term, [], $options);
             $term1 = [];
             foreach ($param as $key => $value) {
-                if ($key == 'included'){      
-                    foreach ( $value as $key_included => $value_included ) {
-                        if(isset($term[$value_included]['#object'])){
-                            $term1[$value_included] = $this->parser($term[$value_included]['#object'],[],$options);
-                        }else{
-                            foreach( $term[$value_included] as  $multiple_included ) {
-                                $term1[$value_included][] = $this->parser($multiple_included['#object'],[],$options);
+                if ($key == 'included') {
+                    foreach ($value as $key_included => $value_included) {
+                        if (isset($term[$value_included]['#object'])) {
+                            $term1[$value_included] = $this->parser($term[$value_included]['#object'], [], $options);
+                        } else {
+                            foreach ($term[$value_included] as  $multiple_included) {
+                                $term1[$value_included][] = $this->parser($multiple_included['#object'], [], $options);
                             }
                         }
-                   }  
+                    }
                 }
             }
-            $term[$value_included] =  $term1[$value_included] ;
-       
+            $term[$value_included] =  $term1[$value_included];
         }
-        return    $term ;
+        return    $term;
     }
     public function taxonomy_load_multi_by_vid($vid, $param = null)
     {
@@ -304,75 +304,141 @@ class ApiJsonParser extends EntityParser
         $res = $query->execute();
         $items = [];
         foreach ($res as $key => $tid) {
-             $item = $this->formatTermManager($tid,$param);
-             if($item){
-                $items[] = $item ;
-             }
+            $item = $this->formatTermManager($tid, $param);
+            if ($item) {
+                $items[] = $item;
+            }
         }
         return $items;
     }
 
-    public function listQuery($entityQuery,$entitype,$bundle){
- 
- 
+    public function listQuery($entityQuery, $entitype, $bundle)
+    {
+
+
         $filters = \Drupal::request()->get('filters');
-    
+
         $key_bundle = \Drupal::entityTypeManager()->getDefinition($entitype)->getKey('bundle');
         $query = $entityQuery->condition($key_bundle, $bundle);
-        if($filters){
-           foreach ($filters as $key => $filter) {
-                   if (isset($filter['op']) && $filter['op'] != null) {
+        if ($filters) {
+            foreach ($filters as $key => $filter) {
+                if (isset($filter['op']) && $filter['op'] != null) {
                     $query->condition($key, $filter['val'], $filter['op']);
-                   } else {
-                        if(is_array($filter['val'])){
-                            $query->condition($key, $filter['val'],'IN');
-                        }else{
-                            $query->condition($key, $filter['val']);
-                        }          
-                   }
+                } else {
+                    if (is_array($filter['val'])) {
+                        $query->condition($key, $filter['val'], 'IN');
+                    } else {
+                        $query->condition($key, $filter['val']);
+                    }
+                }
             }
         }
-  
 
-        return $query ;
-   
+
+        return $query;
     }
-    public function listQueryExecute($entitype,$bundle){
+
+    public function listQueryExecute($entitype, $bundle, ?Request $request = null)
+    {
+        // Si la requête n'est pas passée en paramètre, récupérer la requête courante
+        if ($request === null) {
+            $request = \Drupal::request();
+        }
+
         $queryMain = \Drupal::entityQuery($entitype);
         $queryTotal = \Drupal::entityQuery($entitype);
 
+        $pager = $request->get('pager');
+        $offset = $request->get('offset');
+        $fields = $request->get('fields');
+        $changes = $request->get('changes'); // change name field ouput
+        $values = $request->get('values'); // change name field ouput
+        $sort = $request->get('sort');
 
-        $pager = \Drupal::request()->get('pager');
-        $offset = \Drupal::request()->get('offset');
-        $fields = \Drupal::request()->get('fields');
-        $changes = \Drupal::request()->get('changes'); // change name field ouput
-        $values = \Drupal::request()->get('values'); // change name field ouput
-        $sort = \Drupal::request()->get('sort');
-  
-    
-        $query = $this->listQuery($queryMain,$entitype,$bundle) ;
-        $query_total = $this->listQuery($queryTotal,$entitype,$bundle) ;
+        $query = $this->listQuery($queryMain, $entitype, $bundle);
+        $query_total = $this->listQuery($queryTotal, $entitype, $bundle);
         $total = $query_total->count()->execute();
-   
+
         if ($offset == null) {
             $offset = 10;
         }
-        if( $sort ){
-            $query->sort($sort['val'],$sort['op']);
+
+        if ($sort) {
+            $query->sort($sort['val'], $sort['op']);
         }
+
         if ($pager) {
-            if($pager == 'all'){}else{
-            $query->range($offset * ($pager), $offset);
+            if ($pager == 'all') {
+                // Ne pas appliquer de limite
+            } else {
+                $query->range($offset * ($pager), $offset);
             }
         } else {
             $query->range(0, $offset);
         }
-        
-    $json = $query->execute();
-        
 
-    return ["rows" =>  $json , "total" => $total ];
- 
+        $json = $query->execute();
+
+        return ["rows" => $json, "total" => $total];
     }
 
+    /**
+     * Vérifier l'authentification via le cookie HTTP-Only.
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Drupal\user\Entity\User|false
+     */
+    public function authenticate(Request $request)
+    {
+        $token = $request->cookies->get('auth_token');
+
+        if (!$token) {
+            return FALSE;
+        }
+
+        try {
+            $service = \Drupal::service('api.crud');
+            return $service->validateBearerToken($token);
+        } catch (\Exception $e) {
+            \Drupal::logger('simple_json_api')->error('Erreur d\'authentification: @message', ['@message' => $e->getMessage()]);
+            return FALSE;
+        }
+    }
+
+    /**
+     * Vérifier si l'utilisateur est authentifié.
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return bool
+     */
+    public function isAuthenticated(Request $request)
+    {
+        return (bool) $this->authenticate($request);
+    }
+
+    /**
+     * Récupérer l'utilisateur courant.
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Drupal\user\Entity\User|null
+     */
+    public function getCurrentUser(Request $request)
+    {
+        $user = $this->authenticate($request);
+        return $user ?: NULL;
+    }
+
+    /**
+     * Retourner une réponse 401 non autorisée.
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function unauthorizedResponse()
+    {
+        return new \Symfony\Component\HttpFoundation\JsonResponse([
+            'status' => 'error',
+            'message' => 'Non authentifié. Veuillez vous connecter.',
+            'code' => 401
+        ], 401);
+    }
 }

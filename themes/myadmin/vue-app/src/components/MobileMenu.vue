@@ -42,7 +42,7 @@
         </router-link>
 
         <!-- Équipe -->
-        <router-link to="/users" v-if="roles.some(r => ['gerant', 'administrator'].includes(r))" class="menu-item"
+        <router-link to="/users" v-if="roles.some(r => ['webmaster', 'administrator'].includes(r))" class="menu-item"
           :class="getMenuItemClass('/users')" @click="closeMenu">
           <i class="fas fa-users menu-icon"></i>
           <span class="menu-label">Équipe</span>
