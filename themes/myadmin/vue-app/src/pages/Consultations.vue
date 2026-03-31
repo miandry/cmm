@@ -514,6 +514,8 @@ export default {
                     offset: 1
                 };
                 await userStore.fetchUsers(doctorQueryOptions);
+                alert('vfghjkl')
+                console.log(userStore.users);
             }
 
             // reset form si c'est add
