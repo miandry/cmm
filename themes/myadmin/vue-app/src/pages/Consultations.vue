@@ -5,7 +5,8 @@
             <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-4">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Consultation en cours</h3>
                 <!-- consulatation form -->
-                <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                <div v-if="userStore.users"
+                     class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                             <i class="ri-user-heart-line text-green-600"></i>
