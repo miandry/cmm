@@ -37,7 +37,7 @@
             <tr>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nom</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Rôle</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Rôle(s)</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Statut</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Créé le</th>
               <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Actions</th>
@@ -71,13 +71,15 @@
               </td>
               <td class="px-4 py-3 text-sm text-gray-700">{{ displayEmail(user) }}</td>
               <td class="px-4 py-3">
-                <span :class="getRoleBadgeClass(user.roles[0])"
-                  class="inline-block px-2 py-1 text-xs font-medium rounded-full mr-1">
-                  {{ getRoleLabel(user.roles[0]) }}
-                </span>
-                <br>
+                <div class="flex flex-wrap gap-1">
+                  <span v-for="role in user.roles" :key="role" :class="getRoleBadgeClass(role)"
+                    class="inline-block px-2 py-1 text-xs font-medium rounded-full">
+                    {{ getRoleLabel(role) }}
+                  </span>
+                </div>
+                <p></p>
                 <span v-if="getSpecialtyLabel(user.field_specialite)"
-                  class="bg-orange-100 text-orange-700 inline-block px-2 py-1 text-xs font-medium rounded-full mr-1">
+                  class="bg-orange-100 text-orange-700 inline-block px-2 py-1 text-xs font-medium rounded-full mt-1">
                   {{ getSpecialtyLabel(user.field_specialite) }}
                 </span>
               </td>
@@ -178,29 +180,31 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Rôle <span
+              <label class="block text-sm font-medium text-gray-700 mb-2">Rôle(s) <span
                   class="text-red-500">*</span></label>
               <div class="space-y-2">
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" value="gerant" v-model="formData.role"
-                    class="w-4 h-4 text-primary border-gray-300 focus:ring-primary">
+                  <input type="checkbox" value="gerant" v-model="formData.roles"
+                    class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
                   <span class="text-sm text-gray-700">Gérant</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" value="docteur" v-model="formData.role"
-                    class="w-4 h-4 text-primary border-gray-300 focus:ring-primary">
+                  <input type="checkbox" value="docteur" v-model="formData.roles"
+                    class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
                   <span class="text-sm text-gray-700">Docteur</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" value="caissier" v-model="formData.role"
-                    class="w-4 h-4 text-primary border-gray-300 focus:ring-primary">
+                  <input type="checkbox" value="caissier" v-model="formData.roles"
+                    class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
                   <span class="text-sm text-gray-700">Caissier</span>
                 </label>
               </div>
+              <p v-if="formData.roles.length === 0" class="text-xs text-red-500 mt-1">Veuillez sélectionner au moins un
+                rôle</p>
             </div>
 
-            <!-- Spécialité Select - s'affiche uniquement si le rôle est docteur -->
-            <div v-if="formData.role === 'docteur'">
+            <!-- Spécialité Select - s'affiche uniquement si le rôle docteur est coché -->
+            <div v-if="formData.roles.includes('docteur')">
               <label class="block text-sm font-medium text-gray-700 mb-1">Spécialité <span
                   class="text-red-500">*</span></label>
               <select v-model="formData.specialty"
@@ -230,7 +234,7 @@
                 class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                 Annuler
               </button>
-              <button type="submit" :disabled="saving"
+              <button type="submit" :disabled="saving || formData.roles.length === 0"
                 class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50">
                 <i v-if="saving" class="fas fa-spinner fa-spin mr-2"></i>
                 {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
@@ -385,17 +389,15 @@ export default {
       name: '',
       mail: '',
       pass: '',
-      role: 'caissier',
+      roles: ['caissier'], // Tableau de rôles
       specialty: '',
       status: 1
     });
 
-    // Watch pour le changement de rôle
-    watch(() => formData.value.role, () => {
-      // Si le nouveau rôle n'est pas docteur, on met "_none"
-      if (formData.value.role !== 'docteur') {
-        formData.value.specialty = '_none';
-      } else if (formData.value.specialty === '_none') {
+    // Watch pour le changement des rôles
+    watch(() => formData.value.roles, (newRoles) => {
+      // Si le rôle docteur n'est plus dans le tableau, on reset la spécialité
+      if (!newRoles.includes('docteur')) {
         formData.value.specialty = '';
       }
     });
@@ -422,7 +424,7 @@ export default {
         name: '',
         mail: '',
         pass: '',
-        role: 'caissier',
+        roles: ['caissier'],
         specialty: '',
         status: true
       };
@@ -437,7 +439,7 @@ export default {
         name: user.name,
         mail: getEditableEmail(user),
         pass: '',
-        role: user.roles && user.roles.length > 0 ? user.roles[0] : 'caissier',
+        roles: user.roles && user.roles.length > 0 ? [...user.roles] : ['caissier'],
         specialty: user.field_specialite || '',
         status: user.status === '1'
       };
@@ -462,15 +464,15 @@ export default {
         return;
       }
 
-      // validation du rôle
-      if (!formData.value.role) {
-        error.value = 'Veuillez sélectionner un rôle.';
+      // validation des rôles
+      if (!formData.value.roles || formData.value.roles.length === 0) {
+        error.value = 'Veuillez sélectionner au moins un rôle.';
         saving.value = false;
         return;
       }
 
-      // validation de la spécialité si le rôle est docteur
-      if (formData.value.role === 'docteur' && (!formData.value.specialty || formData.value.specialty === '_none')) {
+      // validation de la spécialité si le rôle docteur est sélectionné
+      if (formData.value.roles.includes('docteur') && (!formData.value.specialty || formData.value.specialty === '_none')) {
         error.value = 'Veuillez sélectionner une spécialité.';
         saving.value = false;
         return;
@@ -482,9 +484,9 @@ export default {
           mail: formData.value.mail?.trim()
             ? formData.value.mail
             : `clinicuser${formData.value.name.replace(/\s+/g, '')}@gmail.com`,
-          roles: [formData.value.role],
+          roles: formData.value.roles, // Envoie le tableau des rôles
           status: formData.value.status ? '1' : '0',
-          field_specialite: formData.value.role === 'docteur' ? formData.value.specialty : '_none',
+          field_specialite: formData.value.roles.includes('docteur') ? formData.value.specialty : '_none',
         };
 
         if (formData.value.pass) {
