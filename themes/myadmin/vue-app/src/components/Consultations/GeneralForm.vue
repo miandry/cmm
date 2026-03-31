@@ -171,6 +171,9 @@ export default {
                     if (appointmentStore.appointment?.field_montant) {
                         form.montant = appointmentStore.appointment.field_montant;
                     }
+                    if (appointmentStore.appointment?.field_notes) {
+                        form.consultationMotif = appointmentStore.appointment.field_notes;
+                    }
                 } catch (error) {
                     console.error('Erreur lors du chargement du montant:', error);
                 }
