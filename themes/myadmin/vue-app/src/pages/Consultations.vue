@@ -507,7 +507,7 @@ export default {
                     filters: {
                         roles: { val: "docteur", op: "=" },
                         status: { val: 1, op: "=" },
-                        uid: { uid: docteurId, op: "=" },
+                        uid: { val: docteurId, op: "=" },
                     },
                     pager: 0,
                     offset: 1
