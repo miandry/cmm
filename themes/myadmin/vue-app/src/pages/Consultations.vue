@@ -504,11 +504,10 @@ export default {
             if (docteurId) {
                 const doctorQueryOptions = {
                     fields: ['uid', 'name', 'field_specialite', 'status'],
-                    sort: { val: 'name', op: 'asc' },
                     filters: {
                         roles: { val: "docteur", op: "=" },
                         status: { val: 1, op: "=" },
-                        status: { uid: docteurId, op: "=" },
+                        uid: { uid: docteurId, op: "=" },
                     },
                     pager: 0,
                     offset: 1
