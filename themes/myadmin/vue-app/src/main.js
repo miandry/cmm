@@ -20,6 +20,9 @@ import { useAuthStore } from "./stores/auth.js";
 import ConsultationDetails from "./pages/ConsultationDetails.vue";
 import { toast } from "vue-sonner";
 import UserProfile from "./pages/UserProfile.vue";
+import AssistBoard from "./pages/AssistBoard.vue";
+import AllAppointment from "./pages/AllAppointment.vue";
+import FactureList from "./pages/FactureList.vue";
 
 blockZoom();
 
@@ -34,13 +37,17 @@ const routes = [
     path: "/",
     name: "home",
     component: Caisse,
-    meta: { roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"] },
+    meta: {
+      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+    },
   },
   {
     path: "/caisse",
     name: "caisse",
     component: Caisse,
-    meta: { roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"] },
+    meta: {
+      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+    },
   },
   {
     path: "/dashboard",
@@ -58,13 +65,25 @@ const routes = [
     path: "/fr",
     name: "home-fr",
     component: Caisse,
-    meta: { roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"] },
+    meta: {
+      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+    },
   },
   {
     path: "/fr/frontdesk",
     name: "frontdesk",
     component: Caisse,
-    meta: { roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"] },
+    meta: {
+      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+    },
+  },
+  {
+    path: "/assist/dashboard",
+    name: "assist.dashboard",
+    component: AssistBoard,
+    meta: {
+      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+    },
   },
   {
     path: "/patients",
@@ -76,7 +95,7 @@ const routes = [
     path: "/consultations",
     name: "consultations",
     component: Consultations,
-    meta: { roles: ["docteur", "gerant", "webmaster", "administrator"] },
+    meta: { roles: ["docteur", "webmaster", "administrator"] },
   },
   {
     path: "/assist",
@@ -88,13 +107,13 @@ const routes = [
     path: "/consultations/:id/edit",
     name: "consultation.edit",
     component: Consultations,
-    meta: { roles: ["docteur", "gerant", "webmaster", "administrator"] },
+    meta: { roles: ["docteur", "webmaster", "administrator"] },
   },
   {
     path: "/consultations/details",
     name: "consultation.details",
     component: ConsultationDetails,
-    meta: { roles: ["docteur", "gerant", "webmaster", "administrator"] },
+    meta: { roles: ["docteur", "webmaster", "administrator"] },
   },
   {
     path: "/facture",
@@ -109,13 +128,18 @@ const routes = [
     path: "/ordonnance",
     name: "ordonnance",
     component: Ordonnance,
-    meta: { hideHeader: true, roles: ["docteur", "gerant", "webmaster", "administrator"] },
+    meta: {
+      hideHeader: true,
+      roles: ["docteur", "gerant", "webmaster", "administrator"],
+    },
   },
   {
     path: "/commandes",
     name: "commandes",
     component: Order,
-    meta: { roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"] },
+    meta: {
+      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+    },
   },
   {
     path: "/stocks",
@@ -127,7 +151,25 @@ const routes = [
     path: "/user-profil",
     name: "user.profil",
     component: UserProfile,
-    meta: { roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"] },
+    meta: {
+      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+    },
+  },
+  {
+    path: "/rendez-vous",
+    name: "appointment",
+    component: AllAppointment,
+    meta: {
+      roles: ["docteur", "webmaster", "administrator"],
+    },
+  },
+    {
+    path: "/factures",
+    name: "facture-list",
+    component: FactureList,
+    meta: {
+      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+    },
   },
 ];
 

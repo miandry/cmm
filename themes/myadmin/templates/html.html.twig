@@ -120,17 +120,41 @@ document.addEventListener('touchend', function (event) {
     window.APP_DATA.menu = [
       { 
         id: 2,
+        name: "Acceuil",
+        path: "/assist/dashboard",
+        icon: "fas fa-home",
+        paths: ["/assist/dashboard", "/fr/assist/dashboard"],
+        roles: ["caissier","docteur", "gerant", "webmaster", "administrator"]
+      },
+      { 
+        id: 2,
         name: "Caisses",
         path: "/",
         icon: "fas fa-shopping-cart",
         paths: ["/", "/caisse", "/fr", "/fr/frontdesk"],
         roles: ["caissier","docteur", "gerant", "webmaster", "administrator"]
       },
+      // Transformation de Ventes en dropdown
       { 
         id: 5,
         name: "Ventes",
-        path: "/commandes",
-        icon: "fas fa-users",
+        path: "#",
+        icon: "fas fa-chart-line",
+        isDropdown: true,
+        dropdownItems: [
+          {
+            name: "Liste ventes",
+            path: "/commandes",
+            icon: "fas fa-list",
+            roles: ["caissier","docteur", "gerant", "webmaster", "administrator"]
+          },
+          {
+            name: "Liste factures",
+            path: "/factures",
+            icon: "fas fa-file-invoice",
+            roles: ["caissier","docteur", "gerant", "webmaster", "administrator"]
+          }
+        ],
         roles: ["caissier","docteur", "gerant", "webmaster", "administrator"]
       },
       { 
@@ -140,13 +164,28 @@ document.addEventListener('touchend', function (event) {
         icon: "fas fa-users",
         roles: ["docteur", "gerant", "webmaster", "administrator"]
       },
+      // Ajout du dropdown pour les médecins
       { 
-        id: 4,
-        name: "Consulter",
-        path: "/consultations",
+        id: 8,
+        name: "Médecine",
+        path: "#",
         icon: "fas fa-stethoscope",
-        paths: ["/consultations", "/consultations/edit"],
-        roles: ["docteur", "gerant", "webmaster", "administrator"]
+        isDropdown: true,
+        dropdownItems: [
+          {
+            name: "Rendez-vous",
+            path: "/rendez-vous",
+            icon: "fas fa-calendar-alt",
+            roles: ["docteur", "webmaster", "administrator"]
+          },
+          {
+            name: "Consulter",
+            path: "/consultations",
+            icon: "fas fa-stethoscope",
+            roles: ["docteur", "webmaster", "administrator"]
+          }
+        ],
+        roles: ["docteur", "webmaster", "administrator"]
       },
       { 
         id: 6,

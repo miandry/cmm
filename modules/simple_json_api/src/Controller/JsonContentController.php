@@ -72,6 +72,7 @@ class JsonContentController extends ControllerBase implements ContainerInjection
             $container->get('renderer')
         );
     }
+
     public function uploader()
     {
         $json = [
@@ -192,6 +193,7 @@ class JsonContentController extends ControllerBase implements ContainerInjection
         }
         return $this->responseCacheableJson(array_values($json));
     }
+
     public function apiTerm($vid)
     {
         $parser_node_json = new ApiJsonParser();
@@ -236,6 +238,7 @@ class JsonContentController extends ControllerBase implements ContainerInjection
 
 
     }
+
     public function sendResetEmail()
     {
         $method = \Drupal::request()->getMethod();
@@ -362,15 +365,16 @@ class JsonContentController extends ControllerBase implements ContainerInjection
      * sorting, paging, value extraction and field renaming.  Mirrors the
      * behaviour of apiListJsonV2 but constrained to user entities.
      */
-    public function apiUserListV2()
+    public function apiUserListV2(Request $request)
     {
-        $fields = \Drupal::request()->get('fields');
-        $changes = \Drupal::request()->get('changes');
-        $values = \Drupal::request()->get('values');
-        $filters = \Drupal::request()->get('filters');
-        $sort = \Drupal::request()->get('sort');
-        $pager = \Drupal::request()->get('pager');
-        $offset = \Drupal::request()->get('offset');
+        $fields = $request->get('fields');
+        $changes = $request->get('changes');
+        $values = $request->get('values');
+        $filters = $request->get('filters');
+        $sort = $request->get('sort');
+        $pager = $request->get('pager');
+        $offset = $request->get('offset');
+
         if ($offset === null) {
             $offset = 10;
         }
@@ -400,6 +404,7 @@ class JsonContentController extends ControllerBase implements ContainerInjection
         if ($sort && isset($sort['val'], $sort['op'])) {
             $query->sort($sort['val'], $sort['op']);
         }
+
         if ($pager) {
             if ($pager !== 'all') {
                 $query->range($offset * ($pager), $offset);
@@ -412,8 +417,10 @@ class JsonContentController extends ControllerBase implements ContainerInjection
         if (!is_array($uids)) {
             $uids = [];
         }
+
         $results = [];
         $users = \Drupal::entityTypeManager()->getStorage('user')->loadMultiple($uids);
+
         foreach ($users as $user) {
             if (is_array($fields)) {
                 $results[] = \Drupal::service('entity_parser.manager')->user_parser($user, $fields);
@@ -422,18 +429,18 @@ class JsonContentController extends ControllerBase implements ContainerInjection
             }
         }
 
-        // Post-process values and changes exactly like apiListJsonV2.
+        // Post-process values and changes exactly like apiListJsonV2
         if ($values) {
             foreach ($results as $rkey => $item) {
                 foreach ($item as $key_field => $value_field) {
                     if (isset($values[$key_field])) {
-                        $key_name = ($values[$key_field]);
-                        $val = $this->getValueArray($item, $key_name);
+                        $val = $this->getValueArray($item, $key_field);
                         $results[$rkey][$key_field] = $val;
                     }
                 }
             }
         }
+
         if ($changes) {
             foreach ($results as $rkey => $item) {
                 foreach ($item as $key_field => $value_field) {
@@ -481,12 +488,11 @@ class JsonContentController extends ControllerBase implements ContainerInjection
         }
 
         if ($values) {
-            foreach ($results as $key => $item) {
+            foreach ($results as $rkey => $item) {
                 foreach ($item as $key_field => $value_field) {
                     if (isset($values[$key_field])) {
-                        $key_name = ($values[$key_field]);
-                        $val = $this->getValueArray($item, $key_name);
-                        $results[$key][$key_field] = $val;
+                        $val = $this->getValueArray($item, $key_field);
+                        $results[$rkey][$key_field] = $val;
                     }
                 }
             }
@@ -507,41 +513,95 @@ class JsonContentController extends ControllerBase implements ContainerInjection
         return new JsonResponse($output);
     }
 
+    /**
+     * Récupère les valeurs des champs imbriqués
+     *
+     * @param array $item
+     * @param string $key_field
+     * @return array
+     */
     private function getValueArray($item, $key_field)
     {
-        $values = \Drupal::request()->get('values');
         $output = [];
 
-        foreach ($item as $field => $value) {
+        // Vérifier si le champ existe dans l'élément
+        if (!isset($item[$key_field])) {
+            return $output;
+        }
 
-            if (isset($values[$field])) {
+        $field_value = $item[$key_field];
 
-                if (isset($item[$field]["#object"])) { // if single reference 
-                    $item_object = $item[$field]["#object"];
-                    $output = $this->getValue($item_object, $field);
-                } else { // if multiple reference 
-                    foreach ($item[$field] as $key => $value_child) {
-                        if (isset($value_child["#object"])) {
-                            $output[] = $this->getValue($value_child["#object"], $field);
-                        } else {
-                        }
+        // Si le champ est vide
+        if (empty($field_value)) {
+            return $output;
+        }
+
+        // Cas 1: C'est une référence simple avec l'objet dans #object
+        if (is_array($field_value) && isset($field_value["#object"])) {
+            $output = $this->getValue($field_value["#object"], $key_field);
+        }
+        // Cas 2: C'est un tableau de références multiples
+        elseif (is_array($field_value)) {
+            foreach ($field_value as $value_child) {
+                if (is_array($value_child) && isset($value_child["#object"])) {
+                    $output[] = $this->getValue($value_child["#object"], $key_field);
+                } elseif (is_object($value_child)) {
+                    // Si c'est directement un objet
+                    $output[] = $this->getValue($value_child, $key_field);
+                } elseif (is_array($value_child) && isset($value_child['target_id'])) {
+                    // Cas pour les références d'entités standard
+                    $entity = \Drupal::entityTypeManager()->getStorage('node')->load($value_child['target_id']);
+                    if ($entity) {
+                        $output[] = $this->getValue($entity, $key_field);
                     }
                 }
             }
         }
+        // Cas 3: C'est directement un objet
+        elseif (is_object($field_value)) {
+            $output = $this->getValue($field_value, $key_field);
+        }
+        // Cas 4: C'est un tableau avec target_id (référence standard)
+        elseif (is_array($field_value) && isset($field_value['target_id'])) {
+            $entity = \Drupal::entityTypeManager()->getStorage('node')->load($field_value['target_id']);
+            if ($entity) {
+                $output = $this->getValue($entity, $key_field);
+            }
+        }
+
         return $output;
     }
 
+    /**
+     * Extrait les valeurs d'une entité pour un champ spécifique
+     *
+     * @param object $item_object
+     * @param string $field
+     * @return array
+     */
     private function getValue($item_object, $field)
     {
         $output = [];
         $values = \Drupal::request()->get('values');
+
+        // Vérifier si le champ parent existe dans values
+        if (!isset($values[$field]) || !is_array($values[$field])) {
+            return $output;
+        }
+
+        // Récupérer les champs demandés pour cette entité
+        $requested_fields = $values[$field];
+
+        // Parser l'entité pour obtenir tous ses champs
         $entity_array = \Drupal::service('entity_parser.manager')->parser($item_object);
+
+        // Filtrer uniquement les champs demandés
         foreach ($entity_array as $field_child => $value_child) {
-            if (is_array($values[$field]) && in_array($field_child, $values[$field])) {
+            if (in_array($field_child, $requested_fields)) {
                 $output[$field_child] = $value_child;
             }
         }
+
         return $output;
     }
 
@@ -568,16 +628,17 @@ class JsonContentController extends ControllerBase implements ContainerInjection
             $item = \Drupal::service('entity_parser.manager')->loader_entity_by_type($id, $entitype);
         }
 
+        // Traitement des valeurs imbriquées
         if ($values) {
             foreach ($item as $key_field => $value_field) {
                 if (isset($values[$key_field])) {
-                    $key_name = ($values[$key_field]);
-                    $val = $this->getValueArray($item, $key_name);
+                    $val = $this->getValueArray($item, $key_field);
                     $item[$key_field] = $val;
                 }
             }
         }
 
+        // Traitement des changements de noms de champs
         if ($changes) {
             foreach ($item as $key_field => $value_field) {
                 if (isset($changes[$key_field])) {

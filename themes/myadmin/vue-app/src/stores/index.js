@@ -4,4 +4,7 @@ export * from "./order/order";
 export * from "./consultation/consultation";
 export * from "./examen/examen";
 export * from "./stock/stock";
+export * from "./facture/facture";
+export * from "./appointment/appointment";
+export * from "./user/user";
 export * from "./auth";

@@ -100,6 +100,7 @@ export default {
         const selectedIndex = ref(null);
         const clientNameSearch = ref('');
         const loading = ref(false);
+
         // Paramètres dynamiques de la requête
         const queryOptions = ref({
             fields: [
@@ -118,7 +119,7 @@ export default {
                 }
             },
             pager: 0,
-            offset: 20
+            offset: 10
         })
 
         const fetchClients = async () => {
@@ -127,6 +128,10 @@ export default {
         }
 
         const confirmSelectedClient = async () => {
+            if (!selectedClientNid.value) {
+                toast.error("Veuillez sélectionner un client.")
+                return
+            }
             await store.fetchClient(selectedClientNid.value);
             if (store.error) {
                 toast.error("Une erreur est survenue lors de la sélection du client.")
@@ -155,6 +160,12 @@ export default {
             selectedIndex.value = index
             selectedClientNid.value = client
         }
+
+        // Charger les 5 premiers clients au montage du composant
+        onMounted(async () => {
+            loading.value = true;
+            await fetchClients();
+        })
 
         return {
             store,

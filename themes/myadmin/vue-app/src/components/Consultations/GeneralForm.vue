@@ -1,6 +1,6 @@
 <template>
     <div class="space-y-4">
-        <Patient :canChange="canChange" class="block lg:hidden"/>
+        <Patient :canChange="canChange" class="block lg:hidden" />
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Motif de consultation</label>
             <textarea v-model="form.consultationMotif" rows="3"
@@ -46,8 +46,11 @@
 </template>
 
 <script>
-import { reactive, ref, defineExpose, watch } from 'vue';
+import { reactive, ref, defineExpose, watch, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+
 import Patient from './Patient.vue';
+import { useAppointmentStore } from '../../stores/index.js';
 
 export default {
     name: 'GeneralForm',
@@ -60,7 +63,10 @@ export default {
         },
     },
     setup(props) {
-        const canChange = ref(props.canChange)
+        const route = useRoute();
+        const appointmentStore = useAppointmentStore();
+        const canChange = ref(props.canChange);
+        
         const form = reactive({
             consultationMotif: '',
             temperature: '',
@@ -139,7 +145,6 @@ export default {
         }
 
         // edit mode
-
         function setFormData(consultation) {
             if (!consultation) return;
 
@@ -156,6 +161,26 @@ export default {
             errors.poids = false;
             errors.montant = false;
         }
+
+        // Charger automatiquement le montant depuis le rendez-vous
+        async function loadAppointmentMontant() {
+            const appointmentId = route.query.appointment;
+            if (appointmentId) {
+                try {
+                    await appointmentStore.fetchAppointment(appointmentId);
+                    if (appointmentStore.appointment?.field_montant) {
+                        form.montant = appointmentStore.appointment.field_montant;
+                    }
+                } catch (error) {
+                    console.error('Erreur lors du chargement du montant:', error);
+                }
+            }
+        }
+
+        // Initialisation au montage du composant
+        onMounted(() => {
+            loadAppointmentMontant();
+        });
 
         defineExpose({
             getGeneralFormData,

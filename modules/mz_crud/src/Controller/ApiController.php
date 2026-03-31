@@ -314,9 +314,11 @@ class ApiController extends ControllerBase
                         $user = User::create([
                             'name' => $data['name'],
                             'mail' => $data['mail'] ?? '',
+                            'field_specialite' => $data['field_specialite'] ?? '',
                             'status' => 1
                         ]);
 
+                        $user->set('field_specialite', $data['field_specialite'] ?? '');
                         $user->setPassword($data['pass']);
 
                         // Ajouter plusieurs roles
@@ -427,6 +429,8 @@ class ApiController extends ControllerBase
                             // Seul l'admin peut changer les rôles
                             $user->set('roles', $data['roles']);
                         }
+
+                        $user->set('field_specialite', $data['field_specialite'] ?? '');
 
                         $saved = $user->save();
 

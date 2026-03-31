@@ -1,434 +1,469 @@
 <template>
-    <div v-if="orderToShow" class="p-4">
-        <!-- Boutons d'impression et de navigation -->
-        <!-- Boutons d'action - Responsive -->
-        <div class="fixed top-4 right-4 no-print z-50">
-            <div class="flex flex-col sm:flex-row gap-2">
-                <!-- Bouton Imprimer -->
-                <button @click="printInvoice" class="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold sm:font-bold 
-                           py-2 sm:py-2 px-3 sm:px-4 rounded-lg sm:rounded shadow-md hover:shadow-lg 
-                           flex items-center justify-center gap-1 sm:gap-2 transition-all duration-200 
-                           min-w-[44px] min-h-[44px] touch-manipulation" aria-label="Imprimer la facture">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                    </svg>
-                    <span class="text-xs sm:text-sm font-medium hidden sm:inline">Imprimer</span>
-                    <span class="text-xs sm:text-sm font-medium sm:hidden">Imp.</span>
-                </button>
+    <div>
+        <page-loader v-if="isLoading" />
+        <div v-if="orderToShow" class="p-4">
 
-                <!-- Bouton Revenir -->
-                <button @click="smartBack" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold sm:font-bold 
-                           py-2 sm:py-2 px-3 sm:px-4 rounded-lg sm:rounded shadow-md hover:shadow-lg 
-                           flex items-center justify-center gap-1 sm:gap-2 transition-all duration-200 
-                           min-w-[44px] min-h-[44px] touch-manipulation" aria-label="Revenir à la liste des commandes">
-                    <i class="ri-arrow-left-line text-base sm:text-lg" aria-hidden="true"></i>
-                    <span class="text-xs sm:text-sm font-medium hidden sm:inline">Revenir</span>
-                    <span class="text-xs sm:text-sm font-medium sm:hidden">Retour</span>
-                </button>
-            </div>
-        </div>
-        <!-- Sélecteur de type de facture - Responsive -->
-        <div class="fixed top-4 left-1/2 transform -translate-x-1/2 no-print z-50 w-[90%] max-w-sm mx-auto">
-            <div class="flex gap-1 bg-white/95 backdrop-blur-sm p-1 rounded-full shadow-lg border border-gray-200">
-                <button @click="showMedicaments = true; currentPage = 1" :class="[
-                    'flex items-center justify-center px-3 py-2 md:px-4 md:py-2 rounded-full font-medium transition-all duration-200 flex-1 min-w-0',
-                    showMedicaments
-                        ? 'bg-blue-600 text-white shadow-md transform scale-[1.02]'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
-                ]" :aria-pressed="showMedicaments" aria-label="Afficher les médicaments">
-                    <i class="ri-medicine-bottle-line text-sm md:text-base mr-1 md:mr-2"></i>
-                    <span class="text-xs md:text-sm font-medium truncate">Médicaments</span>
-                    <span v-if="articles.length > 0"
-                        class="ml-1 md:ml-2 text-[10px] md:text-xs bg-white/20 px-1.5 py-0.5 rounded-full min-w-[1.5rem] flex items-center justify-center">
-                        {{ articles.length }}
-                    </span>
-                </button>
+            <!-- Boutons d'impression et de navigation -->
+            <!-- Boutons d'action - Responsive -->
+            <div class="fixed top-4 right-4 no-print z-50">
+                <div class="flex flex-row sm:flex-row gap-2">
+                    <!-- Bouton Imprimer -->
+                    <button @click="printInvoice" class="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold sm:font-bold 
+                               py-2 sm:py-2 px-3 sm:px-4 rounded-lg sm:rounded shadow-md hover:shadow-lg 
+                               flex items-center justify-center gap-1 sm:gap-2 transition-all duration-200 
+                               min-w-[44px] min-h-[44px] touch-manipulation" aria-label="Imprimer la facture">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        <span class="text-xs sm:text-sm font-medium hidden sm:inline">Imprimer</span>
+                        <span class="text-xs sm:text-sm font-medium sm:hidden">Imp.</span>
+                    </button>
 
-                <button @click="showMedicaments = false; currentPage = 1" :class="[
-                    'flex items-center justify-center px-3 py-2 md:px-4 md:py-2 rounded-full font-medium transition-all duration-200 flex-1 min-w-0',
-                    !showMedicaments
-                        ? 'bg-green-600 text-white shadow-md transform scale-[1.02]'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
-                ]" :aria-pressed="!showMedicaments" aria-label="Afficher les examens">
-                    <i class="ri-stethoscope-line text-sm md:text-base mr-1 md:mr-2"></i>
-                    <span class="text-xs md:text-sm font-medium truncate">Examens</span>
-                    <span v-if="examens.length > 0"
-                        class="ml-1 md:ml-2 text-[10px] md:text-xs bg-white/20 px-1.5 py-0.5 rounded-full min-w-[1.5rem] flex items-center justify-center">
-                        {{ examens.length }}
-                    </span>
-                </button>
-            </div>
+                    <!-- Bouton Sauvegarder --> <!-- saveInvoice  -->
+                    <button @click="saveInvoice" class="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold sm:font-bold 
+                       py-2 sm:py-2 px-3 sm:px-4 rounded-lg sm:rounded shadow-md hover:shadow-lg 
+                       flex items-center justify-center gap-1 sm:gap-2 transition-all duration-200 
+                       min-w-[44px] min-h-[44px] touch-manipulation" aria-label="Sauvegarder la facture">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                        </svg>
+                        <span class="text-xs sm:text-sm font-medium hidden sm:inline">
+                            {{ isEditingInvoice ? 'Enregistrer modification' : 'Sauvegarder' }}
+                        </span>
+                        <span class="text-xs sm:text-sm font-medium sm:hidden">
+                            {{ isEditingInvoice ? 'Enregistrer modification' : 'Sauvegarder' }}
+                        </span>
+                    </button>
 
-            <!-- Indicateur visuel pour mobile -->
-            <div v-if="isMobile" class="mt-2 text-center">
-                <div class="text-[10px] text-gray-500 font-medium">
-                    {{ showMedicaments ? 'Médicaments' : 'Examens' }} - Page {{ currentPage }}/{{ totalPages }}
+                    <!-- Bouton Revenir -->
+                    <button @click="smartBack" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold sm:font-bold 
+                               py-2 sm:py-2 px-3 sm:px-4 rounded-lg sm:rounded shadow-md hover:shadow-lg 
+                               flex items-center justify-center gap-1 sm:gap-2 transition-all duration-200 
+                               min-w-[44px] min-h-[44px] touch-manipulation"
+                        aria-label="Revenir à la liste des commandes">
+                        <i class="ri-arrow-left-line text-base sm:text-lg" aria-hidden="true"></i>
+                        <span class="text-xs sm:text-sm font-medium hidden sm:inline">Revenir</span>
+                        <span class="text-xs sm:text-sm font-medium sm:hidden">Revenir</span>
+                    </button>
                 </div>
             </div>
-        </div>
+            <!-- Sélecteur de type de facture - Responsive -->
+            <div class="fixed top-4 left-1/2 transform -translate-x-1/2 no-print z-50 w-[90%] max-w-sm mx-auto">
+                <div class="flex gap-1 bg-white/95 backdrop-blur-sm p-1 rounded-full shadow-lg border border-gray-200">
+                    <button @click="showMedicaments = true; currentPage = 1" :class="[
+                        'flex items-center justify-center px-3 py-2 md:px-4 md:py-2 rounded-full font-medium transition-all duration-200 flex-1 min-w-0',
+                        showMedicaments
+                            ? 'bg-blue-600 text-white shadow-md transform scale-[1.02]'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
+                    ]" :aria-pressed="showMedicaments" aria-label="Afficher les médicaments">
+                        <i class="ri-medicine-bottle-line text-sm md:text-base mr-1 md:mr-2"></i>
+                        <span class="text-xs md:text-sm font-medium truncate">Médicaments</span>
+                        <span v-if="articles.length > 0"
+                            class="ml-1 md:ml-2 text-[10px] md:text-xs bg-white/20 px-1.5 py-0.5 rounded-full min-w-[1.5rem] flex items-center justify-center">
+                            {{ articles.length }}
+                        </span>
+                    </button>
 
-        <!-- Contrôles de pagination -->
-        <div v-if="totalPages > 1" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 no-print z-50">
-            <div
-                class="flex items-center gap-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-gray-200">
-                <button @click="prevPage" :disabled="currentPage === 1"
-                    class="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <i class="ri-arrow-left-line"></i>
-                </button>
-
-                <div class="flex items-center gap-2">
-                    <span class="font-medium text-gray-700">{{ showMedicaments ? 'Médicaments' : 'Examens' }}</span>
-                    <span class="font-bold text-blue-600">{{ currentPage }}</span>
-                    <span class="text-gray-500">sur</span>
-                    <span class="font-bold text-gray-700">{{ totalPages }}</span>
+                    <button @click="showMedicaments = false; currentPage = 1" :class="[
+                        'flex items-center justify-center px-3 py-2 md:px-4 md:py-2 rounded-full font-medium transition-all duration-200 flex-1 min-w-0',
+                        !showMedicaments
+                            ? 'bg-green-600 text-white shadow-md transform scale-[1.02]'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
+                    ]" :aria-pressed="!showMedicaments" aria-label="Afficher les examens">
+                        <i class="ri-stethoscope-line text-sm md:text-base mr-1 md:mr-2"></i>
+                        <span class="text-xs md:text-sm font-medium truncate">Examens</span>
+                        <span v-if="examens.length > 0"
+                            class="ml-1 md:ml-2 text-[10px] md:text-xs bg-white/20 px-1.5 py-0.5 rounded-full min-w-[1.5rem] flex items-center justify-center">
+                            {{ examens.length }}
+                        </span>
+                    </button>
                 </div>
 
-                <button @click="nextPage" :disabled="currentPage === totalPages"
-                    class="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <i class="ri-arrow-right-line"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Popup de confirmation pour nouvelle page -->
-        <div v-if="showConfirmPopup"
-            class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] no-print">
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-[90%] mx-4 overflow-hidden">
-                <div class="p-5">
-                    <p class="text-center text-gray-600 mb-4">
-                        Voulez-vous créer une nouvelle page pour ajouter cet élément ?
-                    </p>
-                    <div class="flex gap-3 justify-center mt-6">
-                        <button @click="cancelAddItem"
-                            class="flex-1 text-sm px-4 py-2 bg-gray-500 text-white hover:bg-gray-600 !rounded-button font-medium whitespace-nowrap">
-                            Annuler
-                        </button>
-                        <button @click="confirmAddItem"
-                            class="flex-1 text-sm px-4 py-2 bg-green-500 text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap">
-                            Continuer
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Affichage de la page courante -->
-        <div v-for="page in [currentPage]" :key="page">
-            <!--  justify-between -->
-            <div class="sheet-a5 p-5 relative flex flex-col justify-between print-colors-fix">
-                <div>
-                    <div class="mb-12 no-print"></div>
-                    <!-- En-tête (identique sur toutes les pages) -->
-                    <div class="flex justify-between items-start pb-2 mb-4 font-sans">
-                        <div class="w-2/3">
-                            <h1 class="text-sm font-bold text-medical-blue uppercase tracking-wide leading-tight">
-                                {{ cabinet.nom }}
-                            </h1>
-                            <p class="text-sm font-medium text-gray-600 leading-tight f-normal">
-                                {{ cabinet.titre }}
-                            </p>
-                            <div class="text-[11px] text-gray-500 leading-snug mt-1">
-                                <p class="font-bold text-medical-blue inline mr-3">
-                                    {{ cabinet.centre }}
-                                </p>
-                                <span class="inline f-normal">{{ cabinet.adresse }}</span>
-                                <p class="mt-[2px] f-normal">{{ cabinet.contact }}</p>
-                                <p class="mt-[2px] text-[9px] f-normal">{{ cabinet.immat }}</p>
-                            </div>
-                        </div>
-
-                        <div class="w-1/3 text-right pt-1 text-sm">
-                            <h2 class="font-extrabold text-medical-blue text-sm uppercase leading-none mb-1">
-                                <!-- {{ showMedicaments ? 'FACTURE MÉDICAMENTS' : 'FACTURE EXAMENS' }} -->
-                                FACTURE
-                            </h2>
-                            <p class="text-[10px] text-gray-600 leading-tight">
-                                <span class="f-normal">Réf. :</span>
-                                <span class="editable-field" contenteditable="true" @blur="updateFactureRef"
-                                    @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'factureRef')"
-                                    @input="preventVueUpdate($event)" ref="factureRefField">
-                                    {{ factureRef }}
-                                </span>
-                            </p>
-                            <div class="text-[10px] text-gray-600 leading-tight mt-1">
-                                <span class="f-normal">{{ cabinet.ville }}, le</span>
-                                <span class="editable-field" contenteditable="true" @blur="updateCurrentDate"
-                                    @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'currentDate')"
-                                    @input="preventVueUpdate($event)" ref="currentDateField">
-                                    {{ currentDate }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Numéro de page et type de facture -->
-                    <div class="absolute top-5 right-5 text-[9px] text-gray-400 font-medium">
+                <!-- Indicateur visuel pour mobile -->
+                <div v-if="isMobile" class="mt-2 text-center">
+                    <div class="text-[10px] text-gray-500 font-medium">
                         {{ showMedicaments ? 'Médicaments' : 'Examens' }} - Page {{ currentPage }}/{{ totalPages }}
                     </div>
-
-                    <!-- Informations patient (uniquement sur la première page) -->
-                    <div v-if="currentPage === 1"
-                        class="bg-medical-gray rounded-md p-2.5 mb-4 print:bg-transparent print:p-0 print:mb-3">
-                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-snug">
-                            <div class="flex-1 min-w-[180px]">
-                                <span class="font-sans font-bold text-medical-blue inline-block">Client :</span>
-                                <span class="editable-field font-bold text-base" contenteditable="true"
-                                    @blur="updatePatientNom" @keydown.enter="saveAndBlur($event)"
-                                    @focus="handleFocus($event, 'patientNom')" @input="preventVueUpdate($event)"
-                                    ref="patientNomField">
-                                    {{ patient.nom }}
-                                </span>
-                            </div>
-                            <div>
-                                <span class="font-sans font-bold text-medical-blue">Âge :</span>
-                                <span class="editable-field" contenteditable="true" @blur="updatePatientAge"
-                                    @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'patientAge')"
-                                    @input="preventVueUpdate($event)" ref="patientAgeField">
-                                    {{ patient.age }}
-                                </span>
-                            </div>
-                            <div>
-                                <span class="font-sans font-bold text-medical-blue">Dossier :</span>
-                                <span class="editable-field" contenteditable="true" @blur="updatePatientDossier"
-                                    @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'patientDossier')"
-                                    @input="preventVueUpdate($event)" ref="patientDossierField">
-                                    {{ patient.dossier }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Liste des articles ou examens selon le type sélectionné -->
-                    <div class="mb-4">
-                        <!-- SECTION MÉDICAMENTS -->
-                        <div v-if="showMedicaments">
-                            <div v-if="pagedMedicaments.length > 0"
-                                class="flex font-sans text-xs font-bold text-medical-blue border-b-2 border-medical-blue py-1 uppercase">
-                                <div class="w-4/5 pl-1 f-header">Désignation du médicament</div>
-                                <div class="w-1/5 text-center f-header">Qté</div>
-                                <div class="w-1/5 numeric-col pr-1 f-header">P.U</div>
-                                <div class="w-1/5 numeric-col pr-1 f-header">Total HT</div>
-                            </div>
-                            <div class="space-y-0.5">
-                                <div v-for="(article, index) in pagedMedicaments"
-                                    :key="'article-' + getArticleIndex(index)"
-                                    class="flex text-xs border-b border-gray-100 items-center group table-field">
-                                    <div class="w-4/5 pr-2 pl-1 flex items-center min-w-0">
-                                        <span
-                                            class="editable-field font-medium text-medical-red truncate-ellipsis single-line"
-                                            contenteditable="true"
-                                            @blur="(e) => updateArticleDescription(getArticleIndex(index), e)"
-                                            @keydown.enter="saveAndBlur($event)"
-                                            @focus="(e) => handleArticleFocus(e, getArticleIndex(index), 'description')"
-                                            @input="preventVueUpdate($event)"
-                                            :ref="el => setArticleFieldRef(el, 'description', getArticleIndex(index), 'articles')"
-                                            :title="article.description">
-                                            {{ article.description }}
-                                        </span>
-                                        <button @click="removeArticle(getArticleIndex(index), 'articles')"
-                                            class="no-print text-red-400 hover:text-red-600 font-bold px-2 text-lg transition-opacity ml-1 opacity-0 group-hover:opacity-100 align-text-bottom flex-shrink-0">×</button>
-                                    </div>
-                                    <div class="w-1/5 text-center">
-                                        <span class="editable-field text-gray-700" contenteditable="true"
-                                            @blur="(e) => updateArticleQuantity(getArticleIndex(index), e)"
-                                            @keydown.enter="saveAndBlur($event)"
-                                            @focus="(e) => handleArticleFocus(e, getArticleIndex(index), 'quantity')"
-                                            @input="preventVueUpdate($event)"
-                                            :ref="el => setArticleFieldRef(el, 'quantity', getArticleIndex(index), 'articles')">
-                                            {{ article.quantity }}
-                                        </span>
-                                    </div>
-                                    <div class="w-1/5 numeric-col pr-1">
-                                        <span class="editable-field text-gray-700" contenteditable="true"
-                                            @blur="(e) => updateArticlePrice(getArticleIndex(index), e)"
-                                            @keydown.enter="saveAndBlur($event)"
-                                            @focus="(e) => handleArticleFocus(e, getArticleIndex(index), 'price')"
-                                            @input="preventVueUpdate($event)"
-                                            :ref="el => setArticleFieldRef(el, 'price', getArticleIndex(index), 'articles')">
-                                            {{ formatCurrencyDisplay(article.unitPrice) }}
-                                        </span>
-                                    </div>
-                                    <div class="w-1/5 numeric-col pr-1 font-bold">
-                                        <span class="item-total">{{ formatCurrency(article.quantity * article.unitPrice,
-                                            false) }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Message si page vide (après suppression) -->
-                            <div v-if="pagedMedicaments.length === 0 && currentPage <= totalPages && articles.length > 0"
-                                class="text-center py-8 text-gray-400 italic">
-                                <i class="ri-medicine-bottle-line text-3xl mb-2"></i>
-                                <p>Page vide - Retour à la page précédente...</p>
-                            </div>
-
-                            <!-- Message si aucun médicament du tout -->
-                            <div v-if="articles.length === 0 && currentPage === 1"
-                                class="text-center py-8 text-gray-400 italic">
-                                <i class="ri-medicine-bottle-line text-3xl mb-2"></i>
-                                <p>Aucun médicament dans cette facture</p>
-                            </div>
-                        </div>
-
-                        <!-- SECTION EXAMENS -->
-                        <div v-if="!showMedicaments">
-                            <div v-if="pagedExamens.length > 0"
-                                class="flex font-sans text-xs font-bold text-medical-blue border-b-2 border-medical-blue py-1 uppercase">
-                                <div class="w-3/5 pl-1 f-header">Désignation de l'examen</div>
-                                <div class="w-1/5 text-center f-header">Qté</div>
-                                <div class="w-2/5 numeric-col pr-1 f-header">Prix Unitaire</div>
-                                <div class="w-2/5 numeric-col pr-1 f-header">Total HT</div>
-                            </div>
-
-                            <div class="space-y-0.5">
-                                <div v-for="(examen, index) in pagedExamens" :key="'examen-' + getExamenIndex(index)"
-                                    class="flex text-xs border-b border-gray-100 items-center group table-field">
-                                    <div class="w-3/5 pr-2 pl-1 flex items-center">
-                                        <span class="editable-field font-medium text-medical-blue"
-                                            contenteditable="true"
-                                            @blur="(e) => updateExamenDescription(getExamenIndex(index), e)"
-                                            @keydown.enter="saveAndBlur($event)"
-                                            @focus="(e) => handleExamenFocus(e, getExamenIndex(index), 'description')"
-                                            @input="preventVueUpdate($event)"
-                                            :ref="el => setExamenFieldRef(el, 'description', getExamenIndex(index))">
-                                            {{ examen.description }}
-                                        </span>
-                                        <button @click="removeExamen(getExamenIndex(index))"
-                                            class="no-print text-red-400 hover:text-red-600 font-bold px-2 text-lg transition-opacity ml-1 opacity-0 group-hover:opacity-100 align-text-bottom">×</button>
-                                    </div>
-                                    <div class="w-1/5 text-center">
-                                        <span class="text-gray-700">1</span>
-                                    </div>
-                                    <div class="w-2/5 numeric-col pr-1">
-                                        <span class="editable-field text-gray-700" contenteditable="true"
-                                            @blur="(e) => updateExamenPrice(getExamenIndex(index), e)"
-                                            @keydown.enter="saveAndBlur($event)"
-                                            @focus="(e) => handleExamenFocus(e, getExamenIndex(index), 'price')"
-                                            @input="preventVueUpdate($event)"
-                                            :ref="el => setExamenFieldRef(el, 'price', getExamenIndex(index))">
-                                            {{ formatCurrencyDisplay(examen.price) }}
-                                        </span>
-                                    </div>
-                                    <div class="w-2/5 numeric-col pr-1 font-bold">
-                                        <span class="item-total">{{ formatCurrency(examen.price, false) }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Message si page vide (après suppression) -->
-                            <div v-if="pagedExamens.length === 0 && currentPage <= totalPages && examens.length > 0"
-                                class="text-center py-8 text-gray-400 italic">
-                                <i class="ri-stethoscope-line text-3xl mb-2"></i>
-                                <p>Page vide - Retour à la page précédente...</p>
-                            </div>
-
-                            <!-- Message si aucun examen du tout -->
-                            <div v-if="examens.length === 0 && currentPage === 1"
-                                class="text-center py-8 text-gray-400 italic">
-                                <i class="ri-stethoscope-line text-3xl mb-2"></i>
-                                <p>Aucun examen dans cette facture</p>
-                            </div>
-                        </div>
-
-                        <!-- Boutons d'ajout (uniquement sur la dernière page) -->
-                        <div v-if="currentPage === totalPages" class="mt-2 no-print">
-                            <button v-if="showMedicaments" @click="addArticleWithPageCheck"
-                                class="flex items-center text-xs font-bold text-medical-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
-                                <i class="ri-add-line mr-1"></i> Ajouter un médicament
-                            </button>
-                            <button v-if="!showMedicaments" @click="addExamenWithPageCheck"
-                                class="flex items-center text-xs font-bold text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 px-3 py-1 rounded transition-colors">
-                                <i class="ri-add-line mr-1"></i> Ajouter un examen
-                            </button>
-                        </div>
-                    </div>
                 </div>
+            </div>
 
-                <!-- PIED DE PAGE POUR CHAQUE PAGE -->
-                <div> <!-- class="mt-6 pt-2 border-t border-gray-200" -->
-                    <!-- Totaux pour la page courante -->
-                    <div class="flex justify-end">
-                        <div class="w-2/3 text-xs">
-                            <!-- Total HT de la page -->
-                            <div v-if="pageSubTotal > 0" class="flex justify-between py-1">
-                                <span class="font-medium text-gray-700">Total HT Page :</span>
-                                <span class="font-bold numeric-col">{{ formatCurrency(pageSubTotal) }}</span>
-                            </div>
+            <!-- Contrôles de pagination -->
+            <div v-if="totalPages > 1" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 no-print z-50">
+                <div
+                    class="flex items-center gap-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-gray-200">
+                    <button @click="prevPage" :disabled="currentPage === 1"
+                        class="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="ri-arrow-left-line"></i>
+                    </button>
 
-                            <!-- TVA pour la page courante -->
-                            <div v-if="pageSubTotal > 0" class="flex justify-between py-1 border-t border-gray-300"
-                                :class="{ 'no-print': tvaRate == 0 }">
-                                <span class="font-medium text-gray-700">TVA (
-                                    <span class="editable-field" contenteditable="true" @blur="updateTvaRate"
-                                        @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'tvaRate')"
-                                        @input="preventVueUpdate($event)" ref="tvaRateField">
-                                        {{ tvaRate }}%
-                                    </span>
-                                    ) Page :
-                                </span>
-                                <span class="font-bold numeric-col">{{ formatCurrency(pageTvaAmount) }}</span>
-                            </div>
-
-                            <!-- Montant TTC de la page -->
-                            <div v-if="pageSubTotal > 0"
-                                class="flex justify-between py-1 border-y-2 border-medical-blue mt-1">
-                                <span class="font-bold text-medical-blue text-xs uppercase">Total Page TTC :</span>
-                                <span class="font-extrabold text-medical-blue text-xs numeric-col">{{
-                                    formatCurrency(pageGrandTotal) }}</span>
-                            </div>
-
-                            <!-- Mode de paiement (uniquement sur la dernière page) v-if="currentPage === totalPages" -->
-                            <div class="text-[10px] mt-2 text-gray-500 text-right">
-                                Mode de Paiement :
-                                <span class="editable-field text-gray-700" contenteditable="true"
-                                    @blur="updatePaymentMethod" @keydown.enter="saveAndBlur($event)"
-                                    @focus="handleFocus($event, 'paymentMethod')" @input="preventVueUpdate($event)"
-                                    ref="paymentMethodField">
-                                    {{ paymentMethod }}
-                                </span>
-                            </div>
-                        </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-medium text-gray-700">{{ showMedicaments ? 'Médicaments' : 'Examens' }}</span>
+                        <span class="font-bold text-blue-600">{{ currentPage }}</span>
+                        <span class="text-gray-500">sur</span>
+                        <span class="font-bold text-gray-700">{{ totalPages }}</span>
                     </div>
 
-                    <!-- Notes et conditions (uniquement sur la dernière page) v-if="currentPage === totalPages" -->
-                    <div class="mt-4 border-t border-dashed border-gray-300 pt-2">
-                        <h3 class="font-sans text-xs font-bold text-medical-blue uppercase mb-1">Notes et Conditions
-                        </h3>
-                        <p class="editable-field text-xs text-gray-700 leading-snug" contenteditable="true"
-                            @blur="updateInvoiceNotes" @keydown.enter="saveAndBlur($event, true)"
-                            @focus="handleFocus($event, 'invoiceNotes')" @input="preventVueUpdate($event)"
-                            ref="invoiceNotesField">
-                            {{ invoiceNotes }}
+                    <button @click="nextPage" :disabled="currentPage === totalPages"
+                        class="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="ri-arrow-right-line"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Popup de confirmation pour nouvelle page -->
+            <div v-if="showConfirmPopup"
+                class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] no-print">
+                <div class="bg-white rounded-lg shadow-xl max-w-md w-[90%] mx-4 overflow-hidden">
+                    <div class="p-5">
+                        <p class="text-center text-gray-600 mb-4">
+                            Voulez-vous créer une nouvelle page pour ajouter cet élément ?
                         </p>
-                    </div>
-
-                    <!-- Signature (uniquement sur la dernière page) v-if="currentPage === totalPages" -->
-                    <div class="mt-4 pt-3 border-t border-gray-200 text-right">
-                        <p class="text-xs italic text-gray-500 mb-1">Signature du Pharmacien / Vendeur</p>
-                        <div class="inline-block w-40 h-12 border border-gray-300 rounded print:border-none"></div>
+                        <div class="flex gap-3 justify-center mt-6">
+                            <button @click="cancelAddItem"
+                                class="flex-1 text-sm px-4 py-2 bg-gray-500 text-white hover:bg-gray-600 !rounded-button font-medium whitespace-nowrap">
+                                Annuler
+                            </button>
+                            <button @click="confirmAddItem"
+                                class="flex-1 text-sm px-4 py-2 bg-green-500 text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap">
+                                Continuer
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Saut de page pour l'impression -->
-            <div v-if="currentPage < totalPages" class="page-break print:hidden"></div>
+            <!-- Affichage de la page courante -->
+            <div v-for="page in [currentPage]" :key="page">
+                <!--  justify-between -->
+                <div class="sheet-a5 p-5 relative flex flex-col justify-between print-colors-fix">
+                    <div>
+                        <div class="mb-12 no-print"></div>
+                        <!-- En-tête (identique sur toutes les pages) -->
+                        <div class="flex justify-between items-start pb-2 mb-4 font-sans">
+                            <div class="w-2/3">
+                                <h1 class="text-sm font-bold text-medical-blue uppercase tracking-wide leading-tight">
+                                    {{ cabinet.nom }}
+                                </h1>
+                                <p class="text-sm font-medium text-gray-600 leading-tight f-normal">
+                                    {{ cabinet.titre }}
+                                </p>
+                                <div class="text-[11px] text-gray-500 leading-snug mt-1">
+                                    <p class="font-bold text-medical-blue inline mr-3">
+                                        {{ cabinet.centre }}
+                                    </p>
+                                    <span class="inline f-normal">{{ cabinet.adresse }}</span>
+                                    <p class="mt-[2px] f-normal">{{ cabinet.contact }}</p>
+                                    <p class="mt-[2px] text-[9px] f-normal">{{ cabinet.immat }}</p>
+                                </div>
+                            </div>
+
+                            <div class="w-1/3 text-right pt-1 text-sm">
+                                <h2 class="font-extrabold text-medical-blue text-sm uppercase leading-none mb-1">
+                                    <!-- {{ showMedicaments ? 'FACTURE MÉDICAMENTS' : 'FACTURE EXAMENS' }} -->
+                                    FACTURE
+                                </h2>
+                                <p class="text-[10px] text-gray-600 leading-tight">
+                                    <span class="f-normal">Réf. :</span>
+                                    <span class="editable-field" contenteditable="true" @blur="updateFactureRef"
+                                        @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'factureRef')"
+                                        @input="preventVueUpdate($event)" ref="factureRefField">
+                                        {{ factureRef }}
+                                    </span>
+                                </p>
+                                <div class="text-[10px] text-gray-600 leading-tight mt-1">
+                                    <span class="f-normal">{{ cabinet.ville }}, le</span>
+                                    <span class="editable-field" contenteditable="true" @blur="updateCurrentDate"
+                                        @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'currentDate')"
+                                        @input="preventVueUpdate($event)" ref="currentDateField">
+                                        {{ currentDate }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Numéro de page et type de facture -->
+                        <div class="absolute top-5 right-5 text-[9px] text-gray-400 font-medium">
+                            {{ showMedicaments ? 'Médicaments' : 'Examens' }} - Page {{ currentPage }}/{{ totalPages }}
+                        </div>
+
+                        <!-- Informations patient (uniquement sur la première page) -->
+                        <div v-if="currentPage === 1"
+                            class="bg-medical-gray rounded-md p-2.5 mb-4 print:bg-transparent print:p-0 print:mb-3">
+                            <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-snug">
+                                <div class="flex-1 min-w-[180px]">
+                                    <span class="font-sans font-bold text-medical-blue inline-block">Client :</span>
+                                    <span class="editable-field font-bold text-base" contenteditable="true"
+                                        @blur="updatePatientNom" @keydown.enter="saveAndBlur($event)"
+                                        @focus="handleFocus($event, 'patientNom')" @input="preventVueUpdate($event)"
+                                        ref="patientNomField">
+                                        {{ patient.nom }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="font-sans font-bold text-medical-blue">Âge :</span>
+                                    <span class="editable-field" contenteditable="true" @blur="updatePatientAge"
+                                        @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'patientAge')"
+                                        @input="preventVueUpdate($event)" ref="patientAgeField">
+                                        {{ patient.age }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="font-sans font-bold text-medical-blue">Dossier :</span>
+                                    <span class="editable-field" contenteditable="true" @blur="updatePatientDossier"
+                                        @keydown.enter="saveAndBlur($event)"
+                                        @focus="handleFocus($event, 'patientDossier')" @input="preventVueUpdate($event)"
+                                        ref="patientDossierField">
+                                        {{ patient.dossier }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Liste des articles ou examens selon le type sélectionné -->
+                        <div class="mb-4">
+                            <!-- SECTION MÉDICAMENTS -->
+                            <div v-if="showMedicaments">
+                                <div v-if="pagedMedicaments.length > 0"
+                                    class="flex font-sans text-xs font-bold text-medical-blue border-b-2 border-medical-blue py-1 uppercase">
+                                    <div class="w-4/5 pl-1 f-header">Désignation</div>
+                                    <div class="w-1/5 text-center f-header">Qté</div>
+                                    <div class="w-1/5 numeric-col pr-1 f-header">P.U</div>
+                                    <div class="w-1/5 numeric-col pr-1 f-header">Total HT</div>
+                                </div>
+                                <div class="space-y-0.5">
+                                    <div v-for="(article, index) in pagedMedicaments"
+                                        :key="'article-' + getArticleIndex(index)"
+                                        class="flex text-xs border-b border-gray-100 items-center group table-field">
+                                        <div class="w-4/5 pr-2 pl-1 flex items-center min-w-0">
+                                            <span
+                                                class="editable-field font-medium text-medical-red truncate-ellipsis single-line"
+                                                contenteditable="true"
+                                                @blur="(e) => updateArticleDescription(getArticleIndex(index), e)"
+                                                @keydown.enter="saveAndBlur($event)"
+                                                @focus="(e) => handleArticleFocus(e, getArticleIndex(index), 'description')"
+                                                @input="preventVueUpdate($event)"
+                                                :ref="el => setArticleFieldRef(el, 'description', getArticleIndex(index), 'articles')"
+                                                :title="article.description">
+                                                {{ article.description }}
+                                            </span>
+                                            <button @click="removeArticle(getArticleIndex(index), 'articles')"
+                                                class="no-print text-red-400 hover:text-red-600 font-bold px-2 text-lg transition-opacity ml-1 opacity-0 group-hover:opacity-100 align-text-bottom flex-shrink-0">×</button>
+                                        </div>
+                                        <div class="w-1/5 text-center">
+                                            <span class="editable-field text-gray-700" contenteditable="true"
+                                                @blur="(e) => updateArticleQuantity(getArticleIndex(index), e)"
+                                                @keydown.enter="saveAndBlur($event)"
+                                                @focus="(e) => handleArticleFocus(e, getArticleIndex(index), 'quantity')"
+                                                @input="preventVueUpdate($event)"
+                                                :ref="el => setArticleFieldRef(el, 'quantity', getArticleIndex(index), 'articles')">
+                                                {{ article.quantity }}
+                                            </span>
+                                        </div>
+                                        <div class="w-1/5 numeric-col pr-1">
+                                            <span class="editable-field text-gray-700" contenteditable="true"
+                                                @blur="(e) => updateArticlePrice(getArticleIndex(index), e)"
+                                                @keydown.enter="saveAndBlur($event)"
+                                                @focus="(e) => handleArticleFocus(e, getArticleIndex(index), 'price')"
+                                                @input="preventVueUpdate($event)"
+                                                :ref="el => setArticleFieldRef(el, 'price', getArticleIndex(index), 'articles')">
+                                                {{ formatCurrencyDisplay(article.unitPrice) }}
+                                            </span>
+                                        </div>
+                                        <div class="w-1/5 numeric-col pr-1 font-bold">
+                                            <span class="item-total">{{ formatCurrency(article.quantity *
+                                                article.unitPrice,
+                                                false) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Message si page vide (après suppression) -->
+                                <div v-if="pagedMedicaments.length === 0 && currentPage <= totalPages && articles.length > 0"
+                                    class="text-center py-8 text-gray-400 italic">
+                                    <i class="ri-medicine-bottle-line text-3xl mb-2"></i>
+                                    <p>Page vide - Retour à la page précédente...</p>
+                                </div>
+
+                                <!-- Message si aucun médicament du tout -->
+                                <div v-if="articles.length === 0 && currentPage === 1"
+                                    class="text-center py-8 text-gray-400 italic">
+                                    <i class="ri-medicine-bottle-line text-3xl mb-2"></i>
+                                    <p>Aucun médicament dans cette facture</p>
+                                </div>
+                            </div>
+
+                            <!-- SECTION EXAMENS -->
+                            <div v-if="!showMedicaments">
+                                <div v-if="pagedExamens.length > 0"
+                                    class="flex font-sans text-xs font-bold text-medical-blue border-b-2 border-medical-blue py-1 uppercase">
+                                    <div class="w-3/5 pl-1 f-header">Désignation</div>
+                                    <div class="w-1/5 text-center f-header">Qté</div>
+                                    <div class="w-2/5 numeric-col pr-1 f-header">Prix Unitaire</div>
+                                    <div class="w-2/5 numeric-col pr-1 f-header">Total HT</div>
+                                </div>
+
+                                <div class="space-y-0.5">
+                                    <div v-for="(examen, index) in pagedExamens"
+                                        :key="'examen-' + getExamenIndex(index)"
+                                        class="flex text-xs border-b border-gray-100 items-center group table-field">
+                                        <div class="w-3/5 pr-2 pl-1 flex items-center">
+                                            <span class="editable-field font-medium text-medical-blue"
+                                                contenteditable="true"
+                                                @blur="(e) => updateExamenDescription(getExamenIndex(index), e)"
+                                                @keydown.enter="saveAndBlur($event)"
+                                                @focus="(e) => handleExamenFocus(e, getExamenIndex(index), 'description')"
+                                                @input="preventVueUpdate($event)"
+                                                :ref="el => setExamenFieldRef(el, 'description', getExamenIndex(index))">
+                                                {{ examen.description }}
+                                            </span>
+                                            <button @click="removeExamen(getExamenIndex(index))"
+                                                class="no-print text-red-400 hover:text-red-600 font-bold px-2 text-lg transition-opacity ml-1 opacity-0 group-hover:opacity-100 align-text-bottom">×</button>
+                                        </div>
+                                        <div class="w-1/5 text-center">
+                                            <span class="text-gray-700">1</span>
+                                        </div>
+                                        <div class="w-2/5 numeric-col pr-1">
+                                            <span class="editable-field text-gray-700" contenteditable="true"
+                                                @blur="(e) => updateExamenPrice(getExamenIndex(index), e)"
+                                                @keydown.enter="saveAndBlur($event)"
+                                                @focus="(e) => handleExamenFocus(e, getExamenIndex(index), 'price')"
+                                                @input="preventVueUpdate($event)"
+                                                :ref="el => setExamenFieldRef(el, 'price', getExamenIndex(index))">
+                                                {{ formatCurrencyDisplay(examen.price) }}
+                                            </span>
+                                        </div>
+                                        <div class="w-2/5 numeric-col pr-1 font-bold">
+                                            <span class="item-total">{{ formatCurrency(examen.price, false) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Message si page vide (après suppression) -->
+                                <div v-if="pagedExamens.length === 0 && currentPage <= totalPages && examens.length > 0"
+                                    class="text-center py-8 text-gray-400 italic">
+                                    <i class="ri-stethoscope-line text-3xl mb-2"></i>
+                                    <p>Page vide - Retour à la page précédente...</p>
+                                </div>
+
+                                <!-- Message si aucun examen du tout -->
+                                <div v-if="examens.length === 0 && currentPage === 1"
+                                    class="text-center py-8 text-gray-400 italic">
+                                    <i class="ri-stethoscope-line text-3xl mb-2"></i>
+                                    <p>Aucun examen dans cette facture</p>
+                                </div>
+                            </div>
+
+                            <!-- Boutons d'ajout (uniquement sur la dernière page) -->
+                            <div v-if="currentPage === totalPages" class="mt-2 no-print">
+                                <button v-if="showMedicaments" @click="addArticleWithPageCheck"
+                                    class="flex items-center text-xs font-bold text-medical-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
+                                    <i class="ri-add-line mr-1"></i> Ajouter un médicament
+                                </button>
+                                <button v-if="!showMedicaments" @click="addExamenWithPageCheck"
+                                    class="flex items-center text-xs font-bold text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 px-3 py-1 rounded transition-colors">
+                                    <i class="ri-add-line mr-1"></i> Ajouter un examen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PIED DE PAGE POUR CHAQUE PAGE -->
+                    <div> <!-- class="mt-6 pt-2 border-t border-gray-200" -->
+                        <!-- Totaux pour la page courante -->
+                        <div class="flex justify-end">
+                            <div class="w-2/3 text-xs">
+                                <!-- Total HT de la page -->
+                                <div v-if="pageSubTotal > 0" class="flex justify-between py-1">
+                                    <span class="font-medium text-gray-700">Total HT Page :</span>
+                                    <span class="font-bold numeric-col">{{ formatCurrency(pageSubTotal) }}</span>
+                                </div>
+
+                                <!-- TVA pour la page courante -->
+                                <div v-if="pageSubTotal > 0" class="flex justify-between py-1 border-t border-gray-300"
+                                    :class="{ 'no-print': tvaRate == 0 }">
+                                    <span class="font-medium text-gray-700">TVA (
+                                        <span class="editable-field" contenteditable="true" @blur="updateTvaRate"
+                                            @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'tvaRate')"
+                                            @input="preventVueUpdate($event)" ref="tvaRateField">
+                                            {{ tvaRate }}%
+                                        </span>
+                                        ) Page :
+                                    </span>
+                                    <span class="font-bold numeric-col">{{ formatCurrency(pageTvaAmount) }}</span>
+                                </div>
+
+                                <!-- Montant TTC de la page -->
+                                <div v-if="pageSubTotal > 0"
+                                    class="flex justify-between py-1 border-y-2 border-medical-blue mt-1">
+                                    <span class="font-bold text-medical-blue text-xs uppercase">Total Page TTC :</span>
+                                    <span class="font-extrabold text-medical-blue text-xs numeric-col">{{
+                                        formatCurrency(pageGrandTotal) }}</span>
+                                </div>
+
+                                <!-- Mode de paiement (uniquement sur la dernière page) v-if="currentPage === totalPages" -->
+                                <div class="text-[10px] mt-2 text-gray-500 text-right">
+                                    Mode de Paiement :
+                                    <span class="editable-field text-gray-700" contenteditable="true"
+                                        @blur="updatePaymentMethod" @keydown.enter="saveAndBlur($event)"
+                                        @focus="handleFocus($event, 'paymentMethod')" @input="preventVueUpdate($event)"
+                                        ref="paymentMethodField">
+                                        {{ paymentMethod }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes et conditions (uniquement sur la dernière page) v-if="currentPage === totalPages" -->
+                        <div class="mt-4 border-t border-dashed border-gray-300 pt-2">
+                            <h3 class="font-sans text-xs font-bold text-medical-blue uppercase mb-1">Notes et Conditions
+                            </h3>
+                            <p class="editable-field text-xs text-gray-700 leading-snug" contenteditable="true"
+                                @blur="updateInvoiceNotes" @keydown.enter="saveAndBlur($event, true)"
+                                @focus="handleFocus($event, 'invoiceNotes')" @input="preventVueUpdate($event)"
+                                ref="invoiceNotesField">
+                                {{ invoiceNotes }}
+                            </p>
+                        </div>
+
+                        <!-- Signature (uniquement sur la dernière page) v-if="currentPage === totalPages" -->
+                        <div class="mt-4 pt-3 border-t border-gray-200 text-right">
+                            <p class="text-xs italic text-gray-500 mb-1">Signature du Pharmacien / Vendeur</p>
+                            <div class="inline-block w-40 h-12 border border-gray-300 rounded print:border-none"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Saut de page pour l'impression -->
+                <div v-if="currentPage < totalPages" class="page-break print:hidden"></div>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
 import { useRoute, useRouter } from 'vue-router';
-import { useOrderStore } from '../stores/index.js';
+import { useOrderStore, useInvoiceStore } from '../stores/index.js';
 import { onMounted, ref, computed, watch, nextTick } from 'vue';
+import { toast } from 'vue-sonner';
+import PageLoader from '../components/PageLoader.vue';
 
 export default {
     name: "Facture",
+    components: {
+        PageLoader
+    },
     setup() {
         const route = useRoute()
         const orderStore = useOrderStore()
         const slug = route.query.key
+
+        const invoiceId = ref(route.query.invoice || null) // Récupérer l'ID facture si présent
+        const isEditingInvoice = ref(false) // Indique si on modifie une facture existante
+
         const orderToShow = ref(null);
         const router = useRouter()
 
@@ -685,23 +720,71 @@ export default {
         // ============== INITIALISATION ==============
 
         onMounted(async () => {
-            await fetchOrders();
-            if (orderStore.orders.rows && orderStore.orders.rows.length > 0) {
-                orderToShow.value = orderStore.orders.rows[0];
-                updateFactureData();
 
-                // Afficher les médicaments par défaut s'il y en a, sinon les examens
-                if (articles.value.length > 0) {
-                    showMedicaments.value = true;
-                } else if (examens.value.length > 0) {
-                    showMedicaments.value = false;
+            // Vérifier si on modifie une facture existante
+            if (invoiceId.value) {
+                try {
+                    await invoiceStore.fetchInvoice(invoiceId.value, {});
+                    if (invoiceStore.error) {
+                        toast.error("Une erreur est survenu lors du chargement")
+                        return;
+                    }
+                    loadExistingInvoice(invoiceStore.invoice)
+                    isEditingInvoice.value = true;
+                } catch (error) {
+                    console.error(error)
+                }
+
+
+            } else {
+                // Charger depuis la commande
+                await fetchOrders();
+                if (orderStore.orders.rows && orderStore.orders.rows.length > 0) {
+                    orderToShow.value = orderStore.orders.rows[0];
+                    updateFactureData();
+
+                    // Afficher les médicaments par défaut s'il y en a, sinon les examens
+                    if (articles.value.length > 0) {
+                        showMedicaments.value = true;
+                    } else if (examens.value.length > 0) {
+                        showMedicaments.value = false;
+                    }
                 }
             }
+
+
 
             // Vérifier la taille d'écran
             checkMobile();
             window.addEventListener('resize', checkMobile);
         });
+
+        const loadExistingInvoice = (data) => {
+
+            // Restaurer toutes les données de la facture
+            factureRef.value = data.field_reference_facture || "";
+            currentDate.value = data.field_date_facture || new Date().toLocaleDateString('fr-FR');
+
+            patient.value = {
+                nom: data.field_patient_nom || "",
+                age: data.field_patient_age || "",
+                dossier: data.field_patient_dossier || ""
+            };
+
+            articles.value = data.field_facture_medicaments ? JSON.parse(data.field_facture_medicaments) : [];
+            examens.value = data.field_facture_examens ? JSON.parse(data.field_facture_examens) : [];
+
+            tvaRate.value = data.field_tva_facture || 20;
+            paymentMethod.value = data.field_mode_paiement || "Espèces / Chèque";
+            invoiceNotes.value = data.field_notes || "Paiement dû à réception de la facture. Les médicaments non utilisés ne sont pas remboursables.";
+
+            // Créer un objet orderToShow factice pour la commande associée
+            if (data.field_commande) {
+                orderToShow.value = { nid: data.field_commande };
+            }
+
+            console.log('Facture chargée avec succès');
+        };
 
         // ============== GESTION DES CHAMPS ÉDITABLES ==============
 
@@ -1182,6 +1265,53 @@ export default {
             }
         });
 
+        // save facture in database
+        const invoiceStore = useInvoiceStore();
+        const isLoading = ref(false);
+        const saveInvoice = async () => {
+            isLoading.value = true;
+            try {
+                const payload = {
+                    entity_type: "node",
+                    bundle: "facture",
+                    status: 1,
+                    field_commande: orderToShow.value?.nid || "",
+                    field_date_facture: currentDate.value,
+                    field_facture_examens: JSON.stringify(examens.value),
+                    field_mode_paiement: paymentMethod.value,
+                    field_facture_medicaments: JSON.stringify(articles.value),
+                    field_notes: invoiceNotes.value,
+                    field_patient_dossier: patient.value.dossier,
+                    field_patient_nom: patient.value.nom,
+                    field_patient_age: patient.value.age,
+                    field_reference_facture: factureRef.value,
+                    field_tva_facture: tvaRate.value,
+                };
+
+                // Si c'est une création, ajouter le title avec la date
+                if (!isEditingInvoice.value || !invoiceId.value) {
+                    payload.title = `facture-${Date.now()}`;
+                }
+
+                // Si c'est une modification, ajouter le nid dans le payload
+                if (isEditingInvoice.value && invoiceId.value) {
+                    payload.nid = invoiceId.value;
+                }
+
+                await invoiceStore.saveInvoiceData(payload)
+                if (invoiceStore.error) {
+                    toast.error("Une erreur est survenue lors de l'enregistrement du facture.")
+                    return;
+                }
+
+                toast.success("Facture enregistré avec succès")
+            } catch (error) {
+                console.log('erreur: ', error)
+            } finally {
+                isLoading.value = false;
+            }
+        }
+
         // ============== RETURN ==============
 
         return {
@@ -1263,7 +1393,12 @@ export default {
 
             // Fonction de navigation
             smartBack,
-            isMobile
+            isMobile,
+
+            // facture save
+            saveInvoice,
+            isEditingInvoice,
+            isLoading,
         };
     }
 }

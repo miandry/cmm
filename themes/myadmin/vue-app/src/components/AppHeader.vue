@@ -6,10 +6,33 @@
           {{ siteTitle }}
         </h1>
         <nav class="hidden lg:flex space-x-1">
-          <router-link v-for="menuItem in menuItems" :key="menuItem.id" :to="menuItem.path" class="menu-item"
-            :class="getMenuItemClass(menuItem.path)">
-            {{ menuItem.name }}
-          </router-link>
+          <template v-for="menuItem in menuItems" :key="menuItem.id">
+            <!-- Dropdown Menu -->
+            <div v-if="menuItem.isDropdown" class="relative" :ref="'dropdown-' + menuItem.id">
+              <button @click="toggleDropdown(menuItem.id)" :class="getMenuItemClass(menuItem.path)"
+                class="flex items-center gap-2">
+                {{ menuItem.name }}
+                <i class="fas fa-chevron-down text-xs" :class="{ 'rotate-180': activeDropdown === menuItem.id }"></i>
+              </button>
+
+              <!-- Dropdown Content -->
+              <div v-if="activeDropdown === menuItem.id"
+                class="absolute top-full left-0 mt-1 bg-white shadow-lg border rounded-md py-2 z-50 min-w-[200px]">
+                <router-link v-for="dropdownItem in menuItem.dropdownItems" :key="dropdownItem.path"
+                  :to="dropdownItem.path"
+                  class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                  @click="closeDropdown">
+                  <i :class="dropdownItem.icon" class="w-4"></i>
+                  {{ dropdownItem.name }}
+                </router-link>
+              </div>
+            </div>
+
+            <!-- Regular Menu Item -->
+            <router-link v-else :to="menuItem.path" class="menu-item" :class="getMenuItemClass(menuItem.path)">
+              {{ menuItem.name }}
+            </router-link>
+          </template>
         </nav>
       </div>
       <div v-if="authStore.isAuthenticated" class="hidden md:flex items-center space-x-2 md:space-x-4">
@@ -87,6 +110,7 @@ export default {
   data() {
     return {
       showUserMenu: false,
+      activeDropdown: null, // Pour suivre quel dropdown est ouvert
     };
   },
 
@@ -124,7 +148,6 @@ export default {
       const userRoles = this.roles;
 
       return menu.filter(item => {
-
         // menu public
         if (!item.roles || item.roles.length === 0) {
           return true;
@@ -134,16 +157,29 @@ export default {
         return item.roles.some(role =>
           userRoles.includes(role)
         );
+      }).map(item => {
+        // Si c'est un dropdown, filtrer aussi les items du dropdown
+        if (item.isDropdown && item.dropdownItems) {
+          return {
+            ...item,
+            dropdownItems: item.dropdownItems.filter(dropdownItem =>
+              !dropdownItem.roles || dropdownItem.roles.some(role => userRoles.includes(role))
+            )
+          };
+        }
+        return item;
       });
     }
   },
 
   mounted() {
     document.addEventListener("click", this.closeMenuOnClickOutside);
+    document.addEventListener("click", this.closeDropdownOnClickOutside);
   },
 
   beforeUnmount() {
     document.removeEventListener("click", this.closeMenuOnClickOutside);
+    document.removeEventListener("click", this.closeDropdownOnClickOutside);
   },
 
   methods: {
@@ -184,12 +220,33 @@ export default {
       }
     },
 
+    // Nouveaux méthodes pour le dropdown
+    toggleDropdown(menuId) {
+      if (this.activeDropdown === menuId) {
+        this.activeDropdown = null;
+      } else {
+        this.activeDropdown = menuId;
+      }
+    },
+
+    closeDropdown() {
+      this.activeDropdown = null;
+    },
+
+    closeDropdownOnClickOutside(event) {
+      if (this.activeDropdown !== null) {
+        // Vérifier si le clic est en dehors de tous les dropdowns
+        const dropdownElement = this.$refs['dropdown-' + this.activeDropdown];
+        if (dropdownElement && !dropdownElement[0]?.contains(event.target)) {
+          this.activeDropdown = null;
+        }
+      }
+    },
+
     async handleLogout() {
       try {
-        this.showUserMenu = false; // Fermer le menu
-        // Appeler logout avec le router pour la redirection
+        this.showUserMenu = false;
         await this.authStore.logout('/login', this.$router);
-        
       } catch (error) {
         console.error("Logout failed:", error);
         toast.error("Une erreur est survenue lors de la déconnexion. Veuillez réessayer.");
@@ -198,7 +255,6 @@ export default {
   },
 };
 </script>
-
 
 <style scoped>
 .app-header {
@@ -242,6 +298,29 @@ export default {
 
 .menu-toggle i {
   font-size: 1.25rem;
+}
+
+/* Rotation de la flèche */
+.rotate-180 {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
+
+/* Animation du dropdown */
+.animate-fade {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Hide header on large screens (menu is always visible in sidebar) */

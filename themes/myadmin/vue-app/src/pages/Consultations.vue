@@ -5,6 +5,19 @@
             <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-4">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Consultation en cours</h3>
                 <!-- consulatation form -->
+                <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="ri-user-heart-line text-green-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-900">Dr. {{ userStore.users.rows[0].name }}</div>
+                            <div class="text-sm text-gray-600">{{
+                                getSpecialtyLabel(userStore.users.rows[0].field_specialite) }}</div>
+                        </div>
+                    </div>
+                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                </div>
                 <GeneralForm ref="generalFormRef" :canChange="canChange" />
             </div>
             <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-4 hidden">
@@ -119,13 +132,14 @@ import ExamenClinique from '../components/Consultations/ExamenClinique.vue'
 import Patient from '../components/Consultations/Patient.vue'
 import PrescriptionEtSuivi from '../components/Consultations/PrescriptionEtSuivi.vue'
 import Historique from '../components/Consultations/Historique.vue'
-import { useClientStore, useConsultationStore, useExamenStore, useOrderStore } from '../stores/index.js';
+import { useAppointmentStore, useClientStore, useConsultationStore, useExamenStore, useOrderStore, useUserStore } from '../stores/index.js';
 import PageLoader from '../components/PageLoader.vue'
 import { ref, onMounted, computed, nextTick, onBeforeUnmount } from 'vue'
 import { toast } from 'vue-sonner'
 import { useRouter, useRoute } from 'vue-router'
 import { watch } from 'vue'
 import AllHistory from '../components/Consultations/AllHistory.vue'
+import { getSpecialtyLabel } from '../utils/specialties.js'
 
 export default {
     name: 'Consultations',
@@ -146,6 +160,8 @@ export default {
         const generalFormRef = ref(null);
         const examenCliniqueRef = ref(null);
         const patienStore = useClientStore();
+        const appointmentStore = useAppointmentStore()
+        const userStore = useUserStore();
         const router = useRouter();
         const route = useRoute();
         const canChange = ref(true);
@@ -159,6 +175,16 @@ export default {
 
         const handleConsultationSubmit = async (withOrder, ordonnance = null) => {
             try {
+
+                // Vérification que l'utilisateur connecté est un docteur
+                const userRoles = window.APP_DATA?.roles || [];
+                const isDoctor = userRoles.includes('docteur');
+
+                if (!isDoctor) {
+                    toast.error("Seul un docteur peut créer ou modifier une consultation !");
+                    return;
+                }
+
                 loader.value = true
                 if (
                     isEditMode.value &&
@@ -242,6 +268,7 @@ export default {
                     bundle: "consultations",
                     title: "consult-" + Date.now(),
                     status: 1,
+                    field_docteur: window.APP_DATA.user.id,
                     field_client: patienStore.client.nid,
                     // generalFormData
                     field_motif: generalFormData.consultationMotif,
@@ -456,6 +483,14 @@ export default {
                 loadLastconsultation(consultationToLoad);
             }
 
+            // rendez vous
+            const appointmentId = route.query.appointment;
+            if (appointmentId) {
+                await appointmentStore.fetchAppointment(appointmentId);
+                await patienStore.fetchClient(appointmentStore.appointment.field_patient.nid);
+            }
+
+
             // patient preselectionner et edit
             const clientId = route.query.client;
             if (clientId) {
@@ -464,8 +499,25 @@ export default {
                 await patienStore.fetchClient(clientId);
             }
 
+            // docteur
+            const docteurId = window.APP_DATA.user.id;
+            if (docteurId) {
+                const doctorQueryOptions = {
+                    fields: ['uid', 'name', 'field_specialite', 'status'],
+                    sort: { val: 'name', op: 'asc' },
+                    filters: {
+                        roles: { val: "docteur", op: "=" },
+                        status: { val: 1, op: "=" },
+                        status: { uid: docteurId, op: "=" },
+                    },
+                    pager: 0,
+                    offset: 1
+                };
+                await userStore.fetchUsers(doctorQueryOptions);
+            }
+
             // reset form si c'est add
-            if (!isEditMode.value && !clientId) {
+            if (!isEditMode.value && !clientId && !appointmentId) {
                 prescriptionEtSuivi.value.resetAll();
                 patienStore.resetClient()
                 consultationsStore.consultationsReset();
@@ -524,6 +576,8 @@ export default {
             isHistoryModalOpen,
             clientId,
             consultationReference,
+            userStore,
+            getSpecialtyLabel,
         };
     }
 }

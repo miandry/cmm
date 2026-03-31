@@ -71,9 +71,14 @@
               </td>
               <td class="px-4 py-3 text-sm text-gray-700">{{ displayEmail(user) }}</td>
               <td class="px-4 py-3">
-                <span v-for="role in user.roles" :key="role" :class="getRoleBadgeClass(role)"
+                <span :class="getRoleBadgeClass(user.roles[0])"
                   class="inline-block px-2 py-1 text-xs font-medium rounded-full mr-1">
-                  {{ getRoleLabel(role) }}
+                  {{ getRoleLabel(user.roles[0]) }}
+                </span>
+                <br>
+                <span v-if="getSpecialtyLabel(user.field_specialite)"
+                  class="bg-orange-100 text-orange-700 inline-block px-2 py-1 text-xs font-medium rounded-full mr-1">
+                  {{ getSpecialtyLabel(user.field_specialite) }}
                 </span>
               </td>
               <td class="px-4 py-3">
@@ -173,25 +178,38 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Rôles <span
+              <label class="block text-sm font-medium text-gray-700 mb-2">Rôle <span
                   class="text-red-500">*</span></label>
               <div class="space-y-2">
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" value="gerant" v-model="formData.roles"
-                    class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                  <input type="radio" value="gerant" v-model="formData.role"
+                    class="w-4 h-4 text-primary border-gray-300 focus:ring-primary">
                   <span class="text-sm text-gray-700">Gérant</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" value="docteur" v-model="formData.roles"
-                    class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                  <input type="radio" value="docteur" v-model="formData.role"
+                    class="w-4 h-4 text-primary border-gray-300 focus:ring-primary">
                   <span class="text-sm text-gray-700">Docteur</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" value="caissier" v-model="formData.roles"
-                    class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                  <input type="radio" value="caissier" v-model="formData.role"
+                    class="w-4 h-4 text-primary border-gray-300 focus:ring-primary">
                   <span class="text-sm text-gray-700">Caissier</span>
                 </label>
               </div>
+            </div>
+
+            <!-- Spécialité Select - s'affiche uniquement si le rôle est docteur -->
+            <div v-if="formData.role === 'docteur'">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Spécialité <span
+                  class="text-red-500">*</span></label>
+              <select v-model="formData.specialty"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                <option value="">Sélectionnez une spécialité</option>
+                <option v-for="specialty in specialties" :key="specialty.id" :value="specialty.id">
+                  {{ specialty.label }}
+                </option>
+              </select>
             </div>
 
             <div>
@@ -258,6 +276,7 @@ import axios from 'axios';
 import { useUserStore } from '../stores/user/user.js';
 import { debounce } from 'lodash';
 import { toast } from 'vue-sonner';
+import { specialties, getSpecialtyLabel as getSpecialtyLabelUtil } from '../utils/specialties.js';
 
 export default {
   name: 'UserManager',
@@ -284,6 +303,7 @@ export default {
         'access',
         'mail',
         'roles',
+        'field_specialite',
       ],
       sort: { val: 'uid', op: 'desc' },
       filters: {
@@ -302,7 +322,7 @@ export default {
       },
       pager: 0,
       offset: 20,
-    })
+    });
 
     const searchTerm = ref('');
     const statusFilter = ref(''); // '' = all, '1' active, '0' inactive
@@ -353,22 +373,31 @@ export default {
       return pages;
     });
 
-
     const updateFilter = (key, value, op = "=") => {
       if (value === null || value === undefined || value === '') {
         delete queryOptions.value.filters[key];
       } else {
         queryOptions.value.filters[key] = { val: value, op };
       }
-    }
+    };
 
     const formData = ref({
       name: '',
       mail: '',
       pass: '',
-      // default role selection (useful when opening create modal without resetting)
-      roles: ['caissier'],
+      role: 'caissier',
+      specialty: '',
       status: 1
+    });
+
+    // Watch pour le changement de rôle
+    watch(() => formData.value.role, () => {
+      // Si le nouveau rôle n'est pas docteur, on met "_none"
+      if (formData.value.role !== 'docteur') {
+        formData.value.specialty = '_none';
+      } else if (formData.value.specialty === '_none') {
+        formData.value.specialty = '';
+      }
     });
 
     const fetchUsers = async () => {
@@ -382,14 +411,19 @@ export default {
       }
     };
 
+    // Utiliser la fonction d'utilitaire pour obtenir le label de spécialité
+    const getSpecialtyLabel = (specialtyId) => {
+      return getSpecialtyLabelUtil(specialtyId);
+    };
+
     const openCreateModal = () => {
       editingUser.value = null;
       formData.value = {
         name: '',
         mail: '',
         pass: '',
-        // choose caissier by default for new users
-        roles: ['caissier'],
+        role: 'caissier',
+        specialty: '',
         status: true
       };
       error.value = null;
@@ -403,7 +437,8 @@ export default {
         name: user.name,
         mail: getEditableEmail(user),
         pass: '',
-        roles: user.roles || [],
+        role: user.roles && user.roles.length > 0 ? user.roles[0] : 'caissier',
+        specialty: user.field_specialite || '',
         status: user.status === '1'
       };
       error.value = null;
@@ -427,9 +462,16 @@ export default {
         return;
       }
 
-      // simple front–end validation for required fields
-      if (!formData.value.roles || formData.value.roles.length === 0) {
-        error.value = 'Veuillez sélectionner au moins un rôle.';
+      // validation du rôle
+      if (!formData.value.role) {
+        error.value = 'Veuillez sélectionner un rôle.';
+        saving.value = false;
+        return;
+      }
+
+      // validation de la spécialité si le rôle est docteur
+      if (formData.value.role === 'docteur' && (!formData.value.specialty || formData.value.specialty === '_none')) {
+        error.value = 'Veuillez sélectionner une spécialité.';
         saving.value = false;
         return;
       }
@@ -439,9 +481,10 @@ export default {
           name: formData.value.name,
           mail: formData.value.mail?.trim()
             ? formData.value.mail
-            : `clinicuser${formData.value.name}@gmail.com`,
-          roles: formData.value.roles,
-          status: formData.value.status ? '1' : '0'
+            : `clinicuser${formData.value.name.replace(/\s+/g, '')}@gmail.com`,
+          roles: [formData.value.role],
+          status: formData.value.status ? '1' : '0',
+          field_specialite: formData.value.role === 'docteur' ? formData.value.specialty : '_none',
         };
 
         if (formData.value.pass) {
@@ -461,6 +504,7 @@ export default {
                 mail: payload.mail,
                 roles: payload.roles,
                 status: payload.status,
+                field_specialite: payload.field_specialite,
               };
             }
             toast.success('Utilisateur mis à jour avec succès.');
@@ -504,9 +548,11 @@ export default {
         await fetchUsers();
         showDeleteModal.value = false;
         userToDelete.value = null;
+        toast.success('Utilisateur supprimé avec succès.');
       } catch (err) {
         console.error('Error deleting user:', err);
         error.value = err.response?.data?.message || 'Erreur lors de la suppression';
+        toast.error('Erreur lors de la suppression de l\'utilisateur.');
       } finally {
         deleting.value = false;
       }
@@ -614,6 +660,7 @@ export default {
       deleting,
       error,
       formData,
+      specialties, // Utiliser les spécialités importées
       openCreateModal,
       openEditModal,
       closeModal,
@@ -636,6 +683,7 @@ export default {
       previousPage,
       displayEmail,
       getEditableEmail,
+      getSpecialtyLabel, // Utiliser la fonction importée
     };
   }
 }
