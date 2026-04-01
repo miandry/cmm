@@ -23,6 +23,7 @@ import UserProfile from "./pages/UserProfile.vue";
 import AssistBoard from "./pages/AssistBoard.vue";
 import AllAppointment from "./pages/AllAppointment.vue";
 import FactureList from "./pages/FactureList.vue";
+import ConsultationList from "./pages/ConsultationList.vue";
 
 blockZoom();
 
@@ -113,6 +114,12 @@ const routes = [
     path: "/consultations/details",
     name: "consultation.details",
     component: ConsultationDetails,
+    meta: { roles: ["docteur", "webmaster", "administrator"] },
+  },
+  {
+    path: "/mes-consultations",
+    name: "consultation.list",
+    component: ConsultationList,
     meta: { roles: ["docteur", "webmaster", "administrator"] },
   },
   {

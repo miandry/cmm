@@ -72,10 +72,9 @@
 </template>
 
 <script>
-import { onMounted, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useConsultationStore } from '../../stores/index.js';
 import { formatDate } from '../../utils/formateDate.js';
-import { toast } from 'vue-sonner';
 import { useRouter } from 'vue-router';
 import { debounce } from 'lodash';
 
