@@ -27,7 +27,7 @@
                         </div>
                         <div>
                             <div class="font-medium text-gray-900">Dr. {{ doctor.name }}</div>
-                            <div class="text-sm text-gray-600">{{ doctor.field_specialite.title ||
+                            <div class="text-sm text-gray-600">{{ doctor.field_specialite?.title ||
                                 'Spécialité non définie' }}</div>
                             <div class="text-xs mt-1"
                                 :class="doctor.status === '1' ? 'text-green-600' : 'text-gray-500'">
