@@ -81,8 +81,8 @@
                                 ]">
                                 <option value="">Sélectionner un médecin...</option>
                                 <option v-for="doctor in formattedDoctors" :key="doctor.uid" :value="doctor.uid">
-                                    {{ doctor.name }} - {{ doctor.field_specialite.title ||
-                                        doctor.field_specialite.field_specialite_medicale }}
+                                    {{ doctor.name }} - {{ doctor.field_specialite?.title ||
+                                        doctor.field_specialite?.field_specialite_medicale }}
                                 </option>
                             </select>
                             <div v-if="loadingDoctors" class="absolute right-3 top-1/2 transform -translate-y-1/2">

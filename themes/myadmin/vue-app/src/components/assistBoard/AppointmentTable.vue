@@ -138,7 +138,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">Dr. {{ app.field_medecin.name }}</div>
-                            <div class="text-sm text-yellow-700">{{ app.field_medecin.field_specialite.title }}</div>
+                            <div class="text-sm text-yellow-700">{{ app.field_medecin?.field_specialite?.title }}</div>
                         </td>
                             <!-- Colonne Paramètres avec Poids, Température et Tension -->
                         <td class="px-6 py-4 text-sm text-gray-900">
