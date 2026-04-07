@@ -27,7 +27,7 @@
                         </div>
                         <div>
                             <div class="font-medium text-gray-900">Dr. {{ doctor.name }}</div>
-                            <div class="text-sm text-gray-600">{{ getSpecialtyLabel(doctor.field_specialite) ||
+                            <div class="text-sm text-gray-600">{{ doctor.field_specialite.title ||
                                 'Spécialité non définie' }}</div>
                             <div class="text-xs mt-1"
                                 :class="doctor.status === '1' ? 'text-green-600' : 'text-gray-500'">
@@ -48,7 +48,6 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useUserStore } from '../../stores/index';
-import { getSpecialtyLabel } from '../../utils/specialties.js';
 
 export default {
     name: "Medecins",
@@ -88,6 +87,9 @@ export default {
                         roles: { val: "docteur", op: "=" },
                         status: { val: 1, op: "=" }
                     },
+                    values: {
+                        field_specialite: ['nid', 'field_specialite_medicale', 'field_montant_consultation', 'title']
+                    },
                     pager: 0,
                     offset: 100
                 };
@@ -107,7 +109,6 @@ export default {
         return {
             doctorsList,
             loadingDoctors,
-            getSpecialtyLabel
         };
     }
 }

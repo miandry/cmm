@@ -50,7 +50,7 @@ import { reactive, ref, defineExpose, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 
 import Patient from './Patient.vue';
-import { useAppointmentStore } from '../../stores/index.js';
+import { useAppointmentStore, useUserStore } from '../../stores/index.js';
 
 export default {
     name: 'GeneralForm',
@@ -65,8 +65,9 @@ export default {
     setup(props) {
         const route = useRoute();
         const appointmentStore = useAppointmentStore();
+        const userStore = useUserStore();
         const canChange = ref(props.canChange);
-        
+
         const form = reactive({
             consultationMotif: '',
             temperature: '',
@@ -168,11 +169,35 @@ export default {
             if (appointmentId) {
                 try {
                     await appointmentStore.fetchAppointment(appointmentId);
-                    if (appointmentStore.appointment?.field_montant) {
-                        form.montant = appointmentStore.appointment.field_montant;
-                    }
+
                     if (appointmentStore.appointment?.field_notes) {
                         form.consultationMotif = appointmentStore.appointment.field_notes;
+                    }
+                    if (appointmentStore.appointment?.field_tension_arterielle) {
+                        form.tension = appointmentStore.appointment.field_tension_arterielle;
+                    }
+                    if (appointmentStore.appointment?.field_poids) {
+                        form.poids = appointmentStore.appointment.field_poids;
+                    }
+                    if (appointmentStore.appointment?.field_temperature) {
+                        form.temperature = appointmentStore.appointment.field_temperature;
+                    }
+
+                    // Attendre que les données utilisateur soient chargées si nécessaire
+                    if (userStore.users.rows.length) {
+                        form.montant = userStore.users.rows[0].field_specialite.field_montant_consultation;
+                    } else {
+                        // Si pas encore chargé, attendre un court instant ou utiliser un watcher
+                        const unwatch = watch(
+                            () => userStore.users.rows,
+                            (rows) => {
+                                if (rows.length) {
+                                    form.montant = rows[0].field_specialite.field_montant_consultation;
+                                    unwatch(); // Nettoyer le watcher
+                                }
+                            },
+                            { immediate: true }
+                        );
                     }
                 } catch (error) {
                     console.error('Erreur lors du chargement du montant:', error);

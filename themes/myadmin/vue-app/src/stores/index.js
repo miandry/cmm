@@ -7,4 +7,5 @@ export * from "./stock/stock";
 export * from "./facture/facture";
 export * from "./appointment/appointment";
 export * from "./user/user";
+export * from "./specialite/specialite";
 export * from "./auth";

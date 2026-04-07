@@ -7,6 +7,20 @@
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                         <h3 class="text-lg font-semibold text-gray-900">Mes rendez-vous</h3>
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                            <!-- Filtre par statut -->
+                            <div class="relative w-full sm:w-48">
+                                <select v-model="selectedStatusFilter" @change="filterByStatus"
+                                    class="pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm w-full bg-white">
+                                    <option value="">Tous les statuts</option>
+                                    <option value="pending">En attente</option>
+                                    <option value="completed">Terminé</option>
+                                    <option value="cancelled">Annulé</option>
+                                </select>
+                                <div
+                                    class="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center">
+                                    <i class="ri-filter-line text-gray-400"></i>
+                                </div>
+                            </div>
                             <div class="relative w-full sm:w-48" ref="searchContainer">
                                 <input type="text" placeholder="Rechercher par patient..." v-model="searchKeywordClient"
                                     @input="searchByKeyword" @focus="handleFocus" @blur="handleBlur"
@@ -66,22 +80,24 @@
                             <tr>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Ref</th>
+                                    Ref
+                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Patient</th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">
-                                    Médecin</th>
+                                    Patient
+                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Notes</th>
+                                    Paramètres
+                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Prix</th>
+                                    Notes
+                                </th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">
-                                    Actions</th>
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -113,16 +129,26 @@
                                 </td>
                             </tr>
                             <!-- Liste des rendez-vous -->
-                            <tr v-else class="hover:bg-gray-50 cursor-pointer"
-                                v-for="app in appointmentStore.appointments.rows" :key="app.nid"
-                                @click="goToConsultation(app.nid)">
-                                <td class="px-6 py-4 whitespace-nowrap">
+                            <tr v-else class="hover:bg-gray-50" v-for="app in appointmentStore.appointments.rows"
+                                :key="app.nid">
+                                <!-- Colonne Ref + Statut -->
+                                <td class="px-6 py-4">
                                     <div class="text-sm font-medium text-gray-900">{{ app.title }}</div>
-                                    <div class="text-sm font-medium text-gray-500"> Le:
-                                        {{ formatDate(null, app.created, 'short') }}</div>
+                                    <div class="text-sm font-medium text-gray-500">Le: {{ formatDate(null, app.created,
+                                        'short') }}</div>
+                                    <!-- Badge de statut avec icône et couleur -->
+                                    <div class="mt-2">
+                                        <div :class="getStatusClass(app.field_app_status)"
+                                            class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium">
+                                            <i :class="getStatusIcon(app.field_app_status)" class="text-xs"></i>
+                                            <span>{{ getStatusLabel(app.field_app_status) }}</span>
+                                        </div>
+                                    </div>
                                 </td>
+
+                                    <!-- Colonne Patient -->
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ app.field_patient.title }}</div>
+                                    <div class="text-sm font-medium text-gray-900">{{ app.field_patient?.title }}</div>
                                     <div class="text-sm text-gray-500">
                                         {{ getGenderLabel(app.field_patient?.field_sexe) }}
                                         {{ app.field_patient?.field_age ? app.field_patient?.field_age + " ans" : "" }}
@@ -130,26 +156,56 @@
                                         }}
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap hidden">
-                                    <div class="text-sm text-gray-900">Dr. {{ app.field_medecin.name }}</div>
-                                    <div class="text-sm text-yellow-700">{{
-                                        getSpecialtyLabel(app.field_medecin.field_specialite) }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
-                                    app.field_notes
-                                }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{
-                                    formatPrice(app.field_montant)
-                                }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 hidden">
-                                    <button class="text-blue-600 hover:text-blue-900">
-                                        <div class="w-4 h-4 flex items-center justify-center"><i
-                                                class="ri-edit-line"></i></div>
-                                    </button>
-                                    <button class="text-red-600 hover:text-red-900">
-                                        <div class="w-4 h-4 flex items-center justify-center"><i
-                                                class="ri-delete-bin-line"></i>
+
+                                    <!-- Colonne Paramètres (Poids, Température, Tension) -->
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="space-y-1">
+                                        <div v-if="app.field_poids" class="flex items-center gap-2">
+                                            <i class="ri-weight-line text-gray-400 text-xs"></i>
+                                            <span class="text-sm">Poids: {{ app.field_poids }} kg</span>
                                         </div>
+                                        <div v-else class="flex items-center gap-2 text-gray-400">
+                                            <i class="ri-weight-line text-xs"></i>
+                                            <span class="text-xs">Poids: --</span>
+                                        </div>
+
+                                        <div v-if="app.field_temperature" class="flex items-center gap-2">
+                                            <i class="ri-temperature-line text-gray-400 text-xs"></i>
+                                            <span class="text-sm">Temp: {{ app.field_temperature }} °C</span>
+                                        </div>
+                                        <div v-else class="flex items-center gap-2 text-gray-400">
+                                            <i class="ri-temperature-line text-xs"></i>
+                                            <span class="text-xs">Temp: --</span>
+                                        </div>
+
+                                        <div v-if="app.field_tension_arterielle" class="flex items-center gap-2">
+                                            <i class="ri-heart-pulse-line text-gray-400 text-xs"></i>
+                                            <span class="text-sm">Tension: {{ app.field_tension_arterielle }}
+                                                mmHg</span>
+                                        </div>
+                                        <div v-else class="flex items-center gap-2 text-gray-400">
+                                            <i class="ri-heart-pulse-line text-xs"></i>
+                                            <span class="text-xs">Tension: --</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                    <!-- Colonne Notes -->
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ app.field_notes || '---' }}
+                                </td>
+
+                                    <!-- Colonne Actions -->
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
+                                    <button @click.stop="openStatusModal(app)"
+                                        class="text-amber-600 hover:text-amber-900 transition-colors"
+                                        title="Changer le statut">
+                                        <i class="ri-exchange-line text-lg"></i>
+                                    </button>
+                                    <button @click.stop="goToConsultation(app.nid)"
+                                        class="text-blue-600 hover:text-blue-900 transition-colors"
+                                        title="Aller à la consultation">
+                                        <i class="ri-stethoscope-line text-lg"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -165,24 +221,89 @@
                         rendez-vous
                     </div>
                     <div class="flex items-center space-x-2">
-                        <!-- Previous -->
                         <button @click="previousPage" :disabled="currentPage === 1"
                             class="px-3 py-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                             <i class="ri-arrow-left-s-line"></i>
                         </button>
-
-                        <!-- Pages -->
                         <button v-for="page in visiblePages" :key="page" @click="goToPage(page)"
                             class="px-3 py-2 rounded-md transition-colors text-sm font-medium" :class="page === currentPage
                                 ? 'bg-primary text-white'
                                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'">
                             {{ page }}
                         </button>
-
-                        <!-- Next -->
                         <button @click="nextPage" :disabled="currentPage === totalPages"
                             class="px-3 py-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                             <i class="ri-arrow-right-s-line"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal pour changer le statut - Version centrée -->
+        <div v-if="showStatusModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="closeStatusModal">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <!-- Overlay -->
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+                <!-- Modal content -->
+                <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-auto transform transition-all">
+                    <div class="px-6 pt-6 pb-4">
+                        <div class="flex items-start justify-between">
+                            <h3 class="text-lg font-medium leading-6 text-gray-900">
+                                Changer le statut du rendez-vous
+                            </h3>
+                            <button @click="closeStatusModal" class="text-gray-400 hover:text-gray-500">
+                                <i class="ri-close-line text-xl"></i>
+                            </button>
+                        </div>
+                        <div class="mt-4">
+                            <p class="text-sm text-gray-500 mb-4">
+                                Référence: <span class="font-medium text-gray-900">{{ getAppointmentTitle() }}</span>
+                            </p>
+                            <div class="space-y-3">
+                                <label
+                                    class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                                    :class="{ 'border-primary bg-blue-50': selectedStatus === 'pending' }">
+                                    <input type="radio" value="pending" v-model="selectedStatus"
+                                        class="w-4 h-4 text-primary focus:ring-primary">
+                                    <div class="ml-3 flex items-center gap-2">
+                                        <i class="ri-time-line text-yellow-600"></i>
+                                        <span class="text-sm text-gray-900">En attente</span>
+                                    </div>
+                                </label>
+                                <label
+                                    class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                                    :class="{ 'border-primary bg-green-50': selectedStatus === 'completed' }">
+                                    <input type="radio" value="completed" v-model="selectedStatus"
+                                        class="w-4 h-4 text-primary focus:ring-primary">
+                                    <div class="ml-3 flex items-center gap-2">
+                                        <i class="ri-checkbox-circle-line text-green-600"></i>
+                                        <span class="text-sm text-gray-900">Terminé</span>
+                                    </div>
+                                </label>
+                                <label
+                                    class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                                    :class="{ 'border-primary bg-red-50': selectedStatus === 'cancelled' }">
+                                    <input type="radio" value="cancelled" v-model="selectedStatus"
+                                        class="w-4 h-4 text-primary focus:ring-primary">
+                                    <div class="ml-3 flex items-center gap-2">
+                                        <i class="ri-close-circle-line text-red-600"></i>
+                                        <span class="text-sm text-gray-900">Annulé</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 bg-gray-50 sm:flex sm:flex-row-reverse gap-3 rounded-b-lg">
+                        <button @click="updateStatus" :disabled="updatingStatus"
+                            class="inline-flex justify-center w-full px-4 py-2 text-base font-medium text-white bg-primary border border-transparent rounded-md shadow-sm hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i v-if="updatingStatus" class="ri-loader-4-line animate-spin mr-2"></i>
+                            {{ updatingStatus ? 'Mise à jour...' : 'Enregistrer' }}
+                        </button>
+                        <button @click="closeStatusModal"
+                            class="inline-flex justify-center w-full px-4 py-2 mt-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm">
+                            Annuler
                         </button>
                     </div>
                 </div>
@@ -192,8 +313,7 @@
 </template>
 
 <script>
-import { onMounted, ref, computed } from 'vue';
-import { getSpecialtyLabel } from '../utils/specialties.js';
+import { onMounted, ref, computed, watch } from 'vue';
 import { debounce } from 'lodash';
 import { formatDate } from '../utils/formateDate.js';
 import { useAppointmentStore, useClientStore } from '../stores/index.js';
@@ -205,6 +325,15 @@ export default {
         const appointmentStore = useAppointmentStore();
         const clientStore = useClientStore();
         const router = useRouter();
+
+        // Modal status
+        const showStatusModal = ref(false);
+        const selectedAppointment = ref(null);
+        const selectedStatus = ref('');
+        const updatingStatus = ref(false);
+
+        // Filtre statut
+        const selectedStatusFilter = ref('');
 
         // Pagination
         const perPage = 20;
@@ -236,6 +365,10 @@ export default {
                 'field_notes',
                 'field_medecin',
                 'field_montant',
+                'field_poids',
+                'field_temperature',
+                'field_tension_arterielle',
+                'field_app_status',
                 'status',
                 'created',
             ],
@@ -252,7 +385,6 @@ export default {
             },
             values: {
                 field_patient: ['title', 'nid', 'field_sexe', 'field_age', 'field_phone'],
-                field_medecin: ['uid', 'name', 'field_specialite']
             },
             pager: 0,
             offset: perPage
@@ -284,15 +416,38 @@ export default {
         const patientId = ref('');
         const searchContainer = ref(null);
 
-        const formatPrice = (price) => {
-            if (!price && price !== 0) return '0 Ar';
-            return new Intl.NumberFormat('fr-MG', {
-                style: 'currency',
-                currency: 'MGA',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }).format(price).replace('MGA', 'Ar').trim();
+        // ============================================================
+        // FONCTIONS POUR L'AFFICHAGE DU STATUT
+        // ============================================================
+
+        const getStatusLabel = (status) => {
+            const statusMap = {
+                'pending': 'En attente',
+                'completed': 'Terminé',
+                'cancelled': 'Annulé'
+            };
+            return statusMap[status] || status || 'Non défini';
         };
+
+        const getStatusClass = (status) => {
+            const classMap = {
+                'pending': 'bg-yellow-100 text-yellow-800',
+                'completed': 'bg-green-100 text-green-800',
+                'cancelled': 'bg-red-100 text-red-800'
+            };
+            return classMap[status] || 'bg-gray-100 text-gray-800';
+        };
+
+        const getStatusIcon = (status) => {
+            const iconMap = {
+                'pending': 'ri-time-line',
+                'completed': 'ri-checkbox-circle-line',
+                'cancelled': 'ri-close-circle-line'
+            };
+            return iconMap[status] || 'ri-question-line';
+        };
+
+        // ============================================================
 
         const getGenderLabel = (sexe) => {
             if (sexe === 'masculin') return 'Masculin -';
@@ -318,22 +473,17 @@ export default {
             }
         };
 
-        // Convertir une date au format YYYY-MM-DD en timestamp (début et fin de journée)
         const getDateRangeTimestamps = (dateString) => {
             if (!dateString) return null;
-
             const startDate = new Date(dateString);
             startDate.setHours(0, 0, 0, 0);
             const startTimestamp = Math.floor(startDate.getTime() / 1000);
-
             const endDate = new Date(dateString);
             endDate.setHours(23, 59, 59, 999);
             const endTimestamp = Math.floor(endDate.getTime() / 1000);
-
             return { start: startTimestamp, end: endTimestamp };
         };
 
-        // Message personnalisé selon les filtres actifs
         const getEmptyMessage = () => {
             if (patientId.value && dateValue.value) {
                 return "Aucun rendez-vous trouvé pour ce patient à cette date";
@@ -341,16 +491,16 @@ export default {
                 return "Aucun rendez-vous trouvé pour ce patient";
             } else if (dateValue.value) {
                 return "Aucun rendez-vous trouvé pour cette date";
+            } else if (selectedStatusFilter.value) {
+                return `Aucun rendez-vous avec le statut "${getStatusLabel(selectedStatusFilter.value)}"`;
             }
             return "Aucun rendez-vous n'est disponible pour le moment";
         };
 
-        // Pages visibles (max 5 pages)
         const visiblePages = computed(() => {
             const pages = [];
             const total = totalPages.value;
             const current = currentPage.value;
-
             if (total <= 5) {
                 for (let i = 1; i <= total; i++) pages.push(i);
             } else {
@@ -362,19 +512,15 @@ export default {
                     pages.push(1, '...', current - 1, current, current + 1, '...', total);
                 }
             }
-
             return pages;
         });
 
-        // Actions de pagination
         const goToPage = async (page) => {
             if (page === '...') return;
             if (page >= 1 && page <= totalPages.value) {
                 currentPage.value = page;
                 appointmentQueryOptions.value.pager = page - 1;
                 await fetchAppointmentsData(false);
-
-                // Scroll vers le tableau
                 const el = document.querySelector('.bg-white.rounded-xl.shadow-sm');
                 if (el) {
                     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -387,7 +533,6 @@ export default {
                 currentPage.value++;
                 appointmentQueryOptions.value.pager = currentPage.value - 1;
                 await fetchAppointmentsData(false);
-
                 const el = document.querySelector('.bg-white.rounded-xl.shadow-sm');
                 if (el) {
                     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -400,7 +545,6 @@ export default {
                 currentPage.value--;
                 appointmentQueryOptions.value.pager = currentPage.value - 1;
                 await fetchAppointmentsData(false);
-
                 const el = document.querySelector('.bg-white.rounded-xl.shadow-sm');
                 if (el) {
                     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -408,7 +552,6 @@ export default {
             }
         };
 
-        // Gestion du focus
         const handleFocus = () => {
             showList.value = true;
             if (searchKeywordClient.value.trim() !== '') {
@@ -419,7 +562,6 @@ export default {
             }
         };
 
-        // Recherche par mot-clé (patient)
         const searchByKeyword = () => {
             if (searchKeywordClient.value.trim() !== '') {
                 loadingClients.value = true;
@@ -466,11 +608,9 @@ export default {
             else appointmentQueryOptions.value.filters[key] = { val: value, op };
         };
 
-        // Filtre par date avec gestion des timestamps
         const filterByDate = () => {
             appointmentQueryOptions.value.pager = 0;
             currentPage.value = 1;
-
             if (dateValue.value) {
                 const dateRange = getDateRangeTimestamps(dateValue.value);
                 appointmentQueryOptions.value.filters.created = {
@@ -479,6 +619,19 @@ export default {
                 };
             } else {
                 delete appointmentQueryOptions.value.filters.created;
+            }
+            fetchAppointmentsData(false);
+        };
+
+        // Filtre par statut
+        const filterByStatus = () => {
+            appointmentQueryOptions.value.pager = 0;
+            currentPage.value = 1;
+
+            if (selectedStatusFilter.value) {
+                updateFilter('field_app_status', selectedStatusFilter.value, '=');
+            } else {
+                delete appointmentQueryOptions.value.filters.field_app_status;
             }
 
             fetchAppointmentsData(false);
@@ -493,14 +646,61 @@ export default {
             }, 200);
         };
 
-        // Redirection vers la page consultation
-        const goToConsultation = (appointment) => {
+        const goToConsultation = (appointmentId) => {
             router.push({
                 path: '/consultations',
                 query: {
-                    appointment: appointment,
+                    appointment: appointmentId,
                 }
             });
+        };
+
+        // Récupérer le titre du rendez-vous sélectionné
+        const getAppointmentTitle = () => {
+            if (!selectedAppointment.value) return '';
+            const appointment = appointmentStore.appointments.rows.find(a => a.nid === selectedAppointment.value);
+            return appointment?.title || selectedAppointment.value;
+        };
+
+        // Gestion du modal de statut
+        const openStatusModal = (appointment) => {
+            selectedAppointment.value = appointment.nid;
+            selectedStatus.value = appointment.field_app_status || 'pending';
+            showStatusModal.value = true;
+        };
+
+        const closeStatusModal = () => {
+            showStatusModal.value = false;
+            selectedAppointment.value = null;
+            selectedStatus.value = '';
+        };
+
+        const updateStatus = async () => {
+            if (!selectedAppointment.value || !selectedStatus.value) return;
+
+            updatingStatus.value = true;
+            try {
+                const updateData = {
+                    entity_type: "node",
+                    bundle: "rendez_vous_medical",
+                    nid: selectedAppointment.value,
+                    field_app_status: selectedStatus.value
+                };
+
+                await appointmentStore.createAppointment(updateData);
+
+                // Mettre à jour localement
+                const appointment = appointmentStore.appointments.rows.find(a => a.nid === selectedAppointment.value);
+                if (appointment) {
+                    appointment.field_app_status = selectedStatus.value;
+                }
+
+                closeStatusModal();
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour du statut:', error);
+            } finally {
+                updatingStatus.value = false;
+            }
         };
 
         onMounted(async () => {
@@ -510,8 +710,6 @@ export default {
         return {
             appointmentStore,
             clientStore,
-            getSpecialtyLabel,
-            formatPrice,
             getGenderLabel,
             // Recherche
             searchKeywordClient,
@@ -523,14 +721,11 @@ export default {
             handleBlur,
             handleFocus,
             searchContainer,
-            // Filtre date
             dateValue,
             filterByDate,
             formatDate,
-            // État du tableau
             tableLoading,
             getEmptyMessage,
-            // Pagination
             currentPage,
             totalPages,
             visiblePages,
@@ -540,7 +735,51 @@ export default {
             startIndex,
             endIndex,
             goToConsultation,
+            // Statut
+            getStatusLabel,
+            getStatusClass,
+            getStatusIcon,
+            // Filtre statut
+            selectedStatusFilter,
+            filterByStatus,
+            // Modal
+            showStatusModal,
+            selectedAppointment,
+            selectedStatus,
+            updatingStatus,
+            openStatusModal,
+            closeStatusModal,
+            updateStatus,
+            getAppointmentTitle,
         };
     }
 }
 </script>
+
+<style scoped>
+.relative {
+    position: relative;
+}
+
+.absolute {
+    position: absolute;
+}
+
+.z-50 {
+    z-index: 50;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+</style>

@@ -67,16 +67,21 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Ref</th>
+                            Ref
+                        </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Patient</th>
+                            Patient
+                        </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Médecin</th>
+                            Médecin
+                        </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Prix</th>
+                            Paramètres
+                        </th>
                         <th
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">
-                            Actions</th>
+                            Actions
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -109,10 +114,19 @@
                     <!-- Liste des rendez-vous -->
                     <tr v-else class="hover:bg-gray-50" v-for="app in appointmentStore.appointments.rows"
                         :key="app.nid">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <!-- Première colonne: Ref + Statut -->
+                        <td class="px-6 py-4">
                             <div class="text-sm font-medium text-gray-900">{{ app.title }}</div>
-                            <div class="text-sm font-medium text-gray-500"> Le:
-                                {{ formatDate(null, app.created, 'short') }}</div>
+                            <div class="text-sm font-medium text-gray-500">Le: {{ formatDate(null, app.created, 'short')
+                            }}</div>
+                            <!-- Badge de statut avec icône et couleur -->
+                            <div class="mt-2">
+                                <div :class="getStatusClass(app.field_app_status)"
+                                    class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium">
+                                    <i :class="getStatusIcon(app.field_app_status)" class="text-xs"></i>
+                                    <span>{{ getStatusLabel(app.field_app_status) }}</span>
+                                </div>
+                            </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900">{{ app.field_patient.title }}</div>
@@ -124,11 +138,39 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">Dr. {{ app.field_medecin.name }}</div>
-                            <div class="text-sm text-yellow-700">{{
-                                getSpecialtyLabel(app.field_medecin.field_specialite) }}</div>
+                            <div class="text-sm text-yellow-700">{{ app.field_medecin.field_specialite.title }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ formatPrice(app.field_montant)
-                        }}</td>
+                            <!-- Colonne Paramètres avec Poids, Température et Tension -->
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            <div class="space-y-1">
+                                <div v-if="app.field_poids" class="flex items-center gap-2">
+                                    <i class="ri-weight-line text-gray-400 text-xs"></i>
+                                    <span class="text-sm">Poids: {{ app.field_poids }} kg</span>
+                                </div>
+                                <div v-else class="flex items-center gap-2 text-gray-400">
+                                    <i class="ri-weight-line text-xs"></i>
+                                    <span class="text-xs">Poids: --</span>
+                                </div>
+
+                                <div v-if="app.field_temperature" class="flex items-center gap-2">
+                                    <i class="ri-temperature-line text-gray-400 text-xs"></i>
+                                    <span class="text-sm">Temp: {{ app.field_temperature }} °C</span>
+                                </div>
+                                <div v-else class="flex items-center gap-2 text-gray-400">
+                                    <i class="ri-temperature-line text-xs"></i>
+                                    <span class="text-xs">Temp: --</span>
+                                </div>
+
+                                <div v-if="app.field_tension_arterielle" class="flex items-center gap-2">
+                                    <i class="ri-heart-pulse-line text-gray-400 text-xs"></i>
+                                    <span class="text-sm">Tension: {{ app.field_tension_arterielle }} mmHg</span>
+                                </div>
+                                <div v-else class="flex items-center gap-2 text-gray-400">
+                                    <i class="ri-heart-pulse-line text-xs"></i>
+                                    <span class="text-xs">Tension: --</span>
+                                </div>
+                            </div>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 hidden">
                             <button class="text-blue-600 hover:text-blue-900">
                                 <div class="w-4 h-4 flex items-center justify-center"><i class="ri-edit-line"></i></div>
@@ -177,7 +219,6 @@
 <script>
 import { onMounted, ref, computed } from 'vue';
 import { useAppointmentStore, useClientStore, useUserStore } from '../../stores/index';
-import { getSpecialtyLabel } from '../../utils/specialties.js';
 import { debounce } from 'lodash';
 import { formatDate } from '../../utils/formateDate.js';
 
@@ -236,6 +277,10 @@ export default {
                 'field_notes',
                 'field_medecin',
                 'field_montant',
+                'field_poids',
+                'field_temperature',
+                'field_tension_arterielle',
+                'field_app_status',
                 'status',
                 'created',
             ],
@@ -283,21 +328,55 @@ export default {
         const patientId = ref('');
         const searchContainer = ref(null);
 
-        const formatPrice = (price) => {
-            if (!price && price !== 0) return '0 Ar';
-            return new Intl.NumberFormat('fr-MG', {
-                style: 'currency',
-                currency: 'MGA',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }).format(price).replace('MGA', 'Ar').trim();
-        };
-
         const getGenderLabel = (sexe) => {
             if (sexe === 'masculin') return 'Masculin -';
             if (sexe === 'feminin') return 'Féminin -';
             return '';
         };
+
+        // ============================================================
+        // FONCTIONS POUR L'AFFICHAGE DU STATUT
+        // ============================================================
+
+        /**
+         * Retourne le libellé affiché pour un statut donné
+         */
+        const getStatusLabel = (status) => {
+            const statusMap = {
+                'pending': 'En attente',
+                'completed': 'Terminé',
+                'cancelled': 'Annulé'
+            };
+            return statusMap[status] || status || 'Non défini';
+        };
+
+        /**
+         * Retourne les classes CSS pour la couleur du badge selon le statut
+         */
+        const getStatusClass = (status) => {
+            const classMap = {
+                'pending': 'bg-yellow-100 text-yellow-800',
+                'completed': 'bg-green-100 text-green-800',
+                'cancelled': 'bg-red-100 text-red-800'
+            };
+            return classMap[status] || 'bg-gray-100 text-gray-800';
+        };
+
+        /**
+         * Retourne l'icône Remix Icon correspondant au statut
+         */
+        const getStatusIcon = (status) => {
+            const iconMap = {
+                'pending': 'ri-time-line',
+                'completed': 'ri-checkbox-circle-line',
+                'cancelled': 'ri-close-circle-line'
+            };
+            return iconMap[status] || 'ri-question-line';
+        };
+
+        // ============================================================
+        // FIN DES FONCTIONS POUR LE STATUT
+        // ============================================================
 
         const fetchAppointmentsData = async () => {
             tableLoading.value = true;
@@ -495,8 +574,6 @@ export default {
             appointmentStore,
             clientStore,
             userStore,
-            getSpecialtyLabel,
-            formatPrice,
             getGenderLabel,
             // Recherche
             searchKeywordClient,
@@ -524,6 +601,10 @@ export default {
             startIndex,
             endIndex,
             refreshAppointments,
+            // Fonctions pour le statut
+            getStatusLabel,
+            getStatusClass,
+            getStatusIcon,
         };
     }
 }

@@ -38,7 +38,7 @@
                                     </div>
                                 </div>
                                 <div v-else-if="filteredPatients.length > 0">
-                                    <div v-for="(patient, index) in filteredPatients" :key="patient.nid"
+                                    <div v-for="patient in filteredPatients" :key="patient.nid"
                                         @click="selectPatient(patient)"
                                         class="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0">
                                         <div class="flex items-center space-x-3">
@@ -81,7 +81,8 @@
                                 ]">
                                 <option value="">Sélectionner un médecin...</option>
                                 <option v-for="doctor in formattedDoctors" :key="doctor.uid" :value="doctor.uid">
-                                    {{ doctor.displayName }}
+                                    {{ doctor.name }} - {{ doctor.field_specialite.title ||
+                                        doctor.field_specialite.field_specialite_medicale }}
                                 </option>
                             </select>
                             <div v-if="loadingDoctors" class="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -121,7 +122,7 @@
                     </div>
                 </div>
 
-                <div class="mt-4">
+                <div class="mt-4 hidden">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Prix de consultation <span class="text-red-500">*</span>
                     </label>
@@ -143,8 +144,54 @@
                     </div>
                 </div>
 
+                <!-- SECTION PARAMÈTRES MÉDICAUX (NON REQUIS) -->
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Température
+                        </label>
+                        <div class="relative">
+                            <input type="number" placeholder="36.5" v-model="form.field_temperature" :disabled="saving"
+                                :class="[
+                                    'w-full pl-4 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm',
+                                    saving ? 'bg-gray-50' : 'border-gray-300'
+                                ]">
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+                                °C
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Tension artérielle
+                        </label>
+                        <input type="text" placeholder="Ex: 120/80" v-model="form.field_tension_arterielle"
+                            :disabled="saving" :class="[
+                                'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm',
+                                saving ? 'bg-gray-50' : 'border-gray-300'
+                            ]">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Poids
+                        </label>
+                        <div class="relative">
+                            <input type="number" placeholder="53" v-model="form.field_poids" :disabled="saving" :class="[
+                                'w-full pl-4 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm',
+                                saving ? 'bg-gray-50' : 'border-gray-300'
+                            ]">
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+                                kg
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mt-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Notes (optionnel)</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
                     <textarea rows="3" placeholder="Ajouter des notes sur le rendez-vous..." v-model="form.field_notes"
                         :disabled="saving"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm resize-none"
@@ -172,7 +219,6 @@ import { onMounted, reactive, ref, computed, onUnmounted } from 'vue';
 import { useAppointmentStore, useUserStore, useClientStore } from '../../stores/index.js';
 import { debounce } from 'lodash';
 import { toast } from 'vue-sonner';
-import { getSpecialtyLabel, formatDoctorsWithSpecialties } from '../../utils/specialties.js';
 
 export default {
     name: "CreateAppointment",
@@ -243,6 +289,9 @@ export default {
                     filters: {
                         roles: { val: "docteur", op: "=" },
                         status: { val: 1, op: "=" }
+                    },
+                    values: {
+                        field_specialite: ['nid', 'field_specialite_medicale', 'field_montant_consultation', 'title']
                     },
                     pager: 0,
                     offset: 100
@@ -342,7 +391,7 @@ export default {
 
             errors.patient = '';
             errors.medecin = '';
-            errors.montant = '';
+            // errors.montant = '';
 
             if (!form.field_patient) {
                 errors.patient = 'Veuillez sélectionner un patient';
@@ -354,19 +403,19 @@ export default {
                 isValid = false;
             }
 
-            if (!form.field_montant) {
-                errors.montant = 'Veuillez saisir le prix de consultation';
-                isValid = false;
-            } else {
-                const montant = parseFloat(form.field_montant);
-                if (isNaN(montant) || montant <= 0) {
-                    errors.montant = 'Veuillez saisir un montant valide (supérieur à 0)';
-                    isValid = false;
-                } else if (montant > 1000000) {
-                    errors.montant = 'Le montant ne peut pas dépasser 1 000 000 Ar';
-                    isValid = false;
-                }
-            }
+            // if (!form.field_montant) {
+            //     errors.montant = 'Veuillez saisir le prix de consultation';
+            //     isValid = false;
+            // } else {
+            //     const montant = parseFloat(form.field_montant);
+            //     if (isNaN(montant) || montant <= 0) {
+            //         errors.montant = 'Veuillez saisir un montant valide (supérieur à 0)';
+            //         isValid = false;
+            //     } else if (montant > 1000000) {
+            //         errors.montant = 'Le montant ne peut pas dépasser 1 000 000 Ar';
+            //         isValid = false;
+            //     }
+            // }
 
             return isValid;
         };
@@ -377,6 +426,9 @@ export default {
             form.field_notes = '';
             form.field_medecin = '';
             form.field_montant = '';
+            form.field_poids = '';
+            form.field_temperature = '';
+            form.field_tension_arterielle = '';
             selectedPatient.value = null;
             patientNameSearch.value = '';
             errors.patient = '';
@@ -397,6 +449,10 @@ export default {
             field_notes: '',
             field_medecin: '',
             field_montant: '',
+            field_app_status: 'pending',
+            field_poids: '',
+            field_temperature: '',
+            field_tension_arterielle: '',
             status: 1,
         });
 
@@ -450,7 +506,7 @@ export default {
                 user.roles.includes('docteur') &&
                 user.status === '1'
             );
-            return formatDoctorsWithSpecialties(doctors);
+            return doctors;
         });
 
         const closeSuggestions = () => {
@@ -474,7 +530,6 @@ export default {
             errors,
             saving,
             loadingDoctors,
-            getSpecialtyLabel,
             getPatientGenderLabel,
             handleSave,
             validateForm,

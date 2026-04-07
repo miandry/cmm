@@ -6,15 +6,15 @@
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Consultation en cours</h3>
                 <!-- consulatation form -->
                 <div v-if="userStore.users.rows.length"
-                     class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                    class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                             <i class="ri-user-heart-line text-green-600"></i>
                         </div>
                         <div>
                             <div class="font-medium text-gray-900">Dr. {{ userStore.users.rows[0].name }}</div>
-                            <div class="text-sm text-gray-600">{{
-                                getSpecialtyLabel(userStore.users.rows[0].field_specialite) }}</div>
+                            <div class="text-sm text-gray-600 capitalize">{{
+                                userStore.users.rows[0].field_specialite.title }}</div>
                         </div>
                     </div>
                     <div class="w-3 h-3 bg-green-500 rounded-full"></div>
@@ -140,7 +140,6 @@ import { toast } from 'vue-sonner'
 import { useRouter, useRoute } from 'vue-router'
 import { watch } from 'vue'
 import AllHistory from '../components/Consultations/AllHistory.vue'
-import { getSpecialtyLabel } from '../utils/specialties.js'
 
 export default {
     name: 'Consultations',
@@ -484,6 +483,25 @@ export default {
                 loadLastconsultation(consultationToLoad);
             }
 
+            // docteur
+            const docteurId = window.APP_DATA.user.id;
+            if (docteurId) {
+                const doctorQueryOptions = {
+                    fields: ['uid', 'name', 'field_specialite', 'status'],
+                    filters: {
+                        roles: { val: "docteur", op: "=" },
+                        status: { val: 1, op: "=" },
+                        uid: { val: docteurId, op: "=" },
+                    },
+                    values: {
+                        field_specialite: ['nid', 'field_montant_consultation', 'title']
+                    },
+                    pager: 0,
+                    offset: 1
+                };
+                await userStore.fetchUsers(doctorQueryOptions);
+            }
+
             // rendez vous
             const appointmentId = route.query.appointment;
             if (appointmentId) {
@@ -498,22 +516,6 @@ export default {
                 prescriptionEtSuivi.value.resetAll();
                 consultationsStore.consultationsReset();
                 await patienStore.fetchClient(clientId);
-            }
-
-            // docteur
-            const docteurId = window.APP_DATA.user.id;
-            if (docteurId) {
-                const doctorQueryOptions = {
-                    fields: ['uid', 'name', 'field_specialite', 'status'],
-                    filters: {
-                        roles: { val: "docteur", op: "=" },
-                        status: { val: 1, op: "=" },
-                        uid: { val: docteurId, op: "=" },
-                    },
-                    pager: 0,
-                    offset: 1
-                };
-                await userStore.fetchUsers(doctorQueryOptions);
             }
 
             // reset form si c'est add
@@ -577,7 +579,6 @@ export default {
             clientId,
             consultationReference,
             userStore,
-            getSpecialtyLabel,
         };
     }
 }

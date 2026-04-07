@@ -6,11 +6,18 @@
         <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Gestion des Utilisateurs</h1>
         <p class="text-gray-600 text-sm mt-1">Gérer les comptes utilisateurs de la clinique</p>
       </div>
-      <button @click="openCreateModal"
-        class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 w-full md:w-auto justify-center text-center">
-        <i class="fas fa-plus"></i>
-        <span>Nouvel Utilisateur</span>
-      </button>
+      <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+        <button @click="openSpecialitiesModal"
+          class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 justify-center">
+          <i class="fas fa-stethoscope"></i>
+          <span>Gérer spécialité docteur</span>
+        </button>
+        <button @click="openCreateModal"
+          class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 justify-center">
+          <i class="fas fa-plus"></i>
+          <span>Nouvel Utilisateur</span>
+        </button>
+      </div>
     </div>
 
     <!-- Search & Filters -->
@@ -78,9 +85,10 @@
                   </span>
                 </div>
                 <p></p>
-                <span v-if="getSpecialtyLabel(user.field_specialite)"
+                <span
+                  v-if="user.field_specialite && (typeof user.field_specialite === 'string' ? user.field_specialite !== '' : (Array.isArray(user.field_specialite) ? user.field_specialite.length > 0 : Object.keys(user.field_specialite).length > 0))"
                   class="bg-orange-100 text-orange-700 inline-block px-2 py-1 text-xs font-medium rounded-full mt-1">
-                  {{ getSpecialtyLabel(user.field_specialite) }}
+                  {{ getSpecialtyTitle(user.field_specialite) }}
                 </span>
               </td>
               <td class="px-4 py-3">
@@ -210,8 +218,8 @@
               <select v-model="formData.specialty"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                 <option value="">Sélectionnez une spécialité</option>
-                <option v-for="specialty in specialties" :key="specialty.id" :value="specialty.id">
-                  {{ specialty.label }}
+                <option v-for="specialty in specialtiesList" :key="specialty.nid" :value="specialty.nid">
+                  {{ specialty.title }}
                 </option>
               </select>
             </div>
@@ -271,6 +279,10 @@
         </div>
       </div>
     </div>
+
+    <!-- modal for Specialite - docteur  -->
+    <DocteurSpecialities ref="specialitiesModalRef" @specialities-updated="loadSpecialities" />
+
   </div>
 </template>
 
@@ -278,12 +290,16 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 import { useUserStore } from '../stores/user/user.js';
+import { useSpecialityStore } from '../stores/index.js';
 import { debounce } from 'lodash';
 import { toast } from 'vue-sonner';
-import { specialties, getSpecialtyLabel as getSpecialtyLabelUtil } from '../utils/specialties.js';
+import DocteurSpecialities from './DocteurSpecialities.vue';
 
 export default {
   name: 'UserManager',
+  components: {
+    DocteurSpecialities,
+  },
   setup() {
     const users = ref([]);
     const loading = ref(false);
@@ -295,6 +311,56 @@ export default {
     const deleting = ref(false);
     const error = ref(null);
     const userStore = useUserStore();
+    const specialityStore = useSpecialityStore();
+
+    // Liste des spécialités depuis le store
+    const specialtiesList = ref([]);
+
+    // Charger les spécialités depuis le store
+    const loadSpecialities = async () => {
+      try {
+        // Récupérer toutes les spécialités sans pagination
+        const queryOptions = {
+          fields: ['nid', 'title', 'field_montant_consultation'],
+          sort: { val: 'title', op: 'asc' },
+          filters: { status: { val: 1, op: "=" } },
+          pager: 0,
+          offset: 100, // Récupérer toutes les spécialités
+        };
+        await specialityStore.fetchSpecialities(queryOptions);
+        specialtiesList.value = specialityStore.specialities.rows || [];
+      } catch (error) {
+        console.error('Erreur lors du chargement des spécialités:', error);
+        specialtiesList.value = [];
+      }
+    };
+
+    // Obtenir le titre d'une spécialité par son nid (peut être un string ou un objet)
+    const getSpecialtyTitle = (specialty) => {
+      // Vérifier si la valeur est null, undefined, chaîne vide
+      if (!specialty || specialty == '') {
+        return null;
+      }
+
+      // Vérifier si c'est un tableau vide
+      if (Array.isArray(specialty) && specialty.length == 0) {
+        return null;
+      }
+
+      // Vérifier si c'est un objet vide {}
+      if (typeof specialty == 'object' && !Array.isArray(specialty) && Object.keys(specialty).length == 0) {
+        return null;
+      }
+
+      // Si c'est déjà un objet avec un titre
+      if (typeof specialty === 'object' && specialty.title) {
+        return specialty.title;
+      }
+
+      // Si c'est un ID (string ou number), chercher dans la liste
+      const specialtyObj = specialtiesList.value.find(s => s.nid == specialty);
+      return specialtyObj ? specialtyObj.title : null;
+    };
 
     // Paramètres dynamiques de la requête
     const queryOptions = ref({
@@ -413,11 +479,6 @@ export default {
       }
     };
 
-    // Utiliser la fonction d'utilitaire pour obtenir le label de spécialité
-    const getSpecialtyLabel = (specialtyId) => {
-      return getSpecialtyLabelUtil(specialtyId);
-    };
-
     const openCreateModal = () => {
       editingUser.value = null;
       formData.value = {
@@ -434,13 +495,24 @@ export default {
 
     const openEditModal = (user) => {
       editingUser.value = user;
+
+      // Récupérer l'ID de la spécialité (peut être un objet ou un string)
+      let specialtyId = '';
+      if (user.field_specialite) {
+        if (typeof user.field_specialite === 'object' && user.field_specialite.nid) {
+          specialtyId = user.field_specialite.nid;
+        } else if (typeof user.field_specialite === 'string' || typeof user.field_specialite === 'number') {
+          specialtyId = user.field_specialite;
+        }
+      }
+
       formData.value = {
         uid: user.uid,
         name: user.name,
         mail: getEditableEmail(user),
         pass: '',
         roles: user.roles && user.roles.length > 0 ? [...user.roles] : ['caissier'],
-        specialty: user.field_specialite || '',
+        specialty: specialtyId,
         status: user.status === '1'
       };
       error.value = null;
@@ -472,7 +544,7 @@ export default {
       }
 
       // validation de la spécialité si le rôle docteur est sélectionné
-      if (formData.value.roles.includes('docteur') && (!formData.value.specialty || formData.value.specialty === '_none')) {
+      if (formData.value.roles.includes('docteur') && !formData.value.specialty) {
         error.value = 'Veuillez sélectionner une spécialité.';
         saving.value = false;
         return;
@@ -484,9 +556,9 @@ export default {
           mail: formData.value.mail?.trim()
             ? formData.value.mail
             : `clinicuser${formData.value.name.replace(/\s+/g, '')}@gmail.com`,
-          roles: formData.value.roles, // Envoie le tableau des rôles
+          roles: formData.value.roles,
           status: formData.value.status ? '1' : '0',
-          field_specialite: formData.value.roles.includes('docteur') ? formData.value.specialty : '_none',
+          field_specialite: formData.value.roles.includes('docteur') ? formData.value.specialty : '',
         };
 
         if (formData.value.pass) {
@@ -497,16 +569,23 @@ export default {
           payload.uid = formData.value.uid;
           const resp = await userStore.editUser(payload);
           if (resp?.status) {
-            // update local row without refetch
+            // Mettre à jour la ligne localement avec les bonnes données
             const idx = userStore.users.rows.findIndex(u => u.uid == payload.uid);
             if (idx !== -1) {
+              // Récupérer l'objet spécialité complet pour l'affichage
+              let specialtyObject = '';
+              if (payload.field_specialite) {
+                const foundSpecialty = specialtiesList.value.find(s => s.nid == payload.field_specialite);
+                specialtyObject = foundSpecialty || payload.field_specialite;
+              }
+
               userStore.users.rows[idx] = {
                 ...userStore.users.rows[idx],
                 name: payload.name,
                 mail: payload.mail,
                 roles: payload.roles,
                 status: payload.status,
-                field_specialite: payload.field_specialite,
+                field_specialite: specialtyObject,
               };
             }
             toast.success('Utilisateur mis à jour avec succès.');
@@ -518,13 +597,13 @@ export default {
           await userStore.createUser(payload);
           if (userStore.error == 'Username existe déjà') {
             error.value = 'Ce nom d\'utilisateur est déjà utilisé.';
-            return; // Stop further execution to show the error
+            return;
           } else if (userStore.error) {
             error.value = userStore.error;
             toast.error("Une erreur est survenue lors de la création de l'utilisateur.");
             return;
           } else {
-            error.value = null; // Clear any previous errors
+            error.value = null;
           }
           await fetchUsers();
           toast.success('Utilisateur créé avec succès.');
@@ -642,13 +721,21 @@ export default {
       return user.mail === defaultEmail ? '' : user.mail;
     };
 
+    const specialitiesModalRef = ref(null);
+
+    const openSpecialitiesModal = () => {
+      if (specialitiesModalRef.value) {
+        specialitiesModalRef.value.openSpecialitiesModal();
+      }
+    };
+
     watch(statusFilter, () => {
-      // whenever status filter changes, update and reload
       updateStatus();
     });
 
-    onMounted(() => {
-      fetchUsers();
+    onMounted(async () => {
+      await fetchUsers();
+      await loadSpecialities();
     });
 
     return {
@@ -662,7 +749,7 @@ export default {
       deleting,
       error,
       formData,
-      specialties, // Utiliser les spécialités importées
+      specialtiesList,
       openCreateModal,
       openEditModal,
       closeModal,
@@ -685,7 +772,10 @@ export default {
       previousPage,
       displayEmail,
       getEditableEmail,
-      getSpecialtyLabel, // Utiliser la fonction importée
+      getSpecialtyTitle,
+      specialitiesModalRef,
+      openSpecialitiesModal,
+      loadSpecialities,
     };
   }
 }
