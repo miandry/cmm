@@ -19,7 +19,7 @@
                     <p class="text-xs text-gray-400">{{ ex.field_description }}</p>
                 </div>
                 <div class="flex items-center">
-                    <p class="text-xs text-green-600 font-medium">{{ Number(ex.field_prix).toLocaleString() }} Ar</p>
+                    <p class="text-xs text-green-600 font-medium hidden">{{ Number(ex.field_prix).toLocaleString() }} Ar</p>
                     <button @click="removeFromList(ex.nid, ex.field_prix)" v-if="!isEdit"
                         class="text-red-500 hover:text-red-700 cursor-pointer">
                         <div class="w-5 h-5 flex items-center justify-center">
@@ -32,7 +32,7 @@
         <div class="bg-gray-50 rounded-lg p-3 mb-4" v-if="Object.keys(examenStore.savedExamen).length > 0">
             <div class="flex items-center justify-between">
                 <span class="text-sm font-medium text-gray-700">Total examens:</span>
-                <span class="text-lg font-semibold text-primary">{{
+                <span class="text-lg font-semibold text-primary hidden">{{
                     Number(examenStore.savedExamen.total).toLocaleString() }} Ar</span>
             </div>
         </div>
@@ -98,7 +98,7 @@
                                                         {{ ex.title }}
                                                     </h5>
                                                 </div>
-                                                <span class="text-xs font-semibold text-primary">{{
+                                                <span class="text-xs font-semibold text-primary hidden">{{
                                                     Number(ex.field_prix).toLocaleString() }} Ar</span>
                                             </div>
                                         </div>
@@ -122,14 +122,14 @@
                                             {{ exTitle }}
                                         </h4>
                                     </div>
-                                    <div class="text-right">
+                                    <div class="text-right hidden">
                                         <p class="text-sm font-semibold text-blue-900">{{
                                             Number(exFieldPrix).toLocaleString() }} Ar</p>
                                         <p class="text-xs text-blue-600 hidden">Prix estimé</p>
                                     </div>
                                 </div>
                             </div>
-                            <div>
+                            <div class="hidden">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Prix personnalisé <span
                                         class="text-red-500">*</span></label>
                                 <div class="relative">

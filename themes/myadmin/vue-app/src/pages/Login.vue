@@ -22,7 +22,8 @@
           </div>
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-            <input id="password" name="password" type="password" autocomplete="current-password" required v-model="password"
+            <input id="password" name="password" type="password" autocomplete="current-password" required
+              v-model="password"
               class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
               placeholder="••••••••">
           </div>
@@ -70,18 +71,63 @@ export default {
   setup() {
     const authStore = useAuthStore();
     const router = useRouter();
-    
+
     const username = ref('');
     const password = ref('');
 
+    // Fonction pour déterminer la route de redirection selon le rôle
+    const getRedirectPath = (user) => {
+      if (!user || !user.roles || user.roles.length === 0) {
+        return '/caisse'; // fallback par défaut
+      }
+
+      // Vérifier les rôles par ordre de priorité (du plus haut niveau au plus bas)
+      if (user.roles.includes('administrator') ||
+        user.roles.includes('webmaster') ||
+        user.roles.includes('gerant')) {
+        return '/dashboard';
+      }
+
+      if (user.roles.includes('docteur')) {
+        return '/rendez-vous';
+      }
+
+      if (user.roles.includes('caissier')) {
+        return '/caisse';
+      }
+
+      if (user.roles.includes('assistant')) {
+        return '/assist/dashboard';
+      }
+
+      // Fallback par défaut
+      return '/caisse';
+    };
+
     const handleLogin = async () => {
-      if (!username.value || !password.value) return;
+      if (!username.value || !password.value) {
+        toast.error('Veuillez remplir tous les champs');
+        return;
+      }
+
       try {
-        await authStore.login(username.value, password.value);
-        router.push('/caisse');
+        // Appel de la fonction login du store
+        const result = await authStore.login(username.value, password.value);
+
+        if (result === true) {
+          // Récupérer l'utilisateur après connexion
+          const user = authStore.user;
+
+          // Déterminer la route de redirection selon le rôle
+          const redirectPath = getRedirectPath(user);
+
+          // Rediriger vers la page appropriée
+          router.push(redirectPath);
+
+        }
       } catch (error) {
-        toast.error('un problème est survenu lors de la connexion. Veuillez réessayer.');
-      } 
+        console.error('Erreur lors de la connexion:', error);
+      }
     };
 
     return {

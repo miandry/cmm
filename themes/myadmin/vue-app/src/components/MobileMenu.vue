@@ -57,8 +57,8 @@
         </template>
 
         <!-- Dashboard -->
-        <router-link to="/dashboard" v-if="roles.some(r => ['gerant', 'docteur', 'administrator'].includes(r))"
-          class="menu-item" :class="getMenuItemClass('/dashboard')" @click="closeMenu">
+        <router-link to="/dashboard" v-if="roles.some(r => ['gerant', 'administrator'].includes(r))" class="menu-item"
+          :class="getMenuItemClass('/dashboard')" @click="closeMenu">
           <i class="fas fa-chart-line menu-icon"></i>
           <span class="menu-label">Dashboard</span>
         </router-link>

@@ -32,7 +32,8 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Montant du consultation (Ar)</label>
                 <div class="relative">
-                    <input type="number" placeholder="10000" v-model="form.montant"
+                    <!-- v-model="form.montant" -->
+                    <input type="number" placeholder="10000" readonly v-model="form.montant"
                         class="w-full pl-4 pr-10 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
                     <div
                         class="w-4 h-4 flex items-center justify-center absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -117,17 +118,17 @@ export default {
                 errors.tension = false;
             }
 
-            if (
-                form.montant === '' ||
-                form.montant === null ||
-                isNaN(form.montant) ||
-                Number(form.montant) <= 0
-            ) {
-                errors.montant = true;
-                isValid = false;
-            } else {
-                errors.montant = false;
-            }
+            // if (
+            //     form.montant === '' ||
+            //     form.montant === null ||
+            //     isNaN(form.montant) ||
+            //     Number(form.montant) <= 0
+            // ) {
+            //     errors.montant = true;
+            //     isValid = false;
+            // } else {
+            //     errors.montant = false;
+            // }
 
             return isValid;
         }

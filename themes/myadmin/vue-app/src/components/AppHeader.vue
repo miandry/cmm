@@ -49,7 +49,7 @@
           <div v-if="showUserMenu"
             class="absolute right-0 mt-2 min-w-max bg-white shadow-lg border rounded-md py-2 z-50 animate-fade">
             <!-- Dashboard -->
-            <router-link to="/dashboard" v-if="roles.some(r => ['gerant', 'docteur', 'administrator'].includes(r))"
+            <router-link to="/dashboard" v-if="roles.some(r => ['gerant', 'administrator'].includes(r))"
               class="flex items-center w-full px-3 py-2 text-left hover:bg-gray-50 text-sm cursor-pointer transition-colors">
               <i class="fas fa-chart-line text-gray-500 mr-2 text-xs"></i>
               <span class="text-gray-700 font-medium">Dashboard</span>

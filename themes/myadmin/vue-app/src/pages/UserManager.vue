@@ -206,6 +206,11 @@
                     class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
                   <span class="text-sm text-gray-700">Caissier</span>
                 </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" value="assistant" v-model="formData.roles"
+                    class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                  <span class="text-sm text-gray-700">Assistant</span>
+                </label>
               </div>
               <p v-if="formData.roles.length === 0" class="text-xs text-red-500 mt-1">Veuillez sélectionner au moins un
                 rôle</p>
@@ -653,7 +658,8 @@ export default {
         'administrator': 'Admin',
         'gerant': 'Gérant',
         'docteur': 'Docteur',
-        'caissier': 'Caissier'
+        'caissier': 'Caissier',
+        'assistant': 'Assistant'
       };
       return labels[role] || role;
     };
@@ -663,7 +669,8 @@ export default {
         'administrator': 'bg-purple-100 text-purple-700 hidden',
         'gerant': 'bg-yellow-100 text-yellow-700',
         'docteur': 'bg-blue-100 text-blue-700',
-        'caissier': 'bg-green-100 text-green-700'
+        'caissier': 'bg-green-100 text-green-700',
+        'assistant': 'bg-indigo-100 text-indigo-700'
       };
       return classes[role] || 'bg-gray-100 text-gray-700';
     };

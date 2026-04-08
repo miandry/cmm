@@ -39,7 +39,7 @@ const routes = [
     name: "home",
     component: Caisse,
     meta: {
-      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+      roles: ["caissier", "gerant", "webmaster", "administrator"],
     },
   },
   {
@@ -47,14 +47,14 @@ const routes = [
     name: "caisse",
     component: Caisse,
     meta: {
-      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+      roles: ["caissier", "gerant", "webmaster", "administrator"],
     },
   },
   {
     path: "/dashboard",
     name: "dashboard",
     component: Dashboard,
-    meta: { roles: ["docteur", "gerant", "webmaster", "administrator"] },
+    meta: { roles: ["gerant", "webmaster", "administrator"] },
   },
   {
     path: "/users",
@@ -67,7 +67,7 @@ const routes = [
     name: "home-fr",
     component: Caisse,
     meta: {
-      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+      roles: ["caissier", "gerant", "webmaster", "administrator"],
     },
   },
   {
@@ -75,7 +75,7 @@ const routes = [
     name: "frontdesk",
     component: Caisse,
     meta: {
-      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+      roles: ["caissier", "gerant", "webmaster", "administrator"],
     },
   },
   {
@@ -83,7 +83,7 @@ const routes = [
     name: "assist.dashboard",
     component: AssistBoard,
     meta: {
-      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+      roles: ["assistant", "gerant", "webmaster", "administrator"],
     },
   },
   {
@@ -102,7 +102,7 @@ const routes = [
     path: "/assist",
     name: "assist",
     component: Assist,
-    meta: { roles: ["docteur", "gerant", "webmaster", "administrator"] },
+    meta: { roles: ["gerant", "webmaster", "administrator"] },
   },
   {
     path: "/consultations/:id/edit",
@@ -128,7 +128,7 @@ const routes = [
     component: Facture,
     meta: {
       hideHeader: true,
-      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+      roles: ["caissier", "gerant", "webmaster", "administrator"],
     },
   },
   {
@@ -145,21 +145,21 @@ const routes = [
     name: "commandes",
     component: Order,
     meta: {
-      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+      roles: ["caissier", "gerant", "webmaster", "administrator"],
     },
   },
   {
     path: "/stocks",
     name: "stocks",
     component: Stocks,
-    meta: { roles: ["docteur", "gerant", "webmaster", "administrator"] },
+    meta: { roles: ["gerant", "webmaster", "administrator"] },
   },
   {
     path: "/user-profil",
     name: "user.profil",
     component: UserProfile,
     meta: {
-      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+      roles: ["caissier", "assistant", "docteur", "gerant", "webmaster", "administrator"],
     },
   },
   {
@@ -175,7 +175,7 @@ const routes = [
     name: "facture-list",
     component: FactureList,
     meta: {
-      roles: ["caissier", "docteur", "gerant", "webmaster", "administrator"],
+      roles: ["caissier", "gerant", "webmaster", "administrator"],
     },
   },
 ];
