@@ -241,10 +241,10 @@
         </div>
 
         <!-- Modal pour changer le statut - Version centrée -->
-        <div v-if="showStatusModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="closeStatusModal">
+        <div v-if="showStatusModal" class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex items-center justify-center min-h-screen p-4">
                 <!-- Overlay -->
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+                <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
 
                 <!-- Modal content -->
                 <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-auto transform transition-all">

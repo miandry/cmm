@@ -60,7 +60,7 @@
 
 <script>
 import { toast } from 'vue-sonner';
-import { useArticleStore, useOrderStore } from '../../stores';
+import { useArticleStore, useInvoiceStore, useOrderStore } from '../../stores/index.js';
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { h } from "vue";
 import { RouterLink } from "vue-router";
@@ -70,6 +70,7 @@ export default {
     setup(_, { emit }) {
         const articleStore = useArticleStore();
         const orderStore = useOrderStore();
+        const invoiceStore = useInvoiceStore();
         const orderToCreate = articleStore.savedOrder;
         const amountReceived = ref('');
 
@@ -121,9 +122,37 @@ export default {
                     status: 1,
                     field_status: "payed"
                 };
-                await orderStore.saveOrderData(data);
-                if (orderStore.error) {
-                    toast.error("Une erreur est survenue lors de l'ajout du commande.")
+                const response = await orderStore.saveOrderData(data);
+
+
+                // sauvegarde facture
+                const factureArticles = orderToCreate.items.map(item => ({
+                    description: item.title,
+                    quantity: item.quantity,
+                    unitPrice: item.field_prix_unitaire,
+                }));
+
+
+                const payload = {
+                    entity_type: "node",
+                    bundle: "facture",
+                    status: 1,
+                    title: `facture-${Date.now()}`,
+                    field_commande: response.data.item || "",
+                    field_date_facture: new Date().toLocaleDateString('en-En'),
+                    field_mode_paiement: 'Espèces / Chèque',
+                    field_facture_medicaments: JSON.stringify(factureArticles),
+                    field_patient_dossier: data.title,
+                    field_patient_nom: orderToCreate.clientName,
+                    field_reference_facture: data.title,
+                    field_tva_facture: 20,
+                    field_type: 'caisse',
+                };
+
+                await invoiceStore.saveInvoiceData(payload)
+
+                if (orderStore.error || invoiceStore.error) {
+                    toast.error("Une erreur est survenue lors de l'enregistrement")
                     return
                 }
                 articleStore.clearCart(true);
@@ -139,6 +168,7 @@ export default {
                         { default: () => "Voir la commande" }
                     )
                 });
+
             } catch (err) {
                 console.error("Erreur dans saveOrder :", err);
                 toast.error("Une erreur inattendue est survenue.");

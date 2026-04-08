@@ -46,7 +46,7 @@ export const useOrderStore = defineStore("order", () => {
   async function saveOrderData(newOrderData) {
     loading.value = true;
     try {
-      await saveOrder(newOrderData);
+      return await saveOrder(newOrderData);
     } catch (err) {
       error.value = err;
     } finally {
