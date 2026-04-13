@@ -23,6 +23,7 @@ import UserProfile from "./pages/UserProfile.vue";
 import AssistBoard from "./pages/AssistBoard.vue";
 import AllAppointment from "./pages/AllAppointment.vue";
 import FactureList from "./pages/FactureList.vue";
+import FactureDetails from "./pages/FactureDetails.vue";
 import ConsultationList from "./pages/ConsultationList.vue";
 
 blockZoom();
@@ -174,6 +175,14 @@ const routes = [
     path: "/factures",
     name: "facture-list",
     component: FactureList,
+    meta: {
+      roles: ["caissier", "gerant", "webmaster", "administrator"],
+    },
+  },
+  {
+    path: "/factures/details",
+    name: "facture-details",
+    component: FactureDetails,
     meta: {
       roles: ["caissier", "gerant", "webmaster", "administrator"],
     },

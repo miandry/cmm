@@ -205,13 +205,14 @@
 </template>
 
 <script>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, defineEmits } from 'vue';
 import { useSpecialityStore } from '../stores/index.js';
 import { toast } from 'vue-sonner';
 
 export default {
     name: 'DocteurSpecialities',
-    setup() {
+    emits: ['specialities-updated'],
+    setup(props, { emit }) {
         // Store de spécialité
         const specialityStore = useSpecialityStore();
 
@@ -479,7 +480,11 @@ export default {
                 field_specialite_medicale: form.title,
             };
 
-            await saveSpecialtyData(payload, false);
+            const success = await saveSpecialtyData(payload, false);
+            if (success) {
+                // Émettre l'événement pour notifier UserManager
+                emit('specialities-updated');
+            }
             saving.value = false;
         };
 
@@ -518,7 +523,11 @@ export default {
                 status: 1,
             };
 
-            await saveSpecialtyData(payload, true);
+            const success = await saveSpecialtyData(payload, true);
+            if (success) {
+                // Émettre l'événement pour notifier UserManager
+                emit('specialities-updated');
+            }
             updating.value = false;
         };
 

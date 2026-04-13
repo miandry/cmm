@@ -146,7 +146,7 @@
                                     </div>
                                 </td>
 
-                                    <!-- Colonne Patient -->
+                                <!-- Colonne Patient -->
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">{{ app.field_patient?.title }}</div>
                                     <div class="text-sm text-gray-500">
@@ -157,7 +157,7 @@
                                     </div>
                                 </td>
 
-                                    <!-- Colonne Paramètres (Poids, Température, Tension) -->
+                                <!-- Colonne Paramètres (Poids, Température, Tension) -->
                                 <td class="px-6 py-4 text-sm text-gray-900">
                                     <div class="space-y-1">
                                         <div v-if="app.field_poids" class="flex items-center gap-2">
@@ -190,12 +190,12 @@
                                     </div>
                                 </td>
 
-                                    <!-- Colonne Notes -->
+                                <!-- Colonne Notes -->
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ app.field_notes || '---' }}
                                 </td>
 
-                                    <!-- Colonne Actions -->
+                                <!-- Colonne Actions -->
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
                                     <button @click.stop="openStatusModal(app)"
                                         class="text-amber-600 hover:text-amber-900 transition-colors"
@@ -333,7 +333,7 @@ export default {
         const updatingStatus = ref(false);
 
         // Filtre statut
-        const selectedStatusFilter = ref('');
+        const selectedStatusFilter = ref('pending');
 
         // Pagination
         const perPage = 20;
@@ -380,6 +380,10 @@ export default {
                 },
                 field_medecin: {
                     val: window.APP_DATA.user.id,
+                    op: "="
+                },
+                field_app_status: {
+                    val: 'pending',
                     op: "="
                 },
             },

@@ -38,7 +38,8 @@
                             <span class="text-xs font-medium">Non</span>
                         </label>
                     </div>
-                    <div class="cursor-pointer" v-if="insurance && articleStore.cardItems.length" @click="openEditPrice">
+                    <div class="cursor-pointer" v-if="insurance && articleStore.cardItems.length"
+                        @click="openEditPrice">
                         <span class="text-xs text-primary">Modifier les prix</span>
                     </div>
                 </div>
@@ -151,7 +152,8 @@
                                 <span class="text-xs font-medium">Non</span>
                             </label>
                         </div>
-                        <div class="cursor-pointer" v-if="insurance && articleStore.cardItems.length" @click="openEditPrice">
+                        <div class="cursor-pointer" v-if="insurance && articleStore.cardItems.length"
+                            @click="openEditPrice">
                             <span class="text-xs text-primary">Modifier les prix</span>
                         </div>
                     </div>
@@ -268,7 +270,7 @@
 import { toast } from 'vue-sonner';
 import { h } from "vue";
 import { RouterLink } from "vue-router";
-import { useArticleStore, useClientStore, useOrderStore } from '../../stores/index.js';
+import { useArticleStore, useClientStore, useOrderStore, useInvoiceStore } from '../../stores/index.js';
 import { ref, watch } from 'vue';
 
 export default {
@@ -276,6 +278,8 @@ export default {
     setup(_, { emit }) {
         const store = useClientStore();
         const articleStore = useArticleStore();
+        const orderStore = useOrderStore();
+        const invoiceStore = useInvoiceStore();
         const isCartOpen = ref(false);
         const insurance = ref(false);
         const editPrice = ref(false);
@@ -369,7 +373,6 @@ export default {
             editPrice.value = true;
         }
 
-        const orderStore = useOrderStore();
         const creatOrder = async function () {
             const order = saveCurrentOrder();
             if (order) {
@@ -395,13 +398,45 @@ export default {
                         field_total_vente: orderToCreate.total,
                         field_date: formatDateUS(),
                         status: 1,
-                        field_status: "unpayed"
+                        field_status: "unpayed",
+                        field_type: 'caisse',
                     };
-                    await orderStore.saveOrderData(data);
-                    if (orderStore.error) {
+
+                    const response = await orderStore.saveOrderData(data);
+
+                    // sauvegarde facture
+                    // const factureArticles = orderToCreate.items.map(item => ({
+                    //     description: item.title,
+                    //     quantity: item.quantity,
+                    //     unitPrice: item.field_prix_unitaire,
+                    // }));
+                    // field_facture_medicaments: JSON.stringify(factureArticles),
+
+                    const payload = {
+                        entity_type: "node",
+                        bundle: "facture",
+                        status: 1,
+                        title: `facture-${Date.now()}`,
+                        field_commande: response.data.item || "",
+                        field_date_facture: new Date().toLocaleDateString('en-En'),
+                        field_mode_paiement: 'Espèces / Chèque',
+                        field_patient_dossier: data.title,
+                        field_patient_nom: orderToCreate.clientName,
+                        field_reference_facture: data.title,
+                        field_articles_commande: allArticles,
+                        field_total_vente: orderToCreate.total,
+                        field_tva_facture: 20,
+                        field_type: 'caisse',
+                        field_status_invoice: 0,
+                    };
+
+                    await invoiceStore.saveInvoiceData(payload)
+
+                    if (orderStore.error || invoiceStore.error) {
                         toast.error("Une erreur est survenue lors de l'ajout du commande.")
                         return
                     }
+
                     articleStore.clearCart(true);
                     orderStore.loading = false;
                     toast("Commande ajoutée – non payée.", {

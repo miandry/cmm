@@ -133,7 +133,7 @@ import ExamenClinique from '../components/Consultations/ExamenClinique.vue'
 import Patient from '../components/Consultations/Patient.vue'
 import PrescriptionEtSuivi from '../components/Consultations/PrescriptionEtSuivi.vue'
 import Historique from '../components/Consultations/Historique.vue'
-import { useAppointmentStore, useClientStore, useConsultationStore, useExamenStore, useOrderStore, useUserStore } from '../stores/index.js';
+import { useAppointmentStore, useClientStore, useConsultationStore, useExamenStore, useInvoiceStore, useOrderStore, useUserStore } from '../stores/index.js';
 import PageLoader from '../components/PageLoader.vue'
 import { ref, onMounted, computed, nextTick, onBeforeUnmount } from 'vue'
 import { toast } from 'vue-sonner'
@@ -157,6 +157,7 @@ export default {
         const consultationsStore = useConsultationStore();
         const examenStore = useExamenStore();
         const orderStore = useOrderStore();
+        const invoiceStore = useInvoiceStore();
         const generalFormRef = ref(null);
         const examenCliniqueRef = ref(null);
         const patienStore = useClientStore();
@@ -214,7 +215,6 @@ export default {
                 const suiviData = prescriptionEtSuiviData.suivi;
                 let totalMedicament = 0;
                 let totalExamen = 0;
-                const orderStore = useOrderStore();
 
                 /** validation global */
 
@@ -251,7 +251,6 @@ export default {
                         field_justification: item.field_justification,
                     }));
                 }
-
                 const hasExamens = allExamens?.length > 0;
                 const hasMedications = allMedications?.length > 0;
                 // if (withOrder && (hasExamens || hasMedications)) {
@@ -355,9 +354,11 @@ export default {
                         status: 1,
                         field_status: "payed",
                         field_consultation_nid: response.data.item,
+                        field_type: "consultation",
                     };
+                    let allArticles = null;
                     if (allMedications && allMedications.length > 0) {
-                        const allArticles = allMedications.map(item => ({
+                        allArticles = allMedications.map(item => ({
                             entity_type: "paragraph",
                             bundle: "commande",
                             field_article: item.field_articles,
@@ -372,7 +373,50 @@ export default {
                         data.field_examens_order = allExamens;
                     }
 
-                    await orderStore.saveOrderData(data);
+                    const res = await orderStore.saveOrderData(data);
+
+                    // // sauvegarde facture
+                    // let factureArticles = [];
+                    // let factureExamens = [];
+
+                    // if (consultationsStore.savedMedication?.items?.length > 0) {
+                    //     factureArticles = consultationsStore.savedMedication.items.map(item => ({
+                    //         description: item.title,
+                    //         quantity: item.quantity,
+                    //         unitPrice: item.field_prix,
+                    //     }));
+                    // }
+
+                    // if (examenStore.savedExamen?.items?.length > 0) {
+                    //     factureExamens = examenStore.savedExamen.items.map(item => ({
+                    //         description: item.title,
+                    //         price: item.field_prix,
+                    //     }));
+                    // }
+                    // field_facture_medicaments: JSON.stringify(factureArticles),
+                    // field_facture_examens: JSON.stringify(factureExamens),
+
+                    const payload = {
+                        entity_type: "node",
+                        bundle: "facture",
+                        status: 1,
+                        title: `facture-${Date.now()}`,
+                        field_commande: res.data.item || "",
+                        field_date_facture: new Date().toLocaleDateString('en-En'),
+                        field_mode_paiement: 'Espèces / Chèque',
+                        field_articles_commande: allArticles,
+                        field_examens_dans_commande: allExamens,
+                        field_total_vente: totalExamen + totalMedicament,
+                        field_patient_dossier: data.title,
+                        field_patient_nom: patienStore.client.title,
+                        field_reference_facture: data.title,
+                        field_patient_age: patienStore.client.field_age || '',
+                        field_tva_facture: 20,
+                        field_type: 'consultation',
+                        field_status_invoice: 0,
+                    };
+
+                    await invoiceStore.saveInvoiceData(payload)
 
                     if (orderStore.error) {
                         toast.error("Une erreur est survenue lors de l'enregistrement.")
@@ -422,6 +466,7 @@ export default {
 
             } catch (error) {
                 toast.error("Une erreur est survenue lors de l'enregistrement.")
+                console.log(error, 'catch');
             } finally {
                 loader.value = false;
             }

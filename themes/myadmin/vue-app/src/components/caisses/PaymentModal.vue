@@ -120,18 +120,20 @@ export default {
                     field_total_vente: orderToCreate.total,
                     field_date: formatDateUS(),
                     status: 1,
-                    field_status: "payed"
+                    field_status: "payed",
+                    field_type: 'caisse',
                 };
                 const response = await orderStore.saveOrderData(data);
 
 
                 // sauvegarde facture
-                const factureArticles = orderToCreate.items.map(item => ({
-                    description: item.title,
-                    quantity: item.quantity,
-                    unitPrice: item.field_prix_unitaire,
-                }));
+                // const factureArticles = orderToCreate.items.map(item => ({
+                //     description: item.title,
+                //     quantity: item.quantity,
+                //     unitPrice: item.field_prix_unitaire,
+                // }));
 
+                // field_facture_medicaments: JSON.stringify(factureArticles),
 
                 const payload = {
                     entity_type: "node",
@@ -141,12 +143,14 @@ export default {
                     field_commande: response.data.item || "",
                     field_date_facture: new Date().toLocaleDateString('en-En'),
                     field_mode_paiement: 'Espèces / Chèque',
-                    field_facture_medicaments: JSON.stringify(factureArticles),
                     field_patient_dossier: data.title,
                     field_patient_nom: orderToCreate.clientName,
+                    field_articles_commande: allArticles,
+                    field_total_vente: orderToCreate.total,
                     field_reference_facture: data.title,
                     field_tva_facture: 20,
                     field_type: 'caisse',
+                    field_status_invoice: 1,
                 };
 
                 await invoiceStore.saveInvoiceData(payload)

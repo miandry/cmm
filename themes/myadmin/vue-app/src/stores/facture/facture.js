@@ -13,7 +13,7 @@ export const useInvoiceStore = defineStore("invoice", () => {
   const loading = ref(false);
   const error = ref(null);
 
-  async function fetchInvoice(id, options) {
+  async function fetchInvoice(id, options = {}) {
     loading.value = true;
     try {
       const query = buildQueryParams(options);

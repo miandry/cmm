@@ -21,7 +21,7 @@
                         <span class="text-xs sm:text-sm font-medium sm:hidden">Imp.</span>
                     </button>
 
-                    <!-- Bouton Sauvegarder --> <!-- saveInvoice  -->
+                    <!-- Bouton Sauvegarder -->
                     <button @click="saveInvoice" class="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold sm:font-bold 
                        py-2 sm:py-2 px-3 sm:px-4 rounded-lg sm:rounded shadow-md hover:shadow-lg 
                        flex items-center justify-center gap-1 sm:gap-2 transition-all duration-200 
@@ -51,8 +51,10 @@
                     </button>
                 </div>
             </div>
-            <!-- Sélecteur de type de facture - Responsive -->
-            <div class="fixed top-4 left-1/2 transform -translate-x-1/2 no-print z-50 w-[90%] max-w-sm mx-auto">
+
+            <!-- Sélecteur de type de facture - caché si field_type = 'caisse' -->
+            <div v-if="fieldType !== 'caisse'"
+                class="fixed top-4 left-1/2 transform -translate-x-1/2 no-print z-50 w-[90%] max-w-sm mx-auto">
                 <div class="flex gap-1 bg-white/95 backdrop-blur-sm p-1 rounded-full shadow-lg border border-gray-200">
                     <button @click="showMedicaments = true; currentPage = 1" :class="[
                         'flex items-center justify-center px-3 py-2 md:px-4 md:py-2 rounded-full font-medium transition-all duration-200 flex-1 min-w-0',
@@ -88,6 +90,15 @@
                     <div class="text-[10px] text-gray-500 font-medium">
                         {{ showMedicaments ? 'Médicaments' : 'Examens' }} - Page {{ currentPage }}/{{ totalPages }}
                     </div>
+                </div>
+            </div>
+
+            <!-- Badge informatif quand c'est une caisse -->
+            <div v-if="fieldType === 'caisse'"
+                class="fixed top-4 left-1/2 transform -translate-x-1/2 no-print z-50 w-[90%] max-w-sm mx-auto">
+                <div class="bg-blue-600 text-white p-2 rounded-full shadow-lg border border-gray-200 text-center">
+                    <i class="ri-medicine-bottle-line text-sm md:text-base mr-2"></i>
+                    <span class="text-xs md:text-sm font-medium">Médicaments (Caisse)</span>
                 </div>
             </div>
 
@@ -138,7 +149,6 @@
 
             <!-- Affichage de la page courante -->
             <div v-for="page in [currentPage]" :key="page">
-                <!--  justify-between -->
                 <div class="sheet-a5 p-5 relative flex flex-col justify-between print-colors-fix">
                     <div>
                         <div class="mb-12 no-print"></div>
@@ -163,7 +173,6 @@
 
                             <div class="w-1/3 text-right pt-1 text-sm">
                                 <h2 class="font-extrabold text-medical-blue text-sm uppercase leading-none mb-1">
-                                    <!-- {{ showMedicaments ? 'FACTURE MÉDICAMENTS' : 'FACTURE EXAMENS' }} -->
                                     FACTURE
                                 </h2>
                                 <p class="text-[10px] text-gray-600 leading-tight">
@@ -250,7 +259,8 @@
                                                 :title="article.description">
                                                 {{ article.description }}
                                             </span>
-                                            <button @click="removeArticle(getArticleIndex(index), 'articles')"
+                                            <button v-if="fieldType !== 'caisse'"
+                                                @click="removeArticle(getArticleIndex(index), 'articles')"
                                                 class="no-print text-red-400 hover:text-red-600 font-bold px-2 text-lg transition-opacity ml-1 opacity-0 group-hover:opacity-100 align-text-bottom flex-shrink-0">×</button>
                                         </div>
                                         <div class="w-1/5 text-center">
@@ -357,8 +367,8 @@
                                 </div>
                             </div>
 
-                            <!-- Boutons d'ajout (uniquement sur la dernière page) -->
-                            <div v-if="currentPage === totalPages" class="mt-2 no-print">
+                            <!-- Boutons d'ajout (uniquement sur la dernière page) - cachés si caisse -->
+                            <div v-if="currentPage === totalPages && fieldType !== 'caisse'" class="mt-2 no-print">
                                 <button v-if="showMedicaments" @click="addArticleWithPageCheck"
                                     class="flex items-center text-xs font-bold text-medical-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
                                     <i class="ri-add-line mr-1"></i> Ajouter un médicament
@@ -372,7 +382,7 @@
                     </div>
 
                     <!-- PIED DE PAGE POUR CHAQUE PAGE -->
-                    <div> <!-- class="mt-6 pt-2 border-t border-gray-200" -->
+                    <div>
                         <!-- Totaux pour la page courante -->
                         <div class="flex justify-end">
                             <div class="w-2/3 text-xs">
@@ -404,7 +414,7 @@
                                         formatCurrency(pageGrandTotal) }}</span>
                                 </div>
 
-                                <!-- Mode de paiement (uniquement sur la dernière page) v-if="currentPage === totalPages" -->
+                                <!-- Mode de paiement -->
                                 <div class="text-[10px] mt-2 text-gray-500 text-right">
                                     Mode de Paiement :
                                     <span class="editable-field text-gray-700" contenteditable="true"
@@ -417,7 +427,7 @@
                             </div>
                         </div>
 
-                        <!-- Notes et conditions (uniquement sur la dernière page) v-if="currentPage === totalPages" -->
+                        <!-- Notes et conditions -->
                         <div class="mt-4 border-t border-dashed border-gray-300 pt-2">
                             <h3 class="font-sans text-xs font-bold text-medical-blue uppercase mb-1">Notes et Conditions
                             </h3>
@@ -429,7 +439,7 @@
                             </p>
                         </div>
 
-                        <!-- Signature (uniquement sur la dernière page) v-if="currentPage === totalPages" -->
+                        <!-- Signature -->
                         <div class="mt-4 pt-3 border-t border-gray-200 text-right">
                             <p class="text-xs italic text-gray-500 mb-1">Signature du Pharmacien / Vendeur</p>
                             <div class="inline-block w-40 h-12 border border-gray-300 rounded print:border-none"></div>
@@ -461,22 +471,23 @@ export default {
         const orderStore = useOrderStore()
         const slug = route.query.key
 
-        const invoiceId = ref(route.query.invoice || null) // Récupérer l'ID facture si présent
-        const isEditingInvoice = ref(false) // Indique si on modifie une facture existante
+        const invoiceId = ref(route.query.invoice || null)
+        const isEditingInvoice = ref(false)
 
         const orderToShow = ref(null);
         const router = useRouter()
 
         // Variables pour gérer l'affichage
-        const showMedicaments = ref(true); // true = médicaments, false = examens
+        const showMedicaments = ref(true);
+        const fieldType = ref(''); // Ajout pour stocker field_type
 
         // Variables de pagination
         const currentPage = ref(1);
-        const itemsPerPage = ref(10); // 10 articles maximum par page
+        const itemsPerPage = ref(10);
 
         // Variables pour la popup de confirmation
         const showConfirmPopup = ref(false);
-        const pendingItemType = ref(null); // 'article' ou 'examen'
+        const pendingItemType = ref(null);
 
         // Stocker les valeurs originales pour éviter les conflits
         const editingValues = ref({});
@@ -493,16 +504,13 @@ export default {
         const articleFields = ref([]);
         const examenFields = ref([]);
 
-        // Dans le setup(), après les autres refs :
         const isMobile = ref(false);
 
-        // Fonction pour vérifier si on est sur mobile
         const checkMobile = () => {
             isMobile.value = window.innerWidth < 768;
         };
 
         // Données de la facture
-        // Configuration réelle
         const realCabinet = {
             ville: "Tsiroanomandidy",
             nom: "Pharmacie / CENTRE MÉDICAL VONJY AINA",
@@ -513,7 +521,6 @@ export default {
             immat: "NIF: 30024 555 38 / STAT: 65201 14 2016 0 00199"
         };
 
-        // Configuration fictive (tests)
         const fakeCabinet = {
             ville: "Antananarivo",
             nom: "Pharmacie / Centre Médical Test Santé",
@@ -548,84 +555,60 @@ export default {
 
         // ============== PAGINATION ==============
 
-        // Calcul du nombre total de pages selon ce qui est affiché
         const totalPages = computed(() => {
             const itemsToShow = showMedicaments.value ? articles.value.length : examens.value.length;
-
             if (itemsToShow === 0) return 1;
-
-            // Calcule combien de pages sont nécessaires
             const pagesNeeded = Math.ceil(itemsToShow / itemsPerPage.value);
-
             return Math.max(pagesNeeded, 1);
         });
 
-        // Vérifie si la page actuelle est pleine
         const isCurrentPageFull = computed(() => {
             const itemsCount = showMedicaments.value ?
                 articles.value.length - ((currentPage.value - 1) * itemsPerPage.value) :
                 examens.value.length - ((currentPage.value - 1) * itemsPerPage.value);
-
             return itemsCount >= itemsPerPage.value;
         });
 
-        // Médicaments de la page courante
         const pagedMedicaments = computed(() => {
             if (!showMedicaments.value) return [];
-
             const itemsToShow = articles.value;
             if (itemsToShow.length === 0) return [];
-
             if (currentPage.value < totalPages.value) {
-                // Pour les pages qui ne sont pas la dernière
                 const startIndex = (currentPage.value - 1) * itemsPerPage.value;
                 const endIndex = startIndex + itemsPerPage.value;
                 return itemsToShow.slice(startIndex, endIndex);
             } else {
-                // Dernière page : on montre les articles restants
                 const itemsAlreadyShown = (currentPage.value - 1) * itemsPerPage.value;
                 return itemsToShow.slice(itemsAlreadyShown);
             }
         });
 
-        // Examens de la page courante
         const pagedExamens = computed(() => {
             if (showMedicaments.value) return [];
-
             const itemsToShow = examens.value;
             if (itemsToShow.length === 0) return [];
-
             if (currentPage.value < totalPages.value) {
-                // Pour les pages qui ne sont pas la dernière
                 const startIndex = (currentPage.value - 1) * itemsPerPage.value;
                 const endIndex = startIndex + itemsPerPage.value;
                 return itemsToShow.slice(startIndex, endIndex);
             } else {
-                // Dernière page : on montre les examens restants
                 const itemsAlreadyShown = (currentPage.value - 1) * itemsPerPage.value;
                 return itemsToShow.slice(itemsAlreadyShown);
             }
         });
 
-        // ============== TOTAUX GLOBAUX (POUR RÉFÉRENCE INTERNE SEULEMENT) ==============
-
-        // Sous-total des articles (global) - pour calculs internes
         const articlesSubTotal = computed(() => {
             return articles.value.reduce((total, article) => {
                 return total + (article.quantity * article.unitPrice);
             }, 0);
         });
 
-        // Sous-total des examens (global) - pour calculs internes
         const examensSubTotal = computed(() => {
             return examens.value.reduce((total, examen) => {
                 return total + examen.price;
             }, 0);
         });
 
-        // ============== TOTAUX PAR PAGE ==============
-
-        // Total HT de la page courante
         const pageSubTotal = computed(() => {
             if (showMedicaments.value) {
                 return pagedMedicaments.value.reduce((total, article) => {
@@ -638,19 +621,14 @@ export default {
             }
         });
 
-        // TVA pour la page courante
         const pageTvaAmount = computed(() => {
             if (pageSubTotal.value === 0) return 0;
-            // TVA calculée sur le total de la page
             return pageSubTotal.value * (tvaRate.value / 100);
         });
 
-        // Total TTC de la page courante
         const pageGrandTotal = computed(() => {
             return pageSubTotal.value + pageTvaAmount.value;
         });
-
-        // ============== FONCTIONS DE PAGINATION ==============
 
         const nextPage = () => {
             if (currentPage.value < totalPages.value) {
@@ -664,7 +642,6 @@ export default {
             }
         };
 
-        // Fonctions pour obtenir l'index réel dans les tableaux
         const getArticleIndex = (pageIndex) => {
             const startIndex = (currentPage.value - 1) * itemsPerPage.value;
             return startIndex + pageIndex;
@@ -675,8 +652,6 @@ export default {
             return startIndex + pageIndex;
         };
 
-        // ============== FONCTIONS DE NAVIGATION ==============
-
         const smartBack = () => {
             if (window.history.length > 1) {
                 router.back()
@@ -684,8 +659,6 @@ export default {
                 router.push({ name: 'commandes' })
             }
         };
-
-        // ============== REQUÊTE API ==============
 
         const queryOptions = ref({
             fields: [
@@ -697,6 +670,7 @@ export default {
                 'field_date',
                 'field_status',
                 'field_total_vente',
+                'field_type',
                 'created'
             ],
             sort: { val: 'nid', op: 'desc' },
@@ -720,8 +694,6 @@ export default {
         // ============== INITIALISATION ==============
 
         onMounted(async () => {
-
-            // Vérifier si on modifie une facture existante
             if (invoiceId.value) {
                 try {
                     await invoiceStore.fetchInvoice(invoiceId.value, {});
@@ -731,37 +703,44 @@ export default {
                     }
                     loadExistingInvoice(invoiceStore.invoice)
                     isEditingInvoice.value = true;
+
+                    // Récupérer field_type depuis la facture
+                    fieldType.value = invoiceStore.invoice.field_type || '';
+
+                    // Si c'est une caisse, forcer l'affichage des médicaments
+                    if (fieldType.value === 'caisse') {
+                        showMedicaments.value = true;
+                    }
                 } catch (error) {
                     console.error(error)
                 }
-
-
             } else {
-                // Charger depuis la commande
                 await fetchOrders();
                 if (orderStore.orders.rows && orderStore.orders.rows.length > 0) {
                     orderToShow.value = orderStore.orders.rows[0];
                     updateFactureData();
 
-                    // Afficher les médicaments par défaut s'il y en a, sinon les examens
-                    if (articles.value.length > 0) {
+                    // Récupérer field_type depuis la commande
+                    fieldType.value = orderToShow.value.field_type || '';
+
+                    // Si c'est une caisse, forcer l'affichage des médicaments
+                    if (fieldType.value === 'caisse') {
                         showMedicaments.value = true;
-                    } else if (examens.value.length > 0) {
-                        showMedicaments.value = false;
+                    } else {
+                        if (articles.value.length > 0) {
+                            showMedicaments.value = true;
+                        } else if (examens.value.length > 0) {
+                            showMedicaments.value = false;
+                        }
                     }
                 }
             }
 
-
-
-            // Vérifier la taille d'écran
             checkMobile();
             window.addEventListener('resize', checkMobile);
         });
 
         const loadExistingInvoice = (data) => {
-
-            // Restaurer toutes les données de la facture
             factureRef.value = data.field_reference_facture || "";
             currentDate.value = data.field_date_facture || new Date().toLocaleDateString('fr-FR');
 
@@ -771,24 +750,70 @@ export default {
                 dossier: data.field_patient_dossier || ""
             };
 
-            articles.value = data.field_facture_medicaments ? JSON.parse(data.field_facture_medicaments) : [];
-            examens.value = data.field_facture_examens ? JSON.parse(data.field_facture_examens) : [];
+            // Charger les articles de la commande (avec fromOrder: true)
+            articles.value = parseArticles(data.field_articles_commande);
+            
+            // Charger les articles sauvegardés précédemment dans field_facture_medicaments (avec fromOrder: false)
+            if (data.field_facture_medicaments) {
+                const savedArticles = (() => {
+                    const articlesData = data.field_facture_medicaments;
+                    if (!articlesData) return [];
+                    try {
+                        const parsed = typeof articlesData === 'string' ? JSON.parse(articlesData) : articlesData;
+                        if (Array.isArray(parsed)) {
+                            return parsed.map(item => ({
+                                description: item.field_article?.title || item.description || "Produit",
+                                quantity: item.field_quantite || item.quantity || 1,
+                                unitPrice: item.field_prix_unitaire || item.unitPrice || 0,
+                                isNew: false,
+                                fromOrder: false
+                            }));
+                        }
+                    } catch (e) {
+                        console.error("Erreur parsing articles sauvegardés:", e);
+                    }
+                    return [];
+                })();
+                articles.value = [...articles.value, ...savedArticles];
+            }
+            
+            // Charger les examens de la commande (avec fromOrder: true)
+            examens.value = parseExamens(data.field_examens_dans_commande);
+            
+            // Charger les examens sauvegardés précédemment dans field_facture_examens (avec fromOrder: false)
+            if (data.field_facture_examens) {
+                const savedExamens = (() => {
+                    const examensData = data.field_facture_examens;
+                    if (!examensData) return [];
+                    try {
+                        const parsed = typeof examensData === 'string' ? JSON.parse(examensData) : examensData;
+                        if (Array.isArray(parsed)) {
+                            return parsed.map(item => ({
+                                description: item.field_examen?.title || "Examen médical",
+                                price: parseFloat(item.field_prix) || 0,
+                                isNew: false,
+                                fromOrder: false
+                            }));
+                        }
+                    } catch (e) {
+                        console.error("Erreur parsing examens sauvegardés:", e);
+                    }
+                    return [];
+                })();
+                examens.value = [...examens.value, ...savedExamens];
+            }
 
             tvaRate.value = data.field_tva_facture || 20;
             paymentMethod.value = data.field_mode_paiement || "Espèces / Chèque";
             invoiceNotes.value = data.field_notes || "Paiement dû à réception de la facture. Les médicaments non utilisés ne sont pas remboursables.";
 
-            // Créer un objet orderToShow factice pour la commande associée
             if (data.field_commande) {
                 orderToShow.value = { nid: data.field_commande };
             }
-
-            console.log('Facture chargée avec succès');
         };
 
         // ============== GESTION DES CHAMPS ÉDITABLES ==============
 
-        // Fonction pour référencer les champs d'articles
         const setArticleFieldRef = (el, type, index, category = 'articles') => {
             if (!el) return;
             if (!articleFields.value[index]) {
@@ -797,7 +822,6 @@ export default {
             articleFields.value[index][type] = el;
         };
 
-        // Fonction pour référencer les champs d'examens
         const setExamenFieldRef = (el, type, index) => {
             if (!el) return;
             if (!examenFields.value[index]) {
@@ -806,44 +830,31 @@ export default {
             examenFields.value[index][type] = el;
         };
 
-        // Empêcher Vue de mettre à jour pendant l'édition
-        const preventVueUpdate = (event) => {
-            // Ne rien faire - laisser le DOM gérer l'édition
-            // On sauvegarde seulement au blur
-        };
+        const preventVueUpdate = (event) => { };
 
-        // Gérer le focus - sauvegarder la valeur actuelle
         const handleFocus = (event, fieldName) => {
-            // Stocker la valeur originale
             editingValues.value[fieldName] = event.target.textContent;
-
-            // Sélectionner tout le texte pour faciliter l'édition
             nextTick(() => {
                 selectAllText(event.target);
             });
         };
 
-        // Gérer le focus pour les articles
         const handleArticleFocus = (event, index, fieldType) => {
             const fieldName = `article_${index}_${fieldType}`;
             editingValues.value[fieldName] = event.target.textContent;
-
             nextTick(() => {
                 selectAllText(event.target);
             });
         };
 
-        // Gérer le focus pour les examens
         const handleExamenFocus = (event, index, fieldType) => {
             const fieldName = `examen_${index}_${fieldType}`;
             editingValues.value[fieldName] = event.target.textContent;
-
             nextTick(() => {
                 selectAllText(event.target);
             });
         };
 
-        // Sélectionner tout le texte dans un élément
         const selectAllText = (element) => {
             const range = document.createRange();
             range.selectNodeContents(element);
@@ -852,7 +863,6 @@ export default {
             selection.addRange(range);
         };
 
-        // Sauvegarder et perdre le focus
         const saveAndBlur = (event, isTextarea = false) => {
             if (!isTextarea) {
                 event.preventDefault();
@@ -862,10 +872,8 @@ export default {
 
         // ============== PARSING DES DONNÉES ==============
 
-        // Fonction pour parser les articles
         const parseArticles = (articlesData) => {
             if (!articlesData) return [];
-
             try {
                 if (typeof articlesData === 'string') {
                     const parsed = JSON.parse(articlesData);
@@ -873,73 +881,68 @@ export default {
                         return parsed.map(item => ({
                             description: item.field_article?.title || item.description || "Produit",
                             quantity: item.field_quantite || item.quantity || 1,
-                            unitPrice: item.field_prix_unitaire || item.unitPrice || 0
+                            unitPrice: item.field_prix_unitaire || item.unitPrice || 0,
+                            isNew: false,
+                            fromOrder: true
                         }));
                     }
                 }
-
                 if (Array.isArray(articlesData)) {
                     return articlesData.map(item => ({
                         description: item.field_article?.title || item.description || "Produit",
                         quantity: item.field_quantite || item.quantity || 1,
-                        unitPrice: item.field_prix_unitaire || item.unitPrice || 0
+                        unitPrice: item.field_prix_unitaire || item.unitPrice || 0,
+                        isNew: false,
+                        fromOrder: true
                     }));
                 }
             } catch (e) {
                 console.error("Erreur parsing articles:", e);
             }
-
             return [];
         };
 
-        // Fonction pour parser les examens
         const parseExamens = (examensData) => {
             if (!examensData) return [];
-
             try {
                 if (typeof examensData === 'string') {
                     const parsed = JSON.parse(examensData);
                     if (Array.isArray(parsed)) {
                         return parsed.map(item => ({
                             description: item.field_examen?.title || "Examen médical",
-                            price: parseFloat(item.field_prix) || 0
+                            price: parseFloat(item.field_prix) || 0,
+                            isNew: false,
+                            fromOrder: true
                         }));
                     }
                 }
-
                 if (Array.isArray(examensData)) {
                     return examensData.map(item => ({
                         description: item.field_examen?.title || "Examen médical",
-                        price: parseFloat(item.field_prix) || 0
+                        price: parseFloat(item.field_prix) || 0,
+                        isNew: false,
+                        fromOrder: true
                     }));
                 }
             } catch (e) {
                 console.error("Erreur parsing examens:", e);
             }
-
             return [];
         };
 
-        // Mettre à jour les données de la facture
         const updateFactureData = () => {
             if (!orderToShow.value) return;
-
             factureRef.value = `${orderToShow.value.title || orderToShow.value.nid || 'REF'}`;
             currentDate.value = orderToShow.value.field_date || new Date().toLocaleDateString('fr-FR');
-
             patient.value.nom = orderToShow.value.field_client?.title || "";
             patient.value.dossier = orderToShow.value.title || "";
-
             articles.value = parseArticles(orderToShow.value.field_articles);
             examens.value = parseExamens(orderToShow.value.field_examens_order);
-
-            // Réinitialiser à la première page
             currentPage.value = 1;
         };
 
         // ============== MISE À JOUR DES CHAMPS ÉDITABLES ==============
 
-        // Fonctions de mise à jour - appelées seulement au blur
         const updateFactureRef = (event) => {
             const newValue = event.target.textContent.trim();
             if (newValue && newValue !== editingValues.value.factureRef) {
@@ -978,7 +981,6 @@ export default {
         const updateArticleDescription = (index, event) => {
             const newValue = event.target.textContent.trim();
             const oldValueKey = `article_${index}_description`;
-
             if (newValue && newValue !== editingValues.value[oldValueKey]) {
                 if (articles.value[index]) {
                     articles.value[index].description = newValue;
@@ -989,7 +991,6 @@ export default {
         const updateArticleQuantity = (index, event) => {
             const newValue = event.target.textContent.trim();
             const oldValueKey = `article_${index}_quantity`;
-
             if (newValue !== editingValues.value[oldValueKey]) {
                 const quantity = cleanNumericText(newValue);
                 if (articles.value[index]) {
@@ -1001,7 +1002,6 @@ export default {
         const updateArticlePrice = (index, event) => {
             const newValue = event.target.textContent.trim();
             const oldValueKey = `article_${index}_price`;
-
             if (newValue !== editingValues.value[oldValueKey]) {
                 const price = cleanNumericText(newValue);
                 if (articles.value[index]) {
@@ -1013,7 +1013,6 @@ export default {
         const updateExamenDescription = (index, event) => {
             const newValue = event.target.textContent.trim();
             const oldValueKey = `examen_${index}_description`;
-
             if (newValue && newValue !== editingValues.value[oldValueKey]) {
                 if (examens.value[index]) {
                     examens.value[index].description = newValue;
@@ -1024,7 +1023,6 @@ export default {
         const updateExamenPrice = (index, event) => {
             const newValue = event.target.textContent.trim();
             const oldValueKey = `examen_${index}_price`;
-
             if (newValue !== editingValues.value[oldValueKey]) {
                 const price = cleanNumericText(newValue);
                 if (examens.value[index]) {
@@ -1058,65 +1056,49 @@ export default {
 
         // ============== GESTION DES ARTICLES ET EXAMENS ==============
 
-        // Fonction pour ajouter un médicament avec vérification de la page
         const addArticleWithPageCheck = () => {
-            // Vérifier si la page actuelle est pleine
             if (isCurrentPageFull.value) {
-                // Afficher la popup de confirmation
                 pendingItemType.value = 'article';
                 showConfirmPopup.value = true;
             } else {
-                // Ajouter directement l'article
                 addArticle();
             }
         };
 
-        // Fonction pour ajouter un examen avec vérification de la page
         const addExamenWithPageCheck = () => {
-            // Vérifier si la page actuelle est pleine
             if (isCurrentPageFull.value) {
-                // Afficher la popup de confirmation
                 pendingItemType.value = 'examen';
                 showConfirmPopup.value = true;
             } else {
-                // Ajouter directement l'examen
                 addExamen();
             }
         };
 
-        // Fonction appelée quand l'utilisateur confirme l'ajout
         const confirmAddItem = () => {
             showConfirmPopup.value = false;
-
             if (pendingItemType.value === 'article') {
                 addArticle();
             } else if (pendingItemType.value === 'examen') {
                 addExamen();
             }
-
             pendingItemType.value = null;
         };
 
-        // Fonction appelée quand l'utilisateur annule
         const cancelAddItem = () => {
             showConfirmPopup.value = false;
             pendingItemType.value = null;
         };
 
-        // Fonctions d'ajout originales
         const addArticle = () => {
             articles.value.push({
                 description: "Nouveau produit",
                 quantity: 1,
-                unitPrice: 0
+                unitPrice: 0,
+                isNew: true
             });
-
-            // Si on dépasse la capacité de la page courante, aller à la dernière page
             if (currentPage.value !== totalPages.value) {
                 currentPage.value = totalPages.value;
             }
-
-            // Focus sur le nouveau champ de description après ajout
             nextTick(() => {
                 const lastIndex = articles.value.length - 1;
                 const field = articleFields.value[lastIndex]?.description;
@@ -1130,15 +1112,12 @@ export default {
         const addExamen = () => {
             examens.value.push({
                 description: "Nouvel examen",
-                price: 0
+                price: 0,
+                isNew: true
             });
-
-            // Si on dépasse la capacité de la page courante, aller à la dernière page
             if (currentPage.value !== totalPages.value) {
                 currentPage.value = totalPages.value;
             }
-
-            // Focus sur le nouveau champ de description après ajout
             nextTick(() => {
                 const lastIndex = examens.value.length - 1;
                 const field = examenFields.value[lastIndex]?.description;
@@ -1152,35 +1131,22 @@ export default {
         const removeArticle = (index) => {
             articles.value.splice(index, 1);
             articleFields.value.splice(index, 1);
-
-            // Ajuster la pagination après suppression
             adjustPaginationAfterRemoval();
         };
 
         const removeExamen = (index) => {
             examens.value.splice(index, 1);
             examenFields.value.splice(index, 1);
-
-            // Ajuster la pagination après suppression
             adjustPaginationAfterRemoval();
         };
 
-        // ============== FONCTION CORRIGÉE POUR GÉRER LES PAGES VIDES ==============
-
-        // Ajuster la pagination après suppression
         const adjustPaginationAfterRemoval = () => {
-            // Attendre le prochain tick pour que les computed properties soient mises à jour
             nextTick(() => {
-                // Si la page courante est supérieure au nombre total de pages après suppression
                 if (currentPage.value > totalPages.value) {
                     currentPage.value = totalPages.value;
                 }
-
-                // Si on est sur une page vide (après suppression du dernier élément de la page)
-                // mais qu'il y a encore des éléments dans la facture
                 const itemsCount = showMedicaments.value ? articles.value.length : examens.value.length;
                 const currentItems = showMedicaments.value ? pagedMedicaments.value : pagedExamens.value;
-
                 if (currentItems.length === 0 && itemsCount > 0 && currentPage.value > 1) {
                     currentPage.value = currentPage.value - 1;
                 }
@@ -1189,25 +1155,20 @@ export default {
 
         // ============== FORMATAGE ==============
 
-        // Formatage monétaire
         const formatCurrency = (value, showCurrency = true) => {
             const number = parseFloat(value);
             if (isNaN(number)) return showCurrency ? "0.00 MGA" : "0.00";
-
             const formatted = number.toLocaleString('fr-FR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
                 useGrouping: true
             });
-
             return showCurrency ? `${formatted} MGA` : formatted;
         };
 
-        // Formatage pour l'affichage seulement (sans MGA)
         const formatCurrencyDisplay = (value) => {
             const number = parseFloat(value);
             if (isNaN(number)) return "0.00";
-
             return number.toLocaleString('fr-FR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
@@ -1215,49 +1176,35 @@ export default {
             });
         };
 
-        // Nettoyage des valeurs numériques
         const cleanNumericText = (text) => {
             const cleaned = text.toString().replace(',', '.').replace(/[^\d.-]/g, '');
             const number = parseFloat(cleaned);
             return isNaN(number) ? 0 : number;
         };
 
-        // ============== IMPRESSION ==============
-
         const printInvoice = () => {
-            // Fonction simplifiée pour l'impression
-            // La pagination CSS gère automatiquement les sauts de page
             window.print();
         };
 
-        // ============== SURVEILLANCE DES CHANGEMENTS ==============
+        // ============== SURVEILLANCE ==============
 
-        // Surveiller le changement entre médicaments et examens pour réinitialiser la pagination
         watch(showMedicaments, () => {
             currentPage.value = 1;
         });
 
-        // Surveiller les changements des articles et examens
         watch([articles, examens], () => {
-            // Forcer le recalcul des totaux et de la pagination
-            // Ajuster automatiquement la pagination si nécessaire
             adjustPaginationAfterRemoval();
         }, { deep: true });
 
-        // Surveiller le nombre total de pages pour ajuster la page courante
         watch(totalPages, (newTotalPages, oldTotalPages) => {
-            // Si le nombre total de pages a diminué et que la page courante est maintenant invalide
             if (newTotalPages < oldTotalPages && currentPage.value > newTotalPages) {
                 currentPage.value = newTotalPages;
             }
-
-            // Si on a supprimé le dernier élément d'une page
             if (newTotalPages < oldTotalPages && newTotalPages > 0) {
                 adjustPaginationAfterRemoval();
             }
         });
 
-        // Surveiller les changements de l'order
         watch(() => orderStore.orders, (newOrders) => {
             if (newOrders.rows && newOrders.rows.length > 0) {
                 orderToShow.value = newOrders.rows[0];
@@ -1265,21 +1212,26 @@ export default {
             }
         });
 
-        // save facture in database
         const invoiceStore = useInvoiceStore();
         const isLoading = ref(false);
+
         const saveInvoice = async () => {
             isLoading.value = true;
             try {
+                // Filtrer les articles et examens pour sauvegarder SEULEMENT les éléments ajoutés manuellement
+                // (ceux qui ne viennent pas de la commande: fromOrder !== true)
+                const newArticles = articles.value.filter(article => article.fromOrder !== true);
+                const newExamens = examens.value.filter(examen => examen.fromOrder !== true);
+
                 const payload = {
                     entity_type: "node",
                     bundle: "facture",
                     status: 1,
                     field_commande: orderToShow.value?.nid || "",
                     field_date_facture: currentDate.value,
-                    field_facture_examens: JSON.stringify(examens.value),
+                    field_facture_examens: JSON.stringify(newExamens),
                     field_mode_paiement: paymentMethod.value,
-                    field_facture_medicaments: JSON.stringify(articles.value),
+                    field_facture_medicaments: JSON.stringify(newArticles),
                     field_notes: invoiceNotes.value,
                     field_patient_dossier: patient.value.dossier,
                     field_patient_nom: patient.value.nom,
@@ -1288,12 +1240,10 @@ export default {
                     field_tva_facture: tvaRate.value,
                 };
 
-                // Si c'est une création, ajouter le title avec la date
                 if (!isEditingInvoice.value || !invoiceId.value) {
                     payload.title = `facture-${Date.now()}`;
                 }
 
-                // Si c'est une modification, ajouter le nid dans le payload
                 if (isEditingInvoice.value && invoiceId.value) {
                     payload.nid = invoiceId.value;
                 }
@@ -1312,14 +1262,9 @@ export default {
             }
         }
 
-        // ============== RETURN ==============
-
         return {
-            // Variables d'affichage
             showMedicaments,
             showConfirmPopup,
-
-            // Variables existantes
             orderToShow,
             cabinet,
             patient,
@@ -1330,19 +1275,13 @@ export default {
             tvaRate,
             paymentMethod,
             invoiceNotes,
-
-            // Variables de pagination
             currentPage,
             totalPages,
             pagedMedicaments,
             pagedExamens,
-
-            // Totaux par page seulement
             pageSubTotal,
             pageTvaAmount,
             pageGrandTotal,
-
-            // Fonctions existantes
             addArticleWithPageCheck,
             addExamenWithPageCheck,
             removeArticle,
@@ -1370,18 +1309,12 @@ export default {
             handleArticleFocus,
             handleExamenFocus,
             preventVueUpdate,
-
-            // Fonctions de confirmation
             confirmAddItem,
             cancelAddItem,
-
-            // Fonctions de pagination
             nextPage,
             prevPage,
             getArticleIndex,
             getExamenIndex,
-
-            // Références
             factureRefField,
             currentDateField,
             patientNomField,
@@ -1390,15 +1323,12 @@ export default {
             tvaRateField,
             paymentMethodField,
             invoiceNotesField,
-
-            // Fonction de navigation
             smartBack,
             isMobile,
-
-            // facture save
             saveInvoice,
             isEditingInvoice,
             isLoading,
+            fieldType,
         };
     }
 }
@@ -1553,8 +1483,6 @@ body {
         color-adjust: exact !important;
         font-weight: normal !important;
     }
-
-
 }
 
 /* Classes Tailwind custom */

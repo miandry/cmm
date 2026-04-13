@@ -56,7 +56,11 @@
                                 </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
+                                    Montant total
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Action
                                 </th>
                             </tr>
                         </thead>
@@ -117,19 +121,26 @@
                                         </span>
                                     </div>
                                 </td>
+                                <td>
+                                    <span class="font-medium">
+                                        {{
+                                            Number(invoice.field_total_vente ||
+                                                0).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}
+                                    </span>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                    <button class="text-blue-600 hover:text-blue-900"
+                                    <router-link :to="{ name: 'facture-details', query: { invoice: invoice.nid } }"
+                                        class="text-primary hover:text-blue-900 inline-flex">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-eye-line"></i>
+                                        </div>
+                                    </router-link>
+                                    <!-- <button class="text-blue-600 hover:text-blue-900"
                                         @click.stop="goToFacture(invoice)">
                                         <div class="w-4 h-4 flex items-center justify-center">
                                             <i class="ri-printer-line"></i>
                                         </div>
-                                    </button>
-                                    <button class="text-green-600 hover:text-green-900"
-                                        @click.stop="openStatusModal(invoice)">
-                                        <div class="w-4 h-4 flex items-center justify-center">
-                                            <i class="ri-edit-line"></i>
-                                        </div>
-                                    </button>
+                                    </button> -->
                                 </td>
                             </tr>
                         </tbody>
@@ -166,79 +177,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Modal de modification du statut -->
-        <div v-if="showStatusModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title"
-            role="dialog" aria-modal="true">
-            <div class="flex items-center justify-center min-h-screen px-4 text-center">
-                <!-- Overlay -->
-                <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
-
-                <!-- Modal -->
-                <div
-                    class="relative inline-block align-middle bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div
-                                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-                                <i class="ri-file-edit-line text-green-600"></i>
-                            </div>
-                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                    Modifier le statut de la facture
-                                </h3>
-                                <div class="mt-4">
-                                    <p class="text-sm text-gray-500 mb-3">
-                                        Réf: <span class="font-medium text-gray-900">{{
-                                            selectedInvoice?.field_reference_facture }}</span>
-                                    </p>
-                                    <p class="text-sm text-gray-500 mb-4">
-                                        Patient: <span class="font-medium text-gray-900">{{
-                                            selectedInvoice?.field_patient_nom }}</span>
-                                    </p>
-
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                                            Statut de paiement
-                                        </label>
-                                        <div class="flex space-x-4">
-                                            <label class="inline-flex items-center">
-                                                <input type="radio" v-model="newStatus" :value="1"
-                                                    class="form-radio text-primary focus:ring-primary">
-                                                <span class="ml-2 text-sm text-gray-700">Payé</span>
-                                            </label>
-                                            <label class="inline-flex items-center">
-                                                <input type="radio" v-model="newStatus" :value="0"
-                                                    class="form-radio text-primary focus:ring-primary">
-                                                <span class="ml-2 text-sm text-gray-700">Non payé</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button @click="updateInvoiceStatus" :disabled="updatingStatus"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg v-if="updatingStatus" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                </path>
-                            </svg>
-                            {{ updatingStatus ? 'Mise à jour...' : 'Enregistrer' }}
-                        </button>
-                        <button @click="closeStatusModal" type="button"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Annuler
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </main>
 </template>
 
@@ -248,7 +186,6 @@ import { useRouter } from 'vue-router';
 import { debounce } from 'lodash';
 import { formatDate } from '../utils/formateDate.js';
 import { useInvoiceStore } from '../stores/index.js';
-import { toast } from 'vue-sonner';
 
 export default {
     name: "FactureList",
@@ -276,12 +213,6 @@ export default {
         // État de chargement du tableau
         const tableLoading = ref(false);
 
-        // Modal state
-        const showStatusModal = ref(false);
-        const selectedInvoice = ref(null);
-        const newStatus = ref(null);
-        const updatingStatus = ref(false);
-
         // Paramètres dynamiques de la requête pour les factures
         const invoiceQueryOptions = ref({
             fields: [
@@ -292,6 +223,7 @@ export default {
                 'field_reference_facture',
                 'field_patient_age',
                 'field_type',
+                'field_total_vente',
                 'field_status_invoice',
                 'nid'
             ],
@@ -359,57 +291,6 @@ export default {
                 return 'bg-purple-100 text-purple-800';
             }
             return 'bg-gray-100 text-gray-800';
-        };
-
-        // Ouvrir le modal de modification du statut
-        const openStatusModal = (invoice) => {
-            selectedInvoice.value = invoice;
-            newStatus.value = invoice.field_status_invoice;
-            showStatusModal.value = true;
-        };
-
-        // Fermer le modal
-        const closeStatusModal = () => {
-            showStatusModal.value = false;
-            selectedInvoice.value = null;
-            newStatus.value = null;
-        };
-
-        // Mettre à jour le statut de la facture
-        const updateInvoiceStatus = async () => {
-            if (!selectedInvoice.value || newStatus.value === null) return;
-            const form = {
-                entity_type: "node",
-                bundle: "facture",
-                nid: selectedInvoice.value.nid,
-                field_status_invoice: newStatus.value,
-            }
-            updatingStatus.value = true;
-            try {
-                await invoiceStore.saveInvoiceData(form)
-                if (invoiceStore.error) {
-                    toast.error('Erreur lors de la mise à jour du statut')
-                    return;
-                }
-
-                // Mettre à jour localement la facture dans la liste
-                const updatedInvoice = invoiceStore.invoices.rows.find(
-                    inv => inv.nid === selectedInvoice.value.nid
-                );
-                if (updatedInvoice) {
-                    updatedInvoice.field_status_invoice = newStatus.value;
-                }
-
-                // Fermer le modal
-                closeStatusModal();
-
-                toast.success('Statut mis à jour avec succès');
-
-            } catch (error) {
-                console.error('Erreur lors de la mise à jour du statut:', error);
-            } finally {
-                updatingStatus.value = false;
-            }
         };
 
         // Message personnalisé selon les filtres actifs
@@ -572,15 +453,7 @@ export default {
             goToFacture,
             // Badges
             getStatusBadgeClass,
-            getTypeBadgeClass,
-            // Modal statut
-            showStatusModal,
-            selectedInvoice,
-            newStatus,
-            updatingStatus,
-            openStatusModal,
-            closeStatusModal,
-            updateInvoiceStatus
+            getTypeBadgeClass
         };
     }
 }

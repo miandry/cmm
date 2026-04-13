@@ -59,7 +59,8 @@ export default {
                 'field_date',
                 'field_status',
                 'field_total_vente',
-                'created'
+                'created',
+                'field_type',
             ],
             sort: { val: 'nid', op: 'desc' },
             filters: {},

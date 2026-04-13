@@ -218,8 +218,15 @@
 
             <!-- Spécialité Select - s'affiche uniquement si le rôle docteur est coché -->
             <div v-if="formData.roles.includes('docteur')">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Spécialité <span
-                  class="text-red-500">*</span></label>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-sm font-medium text-gray-700">Spécialité <span
+                    class="text-red-500">*</span></label>
+                <button type="button" @click="showQuickAddSpecialtyModal = true"
+                  class="text-xs text-primary hover:text-blue-600 font-medium flex items-center gap-1">
+                  <i class="fas fa-plus"></i>
+                  Ajouter
+                </button>
+              </div>
               <select v-model="formData.specialty"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                 <option value="">Sélectionnez une spécialité</option>
@@ -288,6 +295,56 @@
     <!-- modal for Specialite - docteur  -->
     <DocteurSpecialities ref="specialitiesModalRef" @specialities-updated="loadSpecialities" />
 
+    <!-- Modal pour ajouter rapidement une spécialité -->
+    <div v-if="showQuickAddSpecialtyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4">
+      <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-800">Ajouter une spécialité</h2>
+            <button @click="showQuickAddSpecialtyModal = false" class="text-gray-400 hover:text-gray-600">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+
+          <form @submit.prevent="saveQuickAddSpecialty" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Nom de la spécialité <span class="text-red-500">*</span>
+              </label>
+              <input v-model="quickAddForm.title" type="text" required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="Ex: Cardiologie">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Montant de consultation (Ar) <span class="text-red-500">*</span>
+              </label>
+              <input v-model.number="quickAddForm.field_montant_consultation" type="number" required min="0"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="Ex: 50000">
+            </div>
+
+            <div v-if="quickAddError" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {{ quickAddError }}
+            </div>
+
+            <div class="flex gap-3 pt-4">
+              <button type="button" @click="showQuickAddSpecialtyModal = false"
+                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                Annuler
+              </button>
+              <button type="submit" :disabled="quickAddSaving || !quickAddForm.title || !quickAddForm.field_montant_consultation"
+                class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50">
+                <i v-if="quickAddSaving" class="fas fa-spinner fa-spin mr-2"></i>
+                {{ quickAddSaving ? 'Ajout...' : 'Ajouter' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -320,6 +377,15 @@ export default {
 
     // Liste des spécialités depuis le store
     const specialtiesList = ref([]);
+    
+    // Modal pour ajouter une spécialité rapidement
+    const showQuickAddSpecialtyModal = ref(false);
+    const quickAddForm = ref({
+      title: '',
+      field_montant_consultation: ''
+    });
+    const quickAddError = ref('');
+    const quickAddSaving = ref(false);
 
     // Charger les spécialités depuis le store
     const loadSpecialities = async () => {
@@ -736,6 +802,59 @@ export default {
       }
     };
 
+    const saveQuickAddSpecialty = async () => {
+      quickAddError.value = '';
+      
+      // Validation
+      if (!quickAddForm.value.title.trim()) {
+        quickAddError.value = 'Le nom de la spécialité est requis';
+        return;
+      }
+      
+      if (!quickAddForm.value.field_montant_consultation || quickAddForm.value.field_montant_consultation <= 0) {
+        quickAddError.value = 'Le montant doit être supérieur à 0';
+        return;
+      }
+      
+      quickAddSaving.value = true;
+      
+      try {
+        const payload = {
+          entity_type: 'node',
+          bundle: 'specialite_docteur',
+          status: 1,
+          title: quickAddForm.value.title,
+          field_montant_consultation: quickAddForm.value.field_montant_consultation,
+          field_specialite_medicale: quickAddForm.value.title
+        };
+        
+        await specialityStore.saveSpecialityData(payload);
+        
+        if (!specialityStore.error) {
+          // Recharger les spécialités
+          await loadSpecialities();
+          
+          // Sélectionner automatiquement la nouvelle spécialité
+          const newSpecialty = specialtiesList.value[specialtiesList.value.length - 1];
+          if (newSpecialty) {
+            formData.value.specialty = newSpecialty.nid;
+          }
+          
+          // Fermer la modal et réinitialiser
+          showQuickAddSpecialtyModal.value = false;
+          quickAddForm.value = { title: '', field_montant_consultation: '' };
+          toast.success('Spécialité ajoutée avec succès');
+        } else {
+          quickAddError.value = specialityStore.error || 'Une erreur est survenue';
+        }
+      } catch (error) {
+        console.error('Erreur lors de l\'ajout de la spécialité:', error);
+        quickAddError.value = error.response?.data?.message || 'Une erreur est survenue';
+      } finally {
+        quickAddSaving.value = false;
+      }
+    };
+
     watch(statusFilter, () => {
       updateStatus();
     });
@@ -783,6 +902,12 @@ export default {
       specialitiesModalRef,
       openSpecialitiesModal,
       loadSpecialities,
+      // Quick add specialty
+      showQuickAddSpecialtyModal,
+      quickAddForm,
+      quickAddError,
+      quickAddSaving,
+      saveQuickAddSpecialty,
     };
   }
 }
