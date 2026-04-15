@@ -71,39 +71,64 @@ class APIService
         return $token_new;
     }
 
-    // =============== NOUVELLES MÉTHODES POUR TOKEN BEARER ===============
+    // =============== MÉTHODES POUR TOKEN BEARER AVEC MULTI-SESSIONS ===============
 
     /**
-     * Génère un token Bearer unique pour un utilisateur.
+     * Génère un identifiant de session unique pour un appareil.
+     *
+     * @param \Drupal\user\Entity\User $user
+     *   L'utilisateur.
+     *
+     * @return string
+     *   L'identifiant de session.
+     */
+    private function generateSessionId($user)
+    {
+        $request = \Drupal::request();
+        $user_agent = $request->headers->get('User-Agent', '');
+        $ip = $request->getClientIp();
+        $timestamp = time();
+
+        // Créer un ID unique basé sur plusieurs facteurs
+        return hash('sha256', $user->id() . $user_agent . $ip . $timestamp . uniqid('', true));
+    }
+
+    /**
+     * Génère un token Bearer unique pour un utilisateur (supporte multi-sessions).
      *
      * @param \Drupal\user\Entity\User $user
      *   L'utilisateur pour lequel générer le token.
      * @param int $days
-     *   Nombre de jours avant expiration (défaut: 30).
+     *   Nombre de jours avant expiration (défaut: 60).
      *
      * @return string
      *   Le token généré.
      */
-    public function generateBearerToken($user, $days = 30)
+    public function generateBearerToken($user, $days = 60)
     {
         // Générer un token unique et sécurisé (64 caractères hexadécimaux)
         $token = bin2hex(random_bytes(32));
 
+        // Générer un identifiant de session unique pour cet appareil
+        $session_id = $this->generateSessionId($user);
+
         // Calculer la date d'expiration
         $expiration = time() + ($days * 24 * 60 * 60);
 
-        // Supprimer les anciens tokens de cet utilisateur
-        \Drupal::database()->delete('mz_crud_tokens')
-            ->condition('uid', $user->id())
-            ->execute();
+        // NE PAS supprimer les anciens tokens - on garde toutes les sessions actives
+        // On insère simplement le nouveau token pour cette session
 
-        // Insérer le nouveau token
+        // Insérer le nouveau token avec l'ID de session
         \Drupal::database()->insert('mz_crud_tokens')
             ->fields([
                 'uid' => $user->id(),
                 'token' => $token,
+                'session_id' => $session_id,
+                'user_agent' => \Drupal::request()->headers->get('User-Agent', ''),
+                'ip_address' => \Drupal::request()->getClientIp(),
                 'created' => time(),
                 'expiration' => $expiration,
+                'last_activity' => time(),
             ])
             ->execute();
 
@@ -126,13 +151,19 @@ class APIService
         }
 
         $query = \Drupal::database()->select('mz_crud_tokens', 't')
-            ->fields('t', ['uid'])
+            ->fields('t', ['uid', 'token', 'session_id'])
             ->condition('token', $token)
             ->condition('expiration', time(), '>')
             ->execute()
             ->fetchAssoc();
 
         if ($query && isset($query['uid'])) {
+            // Mettre à jour la dernière activité
+            \Drupal::database()->update('mz_crud_tokens')
+                ->fields(['last_activity' => time()])
+                ->condition('token', $token)
+                ->execute();
+
             return User::load($query['uid']);
         }
 
@@ -180,7 +211,7 @@ class APIService
     }
 
     /**
-     * Invalide un token Bearer (pour logout).
+     * Invalide un token Bearer spécifique (pour logout d'un appareil).
      *
      * @param string $token
      *   Le token à invalider.
@@ -195,7 +226,7 @@ class APIService
     }
 
     /**
-     * Invalide tous les tokens d'un utilisateur.
+     * Invalide tous les tokens d'un utilisateur (déconnexion globale).
      *
      * @param int $uid
      *   L'ID de l'utilisateur.
@@ -205,6 +236,42 @@ class APIService
         if (!empty($uid)) {
             \Drupal::database()->delete('mz_crud_tokens')
                 ->condition('uid', $uid)
+                ->execute();
+        }
+    }
+
+    /**
+     * Récupère toutes les sessions actives d'un utilisateur.
+     *
+     * @param int $uid
+     *   L'ID de l'utilisateur.
+     *
+     * @return array
+     *   Liste des sessions actives.
+     */
+    public function getUserSessions($uid)
+    {
+        $result = \Drupal::database()->select('mz_crud_tokens', 't')
+            ->fields('t', ['token', 'session_id', 'user_agent', 'ip_address', 'created', 'expiration', 'last_activity'])
+            ->condition('uid', $uid)
+            ->condition('expiration', time(), '>')
+            ->execute()
+            ->fetchAll();
+
+        return $result;
+    }
+
+    /**
+     * Invalide une session spécifique par son ID.
+     *
+     * @param string $session_id
+     *   L'ID de session.
+     */
+    public function invalidateSession($session_id)
+    {
+        if (!empty($session_id)) {
+            \Drupal::database()->delete('mz_crud_tokens')
+                ->condition('session_id', $session_id)
                 ->execute();
         }
     }

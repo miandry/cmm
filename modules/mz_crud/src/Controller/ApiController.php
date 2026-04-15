@@ -51,8 +51,8 @@ class ApiController extends ControllerBase
                     if ($password_hasher->check($password, $hashed_password)) {
                         $service = \Drupal::service('api.crud');
 
-                        // Générer un nouveau token Bearer
-                        $token = $service->generateBearerToken($user);
+                        // Générer un nouveau token Bearer (ne supprime pas les anciens)
+                        $token = $service->generateBearerToken($user, 60);
 
                         // Créer la réponse JSON (sans le token dans le body)
                         $response = new JsonResponse([
@@ -146,7 +146,7 @@ class ApiController extends ControllerBase
 
                     if ($saved) {
                         // Générer un token Bearer
-                        $token = $service->generateBearerToken($user);
+                        $token = $service->generateBearerToken($user, 60);
 
                         // Créer la réponse
                         $response = new JsonResponse([
@@ -435,10 +435,11 @@ class ApiController extends ControllerBase
 
                         $saved = $user->save();
 
-                        // Si le mot de passe a changé, régénérer le token
+                        // Si le mot de passe a changé, régénérer le token pour cette session uniquement
                         if (isset($data['pass']) && $data['pass'] !== '' && $data['uid'] == $current_user->id()) {
-                            $service->invalidateUserTokens($user->id());
-                            $new_token = $service->generateBearerToken($user);
+                            // Invalider uniquement le token actuel, pas tous les tokens
+                            $service->invalidateBearerToken($token);
+                            $new_token = $service->generateBearerToken($user, 60);
 
                             $response = new JsonResponse([
                                 'status' => (bool) $saved,
@@ -450,8 +451,19 @@ class ApiController extends ControllerBase
                                 ]
                             ]);
 
-                            // Supprimer l'ancien cookie
-                            $response->headers->clearCookie('auth_token', '/');
+                            // Créer un nouveau cookie avec le nouveau token
+                            $cookie = new Cookie(
+                                'auth_token',
+                                $new_token,
+                                time() + self::COOKIE_LIFETIME,
+                                '/',
+                                null,
+                                false,
+                                true,
+                                false,
+                                'Lax'
+                            );
+                            $response->headers->setCookie($cookie);
 
                             return $response;
                         }
@@ -499,6 +511,7 @@ class ApiController extends ControllerBase
 
         if ($token) {
             $service = \Drupal::service('api.crud');
+            // Invalider uniquement ce token (cette session)
             $service->invalidateBearerToken($token);
         }
 
@@ -634,16 +647,16 @@ class ApiController extends ControllerBase
                 $saved = $current_user->save();
 
                 if ($saved) {
-                    // Invalider l'ancien token
+                    // Invalider l'ancien token de cette session uniquement
                     $service->invalidateBearerToken($token);
 
-                    // Générer un nouveau token
-                    $new_token = $service->generateBearerToken($current_user);
+                    // Générer un nouveau token pour cette session
+                    $new_token = $service->generateBearerToken($current_user, 60);
 
                     // Créer la réponse avec le nouveau cookie
                     $response = new JsonResponse([
                         'status' => true,
-                        'message' => 'Mot de passe changé avec succès. Veuillez vous reconnecter.',
+                        'message' => 'Mot de passe changé avec succès.',
                         'user' => [
                             'id' => $current_user->id(),
                             'name' => $current_user->getAccountName(),
@@ -680,5 +693,167 @@ class ApiController extends ControllerBase
             'status' => false,
             'error' => 'Méthode non autorisée'
         ], 405);
+    }
+
+    /**
+     * Get all active sessions for current user.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getSessions(Request $request)
+    {
+        $token = $request->cookies->get('auth_token');
+
+        if (!$token) {
+            return new JsonResponse([
+                'status' => false,
+                'error' => 'Non authentifié'
+            ], 401);
+        }
+
+        $service = \Drupal::service('api.crud');
+        $current_user = $service->validateBearerToken($token);
+
+        if (!$current_user) {
+            $response = new JsonResponse([
+                'status' => false,
+                'error' => 'Session expirée'
+            ], 401);
+            $response->headers->clearCookie('auth_token', '/');
+            return $response;
+        }
+
+        $sessions = $service->getUserSessions($current_user->id());
+
+        // Formater les sessions pour la réponse
+        $formatted_sessions = [];
+        foreach ($sessions as $session) {
+            $formatted_sessions[] = [
+                'session_id' => $session->session_id,
+                'user_agent' => $session->user_agent,
+                'ip_address' => $session->ip_address,
+                'created' => date('Y-m-d H:i:s', $session->created),
+                'last_activity' => date('Y-m-d H:i:s', $session->last_activity),
+                'expiration' => date('Y-m-d H:i:s', $session->expiration),
+                'is_current' => ($session->token === $token)
+            ];
+        }
+
+        return new JsonResponse([
+            'status' => true,
+            'sessions' => $formatted_sessions
+        ]);
+    }
+
+    /**
+     * Revoke a specific session (logout from other device).
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function revokeSession(Request $request)
+    {
+        $token = $request->cookies->get('auth_token');
+
+        if (!$token) {
+            return new JsonResponse([
+                'status' => false,
+                'error' => 'Non authentifié'
+            ], 401);
+        }
+
+        $service = \Drupal::service('api.crud');
+        $current_user = $service->validateBearerToken($token);
+
+        if (!$current_user) {
+            $response = new JsonResponse([
+                'status' => false,
+                'error' => 'Session expirée'
+            ], 401);
+            $response->headers->clearCookie('auth_token', '/');
+            return $response;
+        }
+
+        $method = $request->getMethod();
+        if ($method === "POST") {
+            $content = $request->getContent();
+            $data = json_decode($content, TRUE);
+
+            if (empty($data['session_id'])) {
+                return new JsonResponse([
+                    'status' => false,
+                    'error' => 'Session ID requis'
+                ], 400);
+            }
+
+            // Ne pas permettre de révoquer sa propre session
+            $current_session = \Drupal::database()->select('mz_crud_tokens', 't')
+                ->fields('t', ['session_id'])
+                ->condition('token', $token)
+                ->execute()
+                ->fetchAssoc();
+
+            if ($current_session && $current_session['session_id'] === $data['session_id']) {
+                return new JsonResponse([
+                    'status' => false,
+                    'error' => 'Vous ne pouvez pas révoquer votre session actuelle'
+                ], 400);
+            }
+
+            // Révoquer la session
+            $service->invalidateSession($data['session_id']);
+
+            return new JsonResponse([
+                'status' => true,
+                'message' => 'Session révoquée avec succès'
+            ]);
+        }
+
+        return new JsonResponse([
+            'status' => false,
+            'error' => 'Méthode non autorisée'
+        ], 405);
+    }
+
+    /**
+     * Revoke all sessions except current.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function revokeAllOtherSessions(Request $request)
+    {
+        $token = $request->cookies->get('auth_token');
+
+        if (!$token) {
+            return new JsonResponse([
+                'status' => false,
+                'error' => 'Non authentifié'
+            ], 401);
+        }
+
+        $service = \Drupal::service('api.crud');
+        $current_user = $service->validateBearerToken($token);
+
+        if (!$current_user) {
+            $response = new JsonResponse([
+                'status' => false,
+                'error' => 'Session expirée'
+            ], 401);
+            $response->headers->clearCookie('auth_token', '/');
+            return $response;
+        }
+
+        // Supprimer toutes les sessions sauf celle-ci
+        \Drupal::database()->delete('mz_crud_tokens')
+            ->condition('uid', $current_user->id())
+            ->condition('token', $token, '<>')
+            ->execute();
+
+        return new JsonResponse([
+            'status' => true,
+            'message' => 'Toutes les autres sessions ont été révoquées'
+        ]);
     }
 }

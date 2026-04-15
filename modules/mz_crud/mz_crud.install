@@ -11,19 +11,31 @@
 function mz_crud_schema() {
   $schema = [];
   
-  // Table pour stocker les tokens d'authentification
+  // Table pour stocker les tokens d'authentification avec support multi-sessions
   $schema['mz_crud_tokens'] = [
-    'description' => 'Stocke les tokens d\'authentification Bearer pour les utilisateurs',
+    'description' => 'Stocke les tokens d\'authentification Bearer pour les utilisateurs avec support multi-sessions',
     'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique token ID',
+      ],
       'uid' => [
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'description' => 'ID de l\'utilisateur Drupal',
       ],
+      'session_id' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'Identifiant unique de session pour chaque appareil',
+      ],
       'token' => [
         'type' => 'varchar',
-        'length' => 128,
+        'length' => 255,
         'not null' => TRUE,
         'description' => 'Token d\'authentification unique',
       ],
@@ -39,11 +51,35 @@ function mz_crud_schema() {
         'not null' => TRUE,
         'description' => 'Timestamp d\'expiration du token',
       ],
+      'user_agent' => [
+        'type' => 'text',
+        'not null' => FALSE,
+        'description' => 'User agent du navigateur/appareil',
+      ],
+      'ip_address' => [
+        'type' => 'varchar',
+        'length' => 45,
+        'not null' => FALSE,
+        'description' => 'Adresse IP de l\'appareil',
+      ],
+      'last_activity' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Timestamp de la dernière activité',
+      ],
     ],
-    'primary key' => ['uid'],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'unique_token' => ['token'],
+    ],
     'indexes' => [
+      'uid_index' => ['uid'],
+      'session_id_index' => ['session_id'],
       'token_index' => ['token'],
       'expiration_index' => ['expiration'],
+      'last_activity_index' => ['last_activity'],
     ],
   ];
   
@@ -54,12 +90,13 @@ function mz_crud_schema() {
  * Implements hook_install().
  */
 function mz_crud_install() {
-  // Vérifier si la table existe déjà avant de la créer
+  // Créer la table avec la nouvelle structure
   $database = \Drupal::database();
   $schema = $database->schema();
   
   if (!$schema->tableExists('mz_crud_tokens')) {
     $schema->createTable('mz_crud_tokens', mz_crud_schema()['mz_crud_tokens']);
+    \Drupal::messenger()->addMessage(t('Table mz_crud_tokens créée avec succès avec support multi-sessions'));
   }
 }
 
@@ -73,5 +110,206 @@ function mz_crud_uninstall() {
   
   if ($schema->tableExists('mz_crud_tokens')) {
     $schema->dropTable('mz_crud_tokens');
+    \Drupal::messenger()->addMessage(t('Table mz_crud_tokens supprimée'));
   }
+}
+
+/**
+ * Update table to support multi-sessions.
+ */
+function mz_crud_update_9001(&$sandbox = NULL) {
+  $database = \Drupal::database();
+  $schema = $database->schema();
+  
+  // Vérifier si la table existe
+  if (!$schema->tableExists('mz_crud_tokens')) {
+    // Créer la table si elle n'existe pas
+    $schema->createTable('mz_crud_tokens', mz_crud_schema()['mz_crud_tokens']);
+    return t('Table mz_crud_tokens created successfully with multi-session support.');
+  }
+  
+  // Vérifier et ajouter la colonne id si elle n'existe pas
+  if (!$schema->fieldExists('mz_crud_tokens', 'id')) {
+    try {
+      $database->query("ALTER TABLE {mz_crud_tokens} ADD COLUMN id INT NOT NULL AUTO_INCREMENT FIRST");
+    } catch (\Exception $e) {
+      // Colonne existe peut-être déjà
+    }
+  }
+  
+  // Ajouter les colonnes si elles n'existent pas
+  if (!$schema->fieldExists('mz_crud_tokens', 'session_id')) {
+    try {
+      $database->query("ALTER TABLE {mz_crud_tokens} ADD COLUMN session_id VARCHAR(255) NULL AFTER uid");
+    } catch (\Exception $e) {
+      // Colonne existe peut-être déjà
+    }
+  }
+  
+  if (!$schema->fieldExists('mz_crud_tokens', 'user_agent')) {
+    try {
+      $database->query("ALTER TABLE {mz_crud_tokens} ADD COLUMN user_agent TEXT NULL AFTER expiration");
+    } catch (\Exception $e) {
+      // Colonne existe peut-être déjà
+    }
+  }
+  
+  if (!$schema->fieldExists('mz_crud_tokens', 'ip_address')) {
+    try {
+      $database->query("ALTER TABLE {mz_crud_tokens} ADD COLUMN ip_address VARCHAR(45) NULL AFTER user_agent");
+    } catch (\Exception $e) {
+      // Colonne existe peut-être déjà
+    }
+  }
+  
+  if (!$schema->fieldExists('mz_crud_tokens', 'last_activity')) {
+    try {
+      $database->query("ALTER TABLE {mz_crud_tokens} ADD COLUMN last_activity INT NOT NULL DEFAULT 0 AFTER ip_address");
+    } catch (\Exception $e) {
+      // Colonne existe peut-être déjà
+    }
+  }
+  
+  // Modifier la longueur du token si nécessaire
+  try {
+    $database->query("ALTER TABLE {mz_crud_tokens} MODIFY token VARCHAR(255) NOT NULL");
+  } catch (\Exception $e) {
+    // Ignorer si déjà modifié
+  }
+  
+  // Modifier la clé primaire
+  try {
+    // Supprimer l'ancienne clé primaire si elle existe
+    $database->query("ALTER TABLE {mz_crud_tokens} DROP PRIMARY KEY");
+  } catch (\Exception $e) {
+    // Ignorer si pas de clé primaire
+  }
+  
+  // Ajouter la nouvelle clé primaire sur id
+  if ($schema->fieldExists('mz_crud_tokens', 'id')) {
+    try {
+      $database->query("ALTER TABLE {mz_crud_tokens} ADD PRIMARY KEY (id)");
+    } catch (\Exception $e) {
+      // Clé primaire existe peut-être déjà
+    }
+  }
+  
+  // Ajouter l'index unique sur token
+  try {
+    $database->query("ALTER TABLE {mz_crud_tokens} ADD UNIQUE INDEX unique_token (token)");
+  } catch (\Exception $e) {
+    // Index existe peut-être déjà
+  }
+  
+  // Ajouter les index
+  try {
+    $database->query("CREATE INDEX IF NOT EXISTS uid_index ON {mz_crud_tokens} (uid)");
+  } catch (\Exception $e) {
+    // Index existe peut-être déjà
+  }
+  
+  try {
+    $database->query("CREATE INDEX IF NOT EXISTS session_id_index ON {mz_crud_tokens} (session_id)");
+  } catch (\Exception $e) {
+    // Index existe peut-être déjà
+  }
+  
+  try {
+    $database->query("CREATE INDEX IF NOT EXISTS expiration_index ON {mz_crud_tokens} (expiration)");
+  } catch (\Exception $e) {
+    // Index existe peut-être déjà
+  }
+  
+  try {
+    $database->query("CREATE INDEX IF NOT EXISTS last_activity_index ON {mz_crud_tokens} (last_activity)");
+  } catch (\Exception $e) {
+    // Index existe peut-être déjà
+  }
+  
+  return t('Table mz_crud_tokens updated successfully with multi-session support.');
+}
+
+/**
+ * Nettoyer les tokens expirés.
+ */
+function mz_crud_update_9002(&$sandbox = NULL) {
+  $database = \Drupal::database();
+  $schema = $database->schema();
+  
+  if (!$schema->tableExists('mz_crud_tokens')) {
+    return t('Table mz_crud_tokens does not exist. Nothing to clean up.');
+  }
+  
+  // Supprimer les tokens expirés
+  $deleted = $database->delete('mz_crud_tokens')
+    ->condition('expiration', time(), '<')
+    ->execute();
+  
+  if ($deleted > 0) {
+    return t('Cleaned up @count expired tokens.', ['@count' => $deleted]);
+  }
+  
+  return t('No expired tokens to clean up.');
+}
+
+/**
+ * Supprimer les sessions orphelines (sans utilisateur existant).
+ */
+function mz_crud_update_9003(&$sandbox = NULL) {
+  $database = \Drupal::database();
+  $schema = $database->schema();
+  
+  if (!$schema->tableExists('mz_crud_tokens')) {
+    return t('Table mz_crud_tokens does not exist.');
+  }
+  
+  // Supprimer les tokens dont l'utilisateur n'existe plus
+  // Version corrigée sans rowCount()
+  $query = $database->query("
+    DELETE t FROM {mz_crud_tokens} t
+    LEFT JOIN {users_field_data} u ON t.uid = u.uid
+    WHERE u.uid IS NULL
+  ");
+  
+  // Récupérer le nombre de lignes supprimées d'une autre manière
+  $deleted = $database->query("SELECT ROW_COUNT()")->fetchField();
+  
+  if ($deleted > 0) {
+    return t('Deleted @count orphaned sessions.', ['@count' => $deleted]);
+  }
+  
+  return t('No orphaned sessions found.');
+}
+
+/**
+ * Alternative: Supprimer les sessions orphelines avec une approche différente.
+ */
+function mz_crud_update_9004(&$sandbox = NULL) {
+  $database = \Drupal::database();
+  $schema = $database->schema();
+  
+  if (!$schema->tableExists('mz_crud_tokens')) {
+    return t('Table mz_crud_tokens does not exist.');
+  }
+  
+  // Version alternative avec SELECT puis DELETE
+  // Récupérer les IDs des tokens orphelins
+  $orphaned_ids = $database->query("
+    SELECT t.id FROM {mz_crud_tokens} t
+    LEFT JOIN {users_field_data} u ON t.uid = u.uid
+    WHERE u.uid IS NULL
+  ")->fetchCol();
+  
+  $deleted = 0;
+  if (!empty($orphaned_ids)) {
+    $deleted = $database->delete('mz_crud_tokens')
+      ->condition('id', $orphaned_ids, 'IN')
+      ->execute();
+  }
+  
+  if ($deleted > 0) {
+    return t('Deleted @count orphaned sessions.', ['@count' => $deleted]);
+  }
+  
+  return t('No orphaned sessions found.');
 }
