@@ -15,6 +15,11 @@ class ApiController extends ControllerBase
 {
 
     /**
+     * Durée de vie du cookie en secondes (2 mois)
+     */
+    const COOKIE_LIFETIME = 5259488; // 60 * 60 * 24 * 60.9 (2 mois)
+
+    /**
      * Login with HTTP-Only cookie.
      *
      * @param Request $request
@@ -61,11 +66,11 @@ class ApiController extends ControllerBase
                             ]
                         ]);
 
-                        // Créer un cookie HTTP-Only avec le token
+                        // Créer un cookie HTTP-Only avec le token - durée 2 mois
                         $cookie = new Cookie(
                             'auth_token',      // Nom du cookie
                             $token,            // Valeur (le token)
-                            time() + 3600,     // Expiration (1 heure)
+                            time() + self::COOKIE_LIFETIME,     // Expiration (2 mois)
                             '/',                // Path (disponible sur tout le site)
                             null,               // Domain (null = domaine actuel)
                             false,               // Secure (HTTPS only)
@@ -154,11 +159,11 @@ class ApiController extends ControllerBase
                             ]
                         ]);
 
-                        // Créer un cookie HTTP-Only avec le token
+                        // Créer un cookie HTTP-Only avec le token - durée 2 mois
                         $cookie = new Cookie(
                             'auth_token',
                             $token,
-                            time() + 3600,
+                            time() + self::COOKIE_LIFETIME,
                             '/',
                             null,
                             true,
@@ -314,11 +319,9 @@ class ApiController extends ControllerBase
                         $user = User::create([
                             'name' => $data['name'],
                             'mail' => $data['mail'] ?? '',
-                            'field_specialite' => $data['field_specialite'] ?? '',
                             'status' => 1
                         ]);
 
-                        $user->set('field_specialite', $data['field_specialite'] ?? '');
                         $user->setPassword($data['pass']);
 
                         // Ajouter plusieurs roles
@@ -429,8 +432,6 @@ class ApiController extends ControllerBase
                             // Seul l'admin peut changer les rôles
                             $user->set('roles', $data['roles']);
                         }
-
-                        $user->set('field_specialite', $data['field_specialite'] ?? '');
 
                         $saved = $user->save();
 
@@ -650,11 +651,11 @@ class ApiController extends ControllerBase
                         ]
                     ]);
 
-                    // Créer un nouveau cookie HTTP-Only avec le nouveau token
+                    // Créer un nouveau cookie HTTP-Only avec le nouveau token - durée 2 mois
                     $cookie = new Cookie(
                         'auth_token',
                         $new_token,
-                        time() + 3600,
+                        time() + self::COOKIE_LIFETIME,
                         '/',
                         null,
                         false,

@@ -143,26 +143,19 @@ document.addEventListener('touchend', function (event) {
         isDropdown: true,
         dropdownItems: [
           {
-            name: "Liste ventes",
+            name: "Ventes",
             path: "/commandes",
             icon: "fas fa-list",
             roles: ["caissier", "gerant", "webmaster", "administrator"]
           },
           {
-            name: "Liste factures",
+            name: "Factures",
             path: "/factures",
             icon: "fas fa-file-invoice",
             roles: ["caissier", "gerant", "webmaster", "administrator"]
           }
         ],
         roles: ["caissier", "gerant", "webmaster", "administrator"]
-      },
-      { 
-        id: 3,
-        name: "Patients",
-        path: "/patients",
-        icon: "fas fa-users",
-        roles: ["docteur", "gerant", "webmaster", "administrator"]
       },
       // Ajout du dropdown pour les médecins
       { 
@@ -192,6 +185,13 @@ document.addEventListener('touchend', function (event) {
           }
         ],
         roles: ["docteur", "webmaster", "administrator"]
+      },
+      { 
+        id: 3,
+        name: "Patients",
+        path: "/patients",
+        icon: "fas fa-users",
+        roles: ["docteur", "gerant", "webmaster", "administrator"]
       },
       { 
         id: 6,

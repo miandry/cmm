@@ -194,7 +194,7 @@ export default {
         const invoiceStore = useInvoiceStore();
 
         // Pagination
-        const perPage = 20;
+        const perPage = 15;
         const currentPage = ref(1);
         const totalPages = computed(() => Math.ceil((invoiceStore.invoices.total || 0) / perPage));
 

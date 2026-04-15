@@ -142,33 +142,54 @@ export default {
       return this.authStore.user?.roles || window.APP_DATA?.roles || [];
     },
 
+    canUseDropdown() {
+      const highRoles = ["administrator", "admin", "webmaster", "gerant"];
+      return this.roles.some(role => highRoles.includes(role));
+    },
+
     // MENU FILTRÉ SELON LES RÔLES
     menuItems() {
       const menu = window.APP_DATA?.menu || [];
       const userRoles = this.roles;
+      const canUseDropdown = this.canUseDropdown;
 
       return menu.filter(item => {
-        // menu public
         if (!item.roles || item.roles.length === 0) {
           return true;
         }
 
-        // vérifier si le user possède un rôle autorisé
-        return item.roles.some(role =>
-          userRoles.includes(role)
-        );
-      }).map(item => {
-        // Si c'est un dropdown, filtrer aussi les items du dropdown
+        return item.roles.some(role => userRoles.includes(role));
+      }).reduce((acc, item) => {
         if (item.isDropdown && item.dropdownItems) {
-          return {
+          const dropdownItems = item.dropdownItems.filter(dropdownItem =>
+            !dropdownItem.roles || dropdownItem.roles.some(role => userRoles.includes(role))
+          );
+
+          if (!dropdownItems.length) {
+            return acc;
+          }
+
+          if (!canUseDropdown) {
+            dropdownItems.forEach((dropdownItem, index) => {
+              acc.push({
+                ...dropdownItem,
+                id: `${item.id}-${index}`,
+                isDropdown: false,
+              });
+            });
+            return acc;
+          }
+
+          acc.push({
             ...item,
-            dropdownItems: item.dropdownItems.filter(dropdownItem =>
-              !dropdownItem.roles || dropdownItem.roles.some(role => userRoles.includes(role))
-            )
-          };
+            dropdownItems,
+          });
+          return acc;
         }
-        return item;
-      });
+
+        acc.push(item);
+        return acc;
+      }, []);
     }
   },
 

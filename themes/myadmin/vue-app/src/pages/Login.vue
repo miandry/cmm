@@ -22,10 +22,18 @@
           </div>
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-            <input id="password" name="password" type="password" autocomplete="current-password" required
-              v-model="password"
-              class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-              placeholder="••••••••">
+            <div class="relative">
+              <input id="password" name="password" :type="showPassword ? 'text' : 'password'"
+                autocomplete="current-password" required v-model="password"
+                class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm pr-10"
+                placeholder="••••••••">
+              <button type="button" @click="togglePasswordVisibility" @mousedown.prevent
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-700 z-10"
+                :aria-label="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+                <i v-if="!showPassword" class="ri-eye-line text-gray-500 hover:text-gray-700 text-lg"></i>
+                <i v-else class="ri-eye-off-line text-gray-500 hover:text-gray-700 text-lg"></i>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -74,6 +82,11 @@ export default {
 
     const username = ref('');
     const password = ref('');
+    const showPassword = ref(false);
+
+    const togglePasswordVisibility = () => {
+      showPassword.value = !showPassword.value;
+    };
 
     // Fonction pour déterminer la route de redirection selon le rôle
     const getRedirectPath = (user) => {
@@ -134,8 +147,23 @@ export default {
       authStore,
       username,
       password,
+      showPassword,
+      togglePasswordVisibility,
       handleLogin
     };
   }
 }
 </script>
+
+<style scoped>
+/* L'icône reste toujours visible et le texte ne passe pas dessous */
+input {
+  padding-right: 2.5rem;
+}
+
+/* Optionnel: améliorer l'apparence du bouton */
+button[aria-label*="Masquer"]:focus,
+button[aria-label*="Afficher"]:focus {
+  outline: none;
+}
+</style>
