@@ -285,6 +285,7 @@ export default {
                 'field_tension_arterielle',
                 'field_client',
                 'field_consultation_status',
+                'field_rendez_vous',
                 'created',
                 'field_docteur',
                 'field_poids',

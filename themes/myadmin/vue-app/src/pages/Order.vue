@@ -61,6 +61,7 @@ export default {
                 'field_total_vente',
                 'created',
                 'field_type',
+                'field_facture',
             ],
             sort: { val: 'nid', op: 'desc' },
             filters: {},

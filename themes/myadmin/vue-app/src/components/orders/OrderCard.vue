@@ -122,9 +122,11 @@
             <router-link :to="{
                 path: '/facture',
                 query: {
-                    key: order.title
+                    key: order.title,
+                    invoice: order.field_facture?.nid 
                 }
-            }" class="px-3 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 !rounded-button text-sm font-medium whitespace-nowrap print-invoice-btn">
+            }"
+                class="px-3 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 !rounded-button text-sm font-medium whitespace-nowrap print-invoice-btn">
                 <div class="w-4 h-4 flex items-center justify-center inline-block mr-1">
                     <i class="ri-printer-line"></i>
                 </div>

@@ -125,22 +125,19 @@ export default {
                 };
                 const response = await orderStore.saveOrderData(data);
 
+                if (orderStore.error) {
+                    toast.error("Une erreur est survenue lors de la création de la commande")
+                    return
+                }
 
-                // sauvegarde facture
-                // const factureArticles = orderToCreate.items.map(item => ({
-                //     description: item.title,
-                //     quantity: item.quantity,
-                //     unitPrice: item.field_prix_unitaire,
-                // }));
-
-                // field_facture_medicaments: JSON.stringify(factureArticles),
+                const commandeId = parseInt(response.data.item);
 
                 const payload = {
                     entity_type: "node",
                     bundle: "facture",
                     status: 1,
                     title: `facture-${Date.now()}`,
-                    field_commande: response.data.item || "",
+                    field_commande: commandeId,
                     field_date_facture: new Date().toLocaleDateString('en-En'),
                     field_mode_paiement: 'Espèces / Chèque',
                     field_patient_dossier: data.title,
@@ -153,12 +150,27 @@ export default {
                     field_status_invoice: 1,
                 };
 
-                await invoiceStore.saveInvoiceData(payload)
+                const invoiceResponse = await invoiceStore.saveInvoiceData(payload);
 
-                if (orderStore.error || invoiceStore.error) {
-                    toast.error("Une erreur est survenue lors de l'enregistrement")
+                if (invoiceStore.error) {
+                    toast.error("Une erreur est survenue lors de la création de la facture")
+                    console.error("Erreur lors de la création de la facture :", invoiceStore.error);
                     return
                 }
+                const dataUpdate = {
+                    entity_type: "node",
+                    bundle: "commande",
+                    nid: commandeId,
+                    field_facture: invoiceResponse.data.item,
+                };
+
+                await orderStore.saveOrderData(dataUpdate)
+
+                if (orderStore.error) {
+                    toast.error("Une erreur est survenue lors de la création de la commande")
+                    return
+                }
+
                 articleStore.clearCart(true);
                 emit('close-payment-modal');
                 orderStore.loading = false;

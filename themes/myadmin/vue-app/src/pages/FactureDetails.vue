@@ -188,6 +188,15 @@
               </div>
               <div class="space-y-3">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                  <span class="text-gray-600">Articles et Examens</span>
+                  <span class="font-medium">{{ (articlesTotal + examensTotal)?.toLocaleString() }} Ar</span>
+                </div>
+                <div v-if="consultationAmount"
+                  class="flex justify-between items-center pb-3 border-b border-gray-200">
+                  <span class="text-gray-600">Montant Consultation</span>
+                  <span class="font-medium">{{ consultationAmount?.toLocaleString() }} Ar</span>
+                </div>
+                <div class="flex justify-between items-center pb-3 border-b border-gray-200">
                   <span class="text-gray-600">Sous-total</span>
                   <span class="font-medium">{{ subTotal?.toLocaleString() }} Ar</span>
                 </div>
@@ -341,8 +350,12 @@ export default {
         }, 0);
     });
 
+    const consultationAmount = computed(() => {
+      return parseNumber(invoiceData.value?.field_montant_cons || 0);
+    });
+
     const subTotal = computed(() => {
-      return articlesTotal.value + examensTotal.value;
+      return articlesTotal.value + examensTotal.value + consultationAmount.value;
     });
 
     const tvaAmount = computed(() => {
@@ -381,7 +394,8 @@ export default {
             'field_mode_paiement',
             'field_tva_facture',
             'field_articles_commande',
-            'field_examens_dans_commande'
+            'field_examens_dans_commande',
+            'field_montant_cons'
           ],
         });
 
@@ -564,6 +578,7 @@ export default {
       examens,
       articlesTotal,
       examensTotal,
+      consultationAmount,
       subTotal,
       tvaAmount,
       totalTTC,

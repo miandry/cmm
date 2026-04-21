@@ -344,6 +344,7 @@ export default {
         const getStatusLabel = (status) => {
             const statusMap = {
                 'pending': 'En attente',
+                'in_process': 'En cours',
                 'completed': 'Terminé',
                 'cancelled': 'Annulé'
             };
@@ -356,6 +357,7 @@ export default {
         const getStatusClass = (status) => {
             const classMap = {
                 'pending': 'bg-yellow-100 text-yellow-800',
+                'in_process': 'bg-blue-100 text-blue-800',
                 'completed': 'bg-green-100 text-green-800',
                 'cancelled': 'bg-red-100 text-red-800'
             };
@@ -368,6 +370,7 @@ export default {
         const getStatusIcon = (status) => {
             const iconMap = {
                 'pending': 'ri-time-line',
+                'in_process': 'ri-time-line',
                 'completed': 'ri-checkbox-circle-line',
                 'cancelled': 'ri-close-circle-line'
             };

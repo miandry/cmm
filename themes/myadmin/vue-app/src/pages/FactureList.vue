@@ -124,8 +124,7 @@
                                 <td>
                                     <span class="font-medium">
                                         {{
-                                            Number(invoice.field_total_vente ||
-                                                0).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}
+                                            (parseInt(invoice.field_total_vente || 0) + (parseInt(invoice?.field_montant_cons) || 0)).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
@@ -225,6 +224,7 @@ export default {
                 'field_type',
                 'field_total_vente',
                 'field_status_invoice',
+                'field_montant_cons',
                 'nid'
             ],
             sort: { val: 'nid', op: 'desc' },

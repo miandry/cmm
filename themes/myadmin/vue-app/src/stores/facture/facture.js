@@ -42,7 +42,7 @@ export const useInvoiceStore = defineStore("invoice", () => {
   async function saveInvoiceData(newInvoiceData) {
     loading.value = true;
     try {
-      await saveInvoice(newInvoiceData);
+      return await saveInvoice(newInvoiceData);
     } catch (err) {
       error.value = err;
     } finally {

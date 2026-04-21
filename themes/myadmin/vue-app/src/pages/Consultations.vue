@@ -34,13 +34,6 @@
             <!-- For mobile device -->
             <div class="flex-1 p-3 flex flex-col justify-end lg:hidden">
                 <div class="space-y-2">
-                    <button @click="handleConsultationSubmit(false, 'ordonnance')"
-                        class="w-full py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 !rounded-button font-medium whitespace-nowrap flex items-center justify-center space-x-2 text-sm cursor-pointer">
-                        <div class="w-4 h-4 flex items-center justify-center">
-                            <i class="ri-printer-line"></i>
-                        </div>
-                        <span>Imprimer ordonnance</span>
-                    </button>
                     <button @click="handleConsultationSubmit(false)"
                         class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 !rounded-button font-medium whitespace-nowrap flex items-center justify-center space-x-2 text-sm cursor-pointer">
                         <div class="w-4 h-4 flex items-center justify-center">
@@ -53,10 +46,6 @@
                         class="w-full py-2 bg-secondary hover:bg-green-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap cursor-pointer">
                         Finaliser la consultation
                     </button>
-                    <router-link v-if="isEditMode" :to="{ name: 'consultations' }"
-                        class="w-full py-2 bg-primary hover:bg-bleu-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap cursor-pointer inline-block text-center">
-                        Nouvelle consultation
-                    </router-link>
                 </div>
             </div>
 
@@ -75,13 +64,6 @@
 
             <div class="hidden flex-1 p-3 lg:flex flex-col justify-end">
                 <div class="space-y-2">
-                    <button @click="handleConsultationSubmit(false, 'ordonnance')"
-                        class="w-full py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 !rounded-button font-medium whitespace-nowrap flex items-center justify-center space-x-2 text-sm cursor-pointer">
-                        <div class="w-4 h-4 flex items-center justify-center">
-                            <i class="ri-printer-line"></i>
-                        </div>
-                        <span>Imprimer ordonnance</span>
-                    </button>
                     <button @click="handleConsultationSubmit(false)"
                         class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 !rounded-button font-medium whitespace-nowrap flex items-center justify-center space-x-2 text-sm cursor-pointer">
                         <div class="w-4 h-4 flex items-center justify-center">
@@ -93,33 +75,6 @@
                     <button @click="handleConsultationSubmit(true)"
                         class="w-full py-2 bg-secondary hover:bg-green-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap cursor-pointer">
                         Finaliser la consultation
-                    </button>
-                    <router-link v-if="isEditMode" :to="{ name: 'consultations' }"
-                        class="w-full py-2 bg-primary hover:bg-bleu-600 text-white !rounded-button font-semibold text-sm whitespace-nowrap cursor-pointer inline-block text-center">
-                        Nouvelle consultation
-                    </router-link>
-                </div>
-            </div>
-        </div>
-        <!-- modal -->
-        <div v-if="confirmSaveModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-90">
-            <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                    Confirmation
-                </h3>
-                <p class="text-sm text-gray-600 mb-6">
-                    Après la sauvegarde, vous quitterez cette page et il ne sera plus possible de modifier ni de rouvrir
-                    cette consultation. Voulez-vous continuer ?
-                </p>
-
-                <div class="flex justify-end space-x-2">
-                    <button @click="continueToNextStep(false)"
-                        class="px-4 py-2 text-sm border border-gray-300 !rounded-button">
-                        Annuler
-                    </button>
-                    <button @click="continueToNextStep(true)"
-                        class="px-4 py-2 text-sm bg-red-600 text-white !rounded-button">
-                        Continuer
                     </button>
                 </div>
             </div>
@@ -166,15 +121,14 @@ export default {
         const router = useRouter();
         const route = useRoute();
         const canChange = ref(true);
-        const confirmSaveModal = ref(false);
         const isEditMode = computed(() => !!route.params.id);
         const loader = ref(false);
-        const continueToNextStep = ref(() => { });
-        const clientId = ref(null)
+        const clientId = ref(null);
+        const rdvId = ref(null);
         const isHistoryModalOpen = ref(false)
         const consultationReference = ref(null);
 
-        const handleConsultationSubmit = async (withOrder, ordonnance = null) => {
+        const handleConsultationSubmit = async (withOrder) => {
             try {
 
                 // Vérification que l'utilisateur connecté est un docteur
@@ -187,18 +141,7 @@ export default {
                 }
 
                 loader.value = true
-                if (
-                    isEditMode.value &&
-                    consultationsStore.consultation?.field_consultation_status == "completed" &&
-                    withOrder
-                ) {
-                    const proceed = confirm("Consultation déjà finalisée, voulez-vous vraiment continuer et créer une nouvelle commande ?");
-                    if (!proceed) {
-                        // L'utilisateur a cliqué sur Annuler : on stoppe l'exécution
-                        return;
-                    }
-                    // sinon on continue normalement
-                }
+
                 let consultationStatus = withOrder ? "completed" : "draft"
 
                 if (isEditMode.value) {
@@ -253,14 +196,6 @@ export default {
                 }
                 const hasExamens = allExamens?.length > 0;
                 const hasMedications = allMedications?.length > 0;
-                // if (withOrder && (hasExamens || hasMedications)) {
-                //     loader.value = false;
-                //     const proceed = await askConfirm();
-                //     if (!proceed) {
-                //         return; // utilisateur a annulé
-                //     }
-                //     loader.value = true;
-                // }
 
                 const consulatationGlobalData = {
                     entity_type: "node",
@@ -269,6 +204,7 @@ export default {
                     status: 1,
                     field_docteur: window.APP_DATA.user.id,
                     field_client: patienStore.client.nid,
+                    field_rendez_vous: parseInt(rdvId.value) || null,
                     // generalFormData
                     field_motif: generalFormData.consultationMotif,
                     field_temperature: generalFormData.temperature,
@@ -314,17 +250,30 @@ export default {
                 }
 
                 const response = await consultationsStore.createConsultation(consulatationGlobalData);
-                if (consultationsStore.error) {
+
+                if (consultationsStore.error || !response?.data?.item) {
                     toast.error("Une erreur est survenue lors de l'enregistrement.")
                     return
                 }
+
+                const consultationId = parseInt(response.data.item);
+
+                await appointmentStore.createAppointment({
+                    entity_type: "node",
+                    bundle: "rendez_vous_medical",
+                    nid: parseInt(rdvId.value) || consultationsStore.consultation.field_rendez_vous.nid,
+                    field_app_consultation: consultationId,
+                    field_temperature: generalFormData.temperature,
+                    field_tension_arterielle: generalFormData.tension,
+                    field_poids: generalFormData.poids,
+                });
 
                 const patientData = {
                     entity_type: "node",
                     bundle: "client",
                     status: 1,
                     nid: parseInt(patienStore.client.nid),
-                    field_consultation: parseInt(response.data.item),
+                    field_consultation: consultationId,
                     field_last_consultation_status: lastConsultationStatus,
                 };
 
@@ -353,7 +302,7 @@ export default {
                         field_date: formatDateUS(),
                         status: 1,
                         field_status: "payed",
-                        field_consultation_nid: response.data.item,
+                        field_consultation_nid: consultationId,
                         field_type: "consultation",
                     };
                     let allArticles = null;
@@ -375,33 +324,12 @@ export default {
 
                     const res = await orderStore.saveOrderData(data);
 
-                    // // sauvegarde facture
-                    // let factureArticles = [];
-                    // let factureExamens = [];
-
-                    // if (consultationsStore.savedMedication?.items?.length > 0) {
-                    //     factureArticles = consultationsStore.savedMedication.items.map(item => ({
-                    //         description: item.title,
-                    //         quantity: item.quantity,
-                    //         unitPrice: item.field_prix,
-                    //     }));
-                    // }
-
-                    // if (examenStore.savedExamen?.items?.length > 0) {
-                    //     factureExamens = examenStore.savedExamen.items.map(item => ({
-                    //         description: item.title,
-                    //         price: item.field_prix,
-                    //     }));
-                    // }
-                    // field_facture_medicaments: JSON.stringify(factureArticles),
-                    // field_facture_examens: JSON.stringify(factureExamens),
-
                     const payload = {
                         entity_type: "node",
                         bundle: "facture",
                         status: 1,
                         title: `facture-${Date.now()}`,
-                        field_commande: res.data.item || "",
+                        field_commande: res?.data?.item || "",
                         field_date_facture: new Date().toLocaleDateString('en-En'),
                         field_mode_paiement: 'Espèces / Chèque',
                         field_articles_commande: allArticles,
@@ -414,11 +342,21 @@ export default {
                         field_tva_facture: 20,
                         field_type: 'consultation',
                         field_status_invoice: 0,
+                        field_montant_cons: userStore.users.rows[0].field_specialite.field_montant_consultation || generalFormData.montant,
                     };
 
-                    await invoiceStore.saveInvoiceData(payload)
+                    const invoiceResponse = await invoiceStore.saveInvoiceData(payload);
 
-                    if (orderStore.error) {
+                    const dataUpdate = {
+                        entity_type: "node",
+                        bundle: "commande",
+                        nid: res?.data?.item,
+                        field_facture: invoiceResponse?.data?.item,
+                    };
+
+                    await orderStore.saveOrderData(dataUpdate);
+
+                    if (orderStore.error || invoiceStore.error) {
                         toast.error("Une erreur est survenue lors de l'enregistrement.")
                         return
                     }
@@ -429,16 +367,12 @@ export default {
                 prescriptionEtSuivi.value.resetAll();
                 patienStore.resetClient();
 
-                if (ordonnance) {
-                    router.push({
-                        name: 'ordonnance',
-                        query: {
-                            key: response.data.item
-                        }
-                    })
-                } else {
-                    router.push({ name: 'patients' });
-                }
+                router.push({
+                    name: 'consultation.details',
+                    query: {
+                        id: consultationId
+                    }
+                });
 
                 if (consultationReference.value) {
                     await orderStore.fetchOrders({
@@ -466,7 +400,6 @@ export default {
 
             } catch (error) {
                 toast.error("Une erreur est survenue lors de l'enregistrement.")
-                console.log(error, 'catch');
             } finally {
                 loader.value = false;
             }
@@ -550,6 +483,7 @@ export default {
             // rendez vous
             const appointmentId = route.query.appointment;
             if (appointmentId) {
+                rdvId.value = appointmentId;
                 await appointmentStore.fetchAppointment(appointmentId);
                 await patienStore.fetchClient(appointmentStore.appointment.field_patient.nid);
             }
@@ -570,18 +504,6 @@ export default {
                 consultationsStore.consultationsReset();
             }
         });
-
-        const askConfirm = () => {
-            return new Promise((resolve) => {
-                continueToNextStep.value = (choice) => {
-                    confirmSaveModal.value = false;
-                    resolve(choice);
-                };
-
-                confirmSaveModal.value = true;
-            });
-        };
-
 
         const openHistory = (cid) => {
             clientId.value = cid;
@@ -615,8 +537,6 @@ export default {
             isEditMode,
             canChange,
             loader,
-            confirmSaveModal,
-            continueToNextStep,
             openHistory,
             loadLastconsultation,
             closeHistory,

@@ -13,6 +13,7 @@
                                     class="pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm w-full bg-white">
                                     <option value="">Tous les statuts</option>
                                     <option value="pending">En attente</option>
+                                    <option value="in_process">En cours</option>
                                     <option value="completed">Terminé</option>
                                     <option value="cancelled">Annulé</option>
                                 </select>
@@ -202,9 +203,14 @@
                                         title="Changer le statut">
                                         <i class="ri-exchange-line text-lg"></i>
                                     </button>
-                                    <button @click.stop="goToConsultation(app.nid)"
+                                    <button @click.stop="goToConsultation(app)" v-if="app.field_app_consultation"
                                         class="text-blue-600 hover:text-blue-900 transition-colors"
-                                        title="Aller à la consultation">
+                                        title="Voir la consultation">
+                                        <i class="ri-eye-line text-lg"></i>
+                                    </button>
+                                    <button @click.stop="goToConsultation(app)" v-else
+                                        class="text-blue-600 hover:text-blue-900 transition-colors"
+                                        title="Consulter le rendez-vous">
                                         <i class="ri-stethoscope-line text-lg"></i>
                                     </button>
                                 </td>
@@ -274,6 +280,16 @@
                                 </label>
                                 <label
                                     class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                                    :class="{ 'border-primary bg-blue-50': selectedStatus === 'in_process' }">
+                                    <input type="radio" value="in_process" v-model="selectedStatus"
+                                        class="w-4 h-4 text-primary focus:ring-primary">
+                                    <div class="ml-3 flex items-center gap-2">
+                                        <i class="ri-time-line text-blue-600"></i>
+                                        <span class="text-sm text-gray-900">En cours</span>
+                                    </div>
+                                </label>
+                                <label
+                                    class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                                     :class="{ 'border-primary bg-green-50': selectedStatus === 'completed' }">
                                     <input type="radio" value="completed" v-model="selectedStatus"
                                         class="w-4 h-4 text-primary focus:ring-primary">
@@ -318,6 +334,7 @@ import { debounce } from 'lodash';
 import { formatDate } from '../utils/formateDate.js';
 import { useAppointmentStore, useClientStore } from '../stores/index.js';
 import { useRouter } from 'vue-router';
+import { toast } from 'vue-sonner';
 
 export default {
     name: "AllAppointment",
@@ -369,6 +386,7 @@ export default {
                 'field_temperature',
                 'field_tension_arterielle',
                 'field_app_status',
+                'field_app_consultation',
                 'status',
                 'created',
             ],
@@ -427,6 +445,7 @@ export default {
         const getStatusLabel = (status) => {
             const statusMap = {
                 'pending': 'En attente',
+                'in_process': 'En cours',
                 'completed': 'Terminé',
                 'cancelled': 'Annulé'
             };
@@ -436,6 +455,7 @@ export default {
         const getStatusClass = (status) => {
             const classMap = {
                 'pending': 'bg-yellow-100 text-yellow-800',
+                'in_process': 'bg-blue-100 text-blue-800',
                 'completed': 'bg-green-100 text-green-800',
                 'cancelled': 'bg-red-100 text-red-800'
             };
@@ -445,6 +465,7 @@ export default {
         const getStatusIcon = (status) => {
             const iconMap = {
                 'pending': 'ri-time-line',
+                'in_process': 'ri-time-line',
                 'completed': 'ri-checkbox-circle-line',
                 'cancelled': 'ri-close-circle-line'
             };
@@ -650,13 +671,32 @@ export default {
             }, 200);
         };
 
-        const goToConsultation = (appointmentId) => {
-            router.push({
-                path: '/consultations',
-                query: {
-                    appointment: appointmentId,
+        const goToConsultation = async (appointment) => {
+            if (!appointment?.field_app_consultation) {
+                await appointmentStore.createAppointment({
+                    entity_type: "node",
+                    bundle: "rendez_vous_medical",
+                    nid: appointment.nid,
+                    field_app_status: 'in_process'
+                });
+                if (appointmentStore.error) {
+                    toast.error('Un problème est survenu. Veuillez réessayer.');
+                    return;
                 }
-            });
+                router.push({
+                    path: '/consultations',
+                    query: {
+                        appointment: appointment.nid,
+                    }
+                });
+            } else {
+                router.push({
+                    name: 'consultation.details',
+                    query: {
+                        id: appointment.field_app_consultation.nid
+                    }
+                });
+            }
         };
 
         // Récupérer le titre du rendez-vous sélectionné

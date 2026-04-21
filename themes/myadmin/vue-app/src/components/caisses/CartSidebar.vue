@@ -404,14 +404,6 @@ export default {
 
                     const response = await orderStore.saveOrderData(data);
 
-                    // sauvegarde facture
-                    // const factureArticles = orderToCreate.items.map(item => ({
-                    //     description: item.title,
-                    //     quantity: item.quantity,
-                    //     unitPrice: item.field_prix_unitaire,
-                    // }));
-                    // field_facture_medicaments: JSON.stringify(factureArticles),
-
                     const payload = {
                         entity_type: "node",
                         bundle: "facture",
@@ -430,10 +422,19 @@ export default {
                         field_status_invoice: 0,
                     };
 
-                    await invoiceStore.saveInvoiceData(payload)
+                    const invoiceResponse = await invoiceStore.saveInvoiceData(payload);
 
-                    if (orderStore.error || invoiceStore.error) {
-                        toast.error("Une erreur est survenue lors de l'ajout du commande.")
+                    const dataUpdate = {
+                        entity_type: "node",
+                        bundle: "commande",
+                        nid: response.data.item,
+                        field_facture: invoiceResponse.data.item,
+                    };
+
+                    await orderStore.saveOrderData(dataUpdate)
+
+                    if (orderStore.error) {
+                        toast.error("Une erreur est survenue lors de la création de la commande")
                         return
                     }
 
