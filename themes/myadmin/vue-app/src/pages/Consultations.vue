@@ -95,6 +95,7 @@ import { toast } from 'vue-sonner'
 import { useRouter, useRoute } from 'vue-router'
 import { watch } from 'vue'
 import AllHistory from '../components/Consultations/AllHistory.vue'
+import { saveCompleteConsultation } from '../services/clinic.js'
 
 export default {
     name: 'Consultations',
@@ -249,62 +250,37 @@ export default {
                     msg = "Consultation enregistré!"
                 }
 
-                const response = await consultationsStore.createConsultation(consulatationGlobalData);
-
-                if (consultationsStore.error || !response?.data?.item) {
-                    toast.error("Une erreur est survenue lors de l'enregistrement.")
-                    return
-                }
-
-                const consultationId = parseInt(response.data.item);
-
-                await appointmentStore.createAppointment({
-                    entity_type: "node",
-                    bundle: "rendez_vous_medical",
-                    nid: parseInt(rdvId.value) || consultationsStore.consultation.field_rendez_vous.nid,
-                    field_app_consultation: consultationId,
-                    field_temperature: generalFormData.temperature,
-                    field_tension_arterielle: generalFormData.tension,
-                    field_poids: generalFormData.poids,
-                });
-
-                const patientData = {
-                    entity_type: "node",
-                    bundle: "client",
-                    status: 1,
-                    nid: parseInt(patienStore.client.nid),
-                    field_consultation: consultationId,
-                    field_last_consultation_status: lastConsultationStatus,
-                };
-
-                await patienStore.createClient(patientData, "consultation")
-
-                const formatDateUS = () => {
-                    const now = new Date();
-                    const month = String(now.getMonth() + 1).padStart(2, '0');
-                    const day = String(now.getDate()).padStart(2, '0');
-                    const year = now.getFullYear();
-                    return `${year}-${month}-${day}`;
-                };
-
-                // sauvegarde commande si c'est finaliser
-                if (withOrder && (hasExamens || hasMedications)) {
-                    // field_examens_order
-                    const data = {
+                // Préparer les données pour l'API groupée
+                const completeConsultationData = {
+                    consultation: consulatationGlobalData,
+                    appointment: {
                         entity_type: "node",
-                        bundle: "commande",
-                        title: "cmd-" + Date.now(),
-                        field_client: patienStore.client.nid,
-                        clientName: patienStore.client.title,
-                        field_total_vente: totalExamen + totalMedicament,
-                        field_articles: [],
-                        field_examens_order: [],
-                        field_date: formatDateUS(),
+                        bundle: "rendez_vous_medical",
+                        nid: parseInt(rdvId.value) || consultationsStore.consultation.field_rendez_vous?.nid,
+                        field_temperature: generalFormData.temperature,
+                        field_tension_arterielle: generalFormData.tension,
+                        field_poids: generalFormData.poids,
+                    },
+                    patient: {
+                        entity_type: "node",
+                        bundle: "client",
                         status: 1,
-                        field_status: "payed",
-                        field_consultation_nid: consultationId,
-                        field_type: "consultation",
+                        nid: parseInt(patienStore.client.nid),
+                        field_consultation: null, // Sera rempli après création de la consultation
+                        field_last_consultation_status: lastConsultationStatus,
+                    },
+                };
+
+                // Ajouter la commande et facture si finalisation
+                if (withOrder && (hasExamens || hasMedications)) {
+                    const formatDateUS = () => {
+                        const now = new Date();
+                        const month = String(now.getMonth() + 1).padStart(2, '0');
+                        const day = String(now.getDate()).padStart(2, '0');
+                        const year = now.getFullYear();
+                        return `${year}-${month}-${day}`;
                     };
+
                     let allArticles = null;
                     if (allMedications && allMedications.length > 0) {
                         allArticles = allMedications.map(item => ({
@@ -315,66 +291,51 @@ export default {
                             field_prix_d_achat: item.field_prix,
                             field_prix_unitaire: item.field_prix,
                         }));
-                        data.field_articles = allArticles;
                     }
 
-                    if (allExamens && allExamens.length > 0) {
-                        data.field_examens_order = allExamens;
-                    }
+                    completeConsultationData.order = {
+                        entity_type: "node",
+                        bundle: "commande",
+                        title: "cmd-" + Date.now(),
+                        field_client: patienStore.client.nid,
+                        clientName: patienStore.client.title,
+                        field_total_vente: totalExamen + totalMedicament,
+                        field_articles: allArticles || [],
+                        field_examens_order: allExamens || [],
+                        field_date: formatDateUS(),
+                        status: 1,
+                        field_status: "payed",
+                        field_type: "consultation",
+                    };
 
-                    const res = await orderStore.saveOrderData(data);
-
-                    const payload = {
+                    completeConsultationData.invoice = {
                         entity_type: "node",
                         bundle: "facture",
                         status: 1,
                         title: `facture-${Date.now()}`,
-                        field_commande: res?.data?.item || "",
-                        field_date_facture: new Date().toLocaleDateString('en-En'),
-                        field_mode_paiement: 'Espèces / Chèque',
-                        field_articles_commande: allArticles,
-                        field_examens_dans_commande: allExamens,
+                        field_articles_commande: allArticles || [],
+                        field_examens_dans_commande: allExamens || [],
                         field_total_vente: totalExamen + totalMedicament,
-                        field_patient_dossier: data.title,
+                        field_patient_dossier: completeConsultationData.consultation.title,
                         field_patient_nom: patienStore.client.title,
-                        field_reference_facture: data.title,
+                        field_reference_facture: completeConsultationData.consultation.title,
                         field_patient_age: patienStore.client.field_age || '',
                         field_tva_facture: 20,
                         field_type: 'consultation',
                         field_status_invoice: 0,
                         field_montant_cons: userStore.users.rows[0].field_specialite.field_montant_consultation || generalFormData.montant,
+                        field_date_facture: new Date().toLocaleDateString('en-En'),
+                        field_mode_paiement: 'Espèces / Chèque',
                     };
-
-                    const invoiceResponse = await invoiceStore.saveInvoiceData(payload);
-
-                    const dataUpdate = {
-                        entity_type: "node",
-                        bundle: "commande",
-                        nid: res?.data?.item,
-                        field_facture: invoiceResponse?.data?.item,
-                    };
-
-                    await orderStore.saveOrderData(dataUpdate);
-
-                    if (orderStore.error || invoiceStore.error) {
-                        toast.error("Une erreur est survenue lors de l'enregistrement.")
-                        return
-                    }
                 }
 
-                toast.success(msg)
-                generalFormRef.value.resetForm();
-                prescriptionEtSuivi.value.resetAll();
-                patienStore.resetClient();
-
-                router.push({
-                    name: 'consultation.details',
-                    query: {
-                        id: consultationId
-                    }
-                });
-
+                // Nettoyage en mode édition
                 if (consultationReference.value) {
+                    completeConsultationData.cleanup = {
+                        old_consultation_id: consultationReference.value,
+                    };
+                    
+                    // Récupérer l'ancienne commande si elle existe
                     await orderStore.fetchOrders({
                         fields: [
                             'nid',
@@ -391,13 +352,36 @@ export default {
                                 op: "="
                             }
                         }
-                    })
-                    if (orderStore.orders.rows[0].nid) {
-                        await consultationsStore.destroyOrder(orderStore.orders.rows[0].nid)
+                    });
+                    
+                    if (orderStore.orders.rows[0]?.nid) {
+                        completeConsultationData.cleanup.old_order_id = orderStore.orders.rows[0].nid;
                     }
-                    await consultationsStore.destroyConsultation(consultationReference.value);
                 }
 
+                // Appel unique à l'API groupée
+                const response = await saveCompleteConsultation(completeConsultationData);
+
+                if (!response?.data?.status) {
+                    toast.error("Une erreur est survenue lors de l'enregistrement.")
+                    return
+                }
+
+                const consultationId = parseInt(response.data.consultation_id);
+
+                toast.success(msg)
+                generalFormRef.value.resetForm();
+                prescriptionEtSuivi.value.resetAll();
+                patienStore.resetClient();
+
+                router.push({
+                    name: 'consultation.details',
+                    query: {
+                        id: consultationId
+                    }
+                });
+
+                
             } catch (error) {
                 toast.error("Une erreur est survenue lors de l'enregistrement.")
             } finally {

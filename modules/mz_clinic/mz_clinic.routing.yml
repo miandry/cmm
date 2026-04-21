@@ -1,0 +1,10 @@
+mz_clinic.save_consultation:
+  path: "/api/clinic/save-consultation"
+  defaults:
+    _controller: '\Drupal\mz_clinic\Controller\ClinicController::saveConsultation'
+    _title: "Save complete consultation"
+  methods: [POST]
+  requirements:
+    _access: "TRUE"
+  options:
+    no_cache: TRUE
