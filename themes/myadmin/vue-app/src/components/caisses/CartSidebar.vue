@@ -388,7 +388,7 @@ export default {
                         field_prix_unitaire: item.field_prix_unitaire,
                     }));
 
-                    const data = {
+                    const orderData = {
                         entity_type: "node",
                         bundle: "commande",
                         title: "cmd-" + Date.now(),
@@ -402,19 +402,16 @@ export default {
                         field_type: 'caisse',
                     };
 
-                    const response = await orderStore.saveOrderData(data);
-
-                    const payload = {
+                    const invoiceData = {
                         entity_type: "node",
                         bundle: "facture",
                         status: 1,
                         title: `facture-${Date.now()}`,
-                        field_commande: response.data.item || "",
                         field_date_facture: new Date().toLocaleDateString('en-En'),
                         field_mode_paiement: 'Espèces / Chèque',
-                        field_patient_dossier: data.title,
+                        field_patient_dossier: orderData.title,
                         field_patient_nom: orderToCreate.clientName,
-                        field_reference_facture: data.title,
+                        field_reference_facture: orderData.title,
                         field_articles_commande: allArticles,
                         field_total_vente: orderToCreate.total,
                         field_tva_facture: 20,
@@ -422,20 +419,25 @@ export default {
                         field_status_invoice: 0,
                     };
 
-                    const invoiceResponse = await invoiceStore.saveInvoiceData(payload);
+                    // Appel unique à la nouvelle route
+                    const response = await fetch('/api/clinic/create-order-with-invoice', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            order: orderData,
+                            invoice: invoiceData
+                        })
+                    });
 
-                    const dataUpdate = {
-                        entity_type: "node",
-                        bundle: "commande",
-                        nid: response.data.item,
-                        field_facture: invoiceResponse.data.item,
-                    };
+                    const result = await response.json();
 
-                    await orderStore.saveOrderData(dataUpdate)
-
-                    if (orderStore.error) {
-                        toast.error("Une erreur est survenue lors de la création de la commande")
-                        return
+                    if (!response.ok || !result.status) {
+                        toast.error(result.message || 'Erreur lors de la création de la commande');
+                        orderStore.loading = false;
+                        return;
                     }
 
                     articleStore.clearCart(true);
@@ -453,6 +455,7 @@ export default {
                     });
                 } catch (err) {
                     toast.error("Une erreur inattendue est survenue.");
+                    console.error("Erreur:", err);
                 } finally {
                     orderStore.loading = false;
                 }

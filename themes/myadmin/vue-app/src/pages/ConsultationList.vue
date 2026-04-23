@@ -61,6 +61,7 @@
                                 <option value="">Tous les statuts</option>
                                 <option value="completed">Payé</option>
                                 <option value="draft">Non payé</option>
+                                <option value="cancelled">Annulée</option>
                             </select>
                         </div>
                     </div>
@@ -173,16 +174,20 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span :class="[
-                                        'px-2 py-1 text-xs font-medium rounded-full',
+                                        'px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1 w-fit',
                                         cons.field_consultation_status === 'completed'
                                             ? 'bg-green-100 text-green-800'
+                                            : cons.field_consultation_status === 'cancelled'
+                                            ? 'bg-red-100 text-red-800'
                                             : 'bg-orange-100 text-orange-800'
                                     ]">
                                         <i :class="[
-                                            cons.field_consultation_status === 'completed' ? 'ri-checkbox-circle-line' : 'ri-time-line',
+                                            cons.field_consultation_status === 'completed' ? 'ri-checkbox-circle-line' 
+                                            : cons.field_consultation_status === 'cancelled' ? 'ri-close-circle-fill'
+                                            : 'ri-time-line',
                                             'mr-1'
                                         ]"></i>
-                                        {{ cons.field_consultation_status === 'completed' ? 'Payé' : 'Non payé' }}
+                                        {{ cons.field_consultation_status === 'completed' ? 'Payé' : cons.field_consultation_status === 'cancelled' ? 'Annulée' : 'Non payé' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
@@ -389,7 +394,13 @@ export default {
             } else if (dateValue.value) {
                 return "Aucune consultation trouvée pour cette date";
             } else if (statusFilter.value) {
-                return `Aucune consultation ${statusFilter.value === 'completed' ? 'payée' : 'non payée'} trouvée`;
+                const statusLabels = {
+                    'completed': 'payée',
+                    'draft': 'non payée',
+                    'cancelled': 'annulée'
+                };
+                const label = statusLabels[statusFilter.value] || statusFilter.value;
+                return `Aucune consultation ${label} trouvée`;
             }
             return "Aucune consultation n'est disponible pour le moment";
         };

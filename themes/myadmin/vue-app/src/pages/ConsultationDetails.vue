@@ -59,10 +59,15 @@
                         <!-- Statut -->
                         <div class="flex items-center justify-between mb-6">
                             <h2 class="text-xl font-semibold text-gray-900">Informations de la Consultation</h2>
-                            <div class="mt-1">
+                            <div class="mt-1 flex items-center gap-2">
                                 <span v-if="consultation.field_consultation_status === 'completed'"
                                     class="px-3 py-1 text-sm font-medium bg-green-100 text-green-800 rounded-full">
                                     Achevée
+                                </span>
+                                <span v-else-if="consultation.field_consultation_status === 'cancelled'"
+                                    class="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-full flex items-center gap-2">
+                                    <i class="ri-close-circle-fill"></i>
+                                    Annulée
                                 </span>
                                 <span v-else
                                     class="px-3 py-1 text-sm font-medium bg-yellow-100 text-yellow-800 rounded-full">
@@ -230,8 +235,10 @@
                                 <i class="ri-printer-line text-lg"></i>
                                 <span>Imprimer ordonnance</span>
                             </button>
-                            <button type="button"
-                                class="w-full bg-red-50 text-red-700 py-3 px-4 rounded-lg font-medium hover:bg-red-100 transition-colors flex items-center justify-center space-x-2 !rounded-button whitespace-nowrap border border-red-200">
+                            <button v-if="consultation.field_consultation_status !== 'cancelled'" 
+                                @click="openCancelModal"
+                                :disabled="cancellingConsultation"
+                                class="w-full bg-red-50 text-red-700 py-3 px-4 rounded-lg font-medium hover:bg-red-100 transition-colors flex items-center justify-center space-x-2 !rounded-button whitespace-nowrap border border-red-200 disabled:opacity-50 disabled:cursor-not-allowed">
                                 <i class="ri-close-circle-line text-lg"></i>
                                 <span>Annuler la consultation</span>
                             </button>
@@ -438,6 +445,46 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal Annulation Consultation -->
+        <div v-if="showCancelModal" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen px-4 text-center">
+                <!-- Overlay -->
+                <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+
+                <!-- Modal -->
+                <div
+                    class="relative inline-block align-middle bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div
+                                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <i class="ri-alert-line text-red-600"></i>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">Annuler la consultation</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">
+                                        Êtes-vous sûr de vouloir annuler cette consultation ? Cette action annulera également la commande associée et ne peut pas être inversée.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-3 rounded-b-lg">
+                        <button @click="performCancelConsultation" :disabled="cancellingConsultation"
+                            class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto sm:text-sm">
+                            <i v-if="cancellingConsultation" class="ri-loader-4-line animate-spin mr-2"></i>
+                            {{ cancellingConsultation ? 'Annulation...' : 'Confirmer' }}
+                        </button>
+                        <button @click="closeCancelModal" type="button" :disabled="cancellingConsultation"
+                            class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed sm:mt-0 sm:w-auto sm:text-sm">
+                            Retour
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
 </template>
@@ -461,6 +508,9 @@ export default {
         const showStatusModal = ref(false);
         const selectedStatus = ref('pending');
         const updatingStatus = ref(false);
+        // Variables pour le modal d'annulation
+        const showCancelModal = ref(false);
+        const cancellingConsultation = ref(false);
         // Paramètres dynamiques de la requête
         const queryOptions = ref({
             fields: [
@@ -483,9 +533,9 @@ export default {
                 'field_temperature',
                 'field_tension_arterielle',
                 'field_type_de_suivi',
-                'field_consultation_status',
                 'field_prochaine_consultation',
-                'field_rendez_vous'
+                'field_rendez_vous',
+                'field_commande_cons',
             ],
             sort: { val: 'nid', op: 'desc' },
             filters: {
@@ -636,6 +686,56 @@ export default {
             }
         };
 
+        // Gestion du modal d'annulation
+        const openCancelModal = () => {
+            showCancelModal.value = true;
+        };
+
+        const closeCancelModal = () => {
+            showCancelModal.value = false;
+        };
+
+        const performCancelConsultation = async () => {
+            if (!consultation.value?.nid) return;
+
+            cancellingConsultation.value = true;
+            try {
+                // Récupérer la commande associée si elle existe
+                const orderId = consultation.value.field_commande_cons?.nid || null;
+
+                const cancelData = {
+                    consultation_id: consultation.value.nid,
+                    order_id: orderId
+                };
+
+                const response = await fetch('/api/clinic/cancel-consultation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(cancelData)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.status) {
+                    toast.error(result.message || 'Erreur lors de l\'annulation');
+                    return;
+                }
+
+                // Mettre à jour localement
+                consultation.value.field_consultation_status = 'cancelled';
+                closeCancelModal();
+                toast.success('Consultation et commande annulées avec succès');
+            } catch (error) {
+                console.error('Erreur:', error);
+                toast.error('Une erreur est survenue lors de l\'annulation');
+            } finally {
+                cancellingConsultation.value = false;
+            }
+        };
+
         return {
             consultationsStore,
             consultation,
@@ -655,6 +755,12 @@ export default {
             openStatusModal,
             closeStatusModal,
             updateAppointmentStatus,
+            // Modal annulation
+            showCancelModal,
+            cancellingConsultation,
+            openCancelModal,
+            closeCancelModal,
+            performCancelConsultation,
         };
     }
 }
