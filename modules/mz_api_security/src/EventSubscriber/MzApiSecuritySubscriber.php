@@ -92,10 +92,19 @@ class MzApiSecuritySubscriber implements EventSubscriberInterface
             $referer = $request->headers->get('referer');
             $clientIp = $request->getClientIp();
 
+            // Le domaine propre du serveur Drupal (toujours autorisé)
+            $serverHost = $request->getSchemeAndHttpHost();
+
             $isAuthorized = FALSE;
 
-            // Vérifier si l'IP est autorisée
-            if (!empty($allowedIpsArray) && in_array($clientIp, $allowedIpsArray)) {
+            // Autoriser les IPs locales (localhost / 127.0.0.1 / ::1)
+            $localhostIps = ['127.0.0.1', '::1', '0:0:0:0:0:0:0:1'];
+            if (in_array($clientIp, $localhostIps)) {
+                $isAuthorized = TRUE;
+            }
+
+            // Vérifier si l'IP est dans la liste autorisée configurée
+            if (!$isAuthorized && !empty($allowedIpsArray) && in_array($clientIp, $allowedIpsArray)) {
                 $isAuthorized = TRUE;
                 if ($enableLogging) {
                     \Drupal::logger('mz_api_security')->notice('API access granted from authorized IP: @ip', [
@@ -104,19 +113,33 @@ class MzApiSecuritySubscriber implements EventSubscriberInterface
                 }
             }
 
-            // Vérifier l'origine (Origin header)
-            if (!$isAuthorized && $origin && $origin === $allowedDomain) {
-                $isAuthorized = TRUE;
+            // Vérifier l'origine contre le domaine configuré ET le domaine propre du serveur
+            if (!$isAuthorized && $origin) {
+                $allowedHosts = [
+                    parse_url($allowedDomain, PHP_URL_HOST),
+                    parse_url($serverHost, PHP_URL_HOST),
+                ];
+                $originHost = parse_url($origin, PHP_URL_HOST);
+                if (in_array($originHost, array_filter($allowedHosts))) {
+                    $isAuthorized = TRUE;
+                }
             }
 
             // Vérifier le referer si pas d'origine
             if (!$isAuthorized && $referer) {
                 $refererHost = parse_url($referer, PHP_URL_HOST);
-                $allowedHost = parse_url($allowedDomain, PHP_URL_HOST);
-
-                if ($refererHost === $allowedHost) {
+                $allowedHosts = [
+                    parse_url($allowedDomain, PHP_URL_HOST),
+                    parse_url($serverHost, PHP_URL_HOST),
+                ];
+                if (in_array($refererHost, array_filter($allowedHosts))) {
                     $isAuthorized = TRUE;
                 }
+            }
+
+            // Autoriser les requêtes sans Origin ni Referer (appels serveur-à-serveur)
+            if (!$isAuthorized && !$origin && !$referer) {
+                $isAuthorized = TRUE;
             }
 
             // Log des tentatives non autorisées
