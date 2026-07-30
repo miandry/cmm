@@ -110,7 +110,7 @@
                 </button>
                 <button type="submit"
                     class="px-6 py-2 bg-secondary text-white hover:bg-green-600 !rounded-button whitespace-nowrap">
-                    Enregistrer
+                    {{ isEdit ? 'Mettre à jour' : 'Enregistrer' }}
                 </button>
             </div>
         </form>
@@ -118,9 +118,10 @@
 </template>
 
 <script>
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useArticleStore } from '../../stores/index.js';
+import { getArticle } from '../../services/article.js';
 import PageLoader from '../PageLoader.vue';
 import { toast } from 'vue-sonner';
 
@@ -129,11 +130,26 @@ export default {
     components: {
         PageLoader
     },
-    setup() {
+    props: {
+        articleId: {
+            type: [Number, String],
+            default: null,
+        },
+        cancelTo: {
+            type: String,
+            default: '/stocks',
+        },
+        successTo: {
+            type: String,
+            default: '/stocks',
+        },
+    },
+    setup(props) {
         const router = useRouter();
         const articleStore = useArticleStore();
         const loader = ref(false)
         const fileInput = ref(null)
+        const isEdit = computed(() => Boolean(props.articleId))
 
         const imagePreview = ref(null)
         const imageName = ref('')
@@ -227,6 +243,41 @@ export default {
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
         }
 
+        const resolveTaxonomyId = (field) => {
+            if (!field) return '';
+            if (typeof field === 'number' || typeof field === 'string') return field;
+            return field.tid || field.target_id || '';
+        }
+
+        const loadArticle = async () => {
+            if (!props.articleId) return;
+
+            try {
+                loader.value = true;
+                const response = await getArticle(props.articleId, 'fields[]=nid&fields[]=title&fields[]=status&fields[]=field_categorie&fields[]=field_prix_unitaire&fields[]=field_quantite_stock&fields[]=field_posologie&fields[]=field_type_pack&fields[]=field_nombre_par_unite&fields[]=field_image');
+                const article = response.data;
+
+                form.title = article.title || '';
+                form.field_categorie = resolveTaxonomyId(article.field_categorie);
+                form.field_prix_unitaire = article.field_prix_unitaire ?? '';
+                form.field_quantite_stock = article.field_quantite_stock ?? 0;
+                form.field_posologie = article.field_posologie || '';
+                form.field_type_pack = resolveTaxonomyId(article.field_type_pack);
+                form.field_nombre_par_unite = article.field_nombre_par_unite ?? 1;
+                form.status = article.status ?? 1;
+
+                const imageUrl = article.field_image?.image?.url;
+                if (imageUrl) {
+                    imagePreview.value = imageUrl;
+                }
+            } catch (error) {
+                toast.error('Impossible de charger le produit.');
+                router.push(props.cancelTo);
+            } finally {
+                loader.value = false;
+            }
+        };
+
         const validateForm = () => {
             let isValid = true;
             errors.title = false;
@@ -265,7 +316,7 @@ export default {
             try {
                 loader.value = true
 
-                const newArticle = {
+                const payload = {
                     entity_type: "node",
                     bundle: "article",
                     title: form.title,
@@ -274,26 +325,27 @@ export default {
                     field_quantite_stock: parseInt(form.field_quantite_stock),
                     field_posologie: form.field_posologie || "",
                     field_type_pack: form.field_type_pack,
-                    status: 1,
+                    status: form.status ?? 1,
                     field_nombre_par_unite: form.field_nombre_par_unite || 1,
-                    ...(base64Image.value && { field_image: base64Image.value })
+                    ...(base64Image.value && { field_image: base64Image.value }),
+                    ...(isEdit.value && props.articleId ? { nid: Number(props.articleId) } : {}),
                 }
 
-                Object.keys(newArticle).forEach(key => {
-                    if (newArticle[key] === "" || newArticle[key] === null || newArticle[key] === undefined) {
-                        delete newArticle[key]
+                Object.keys(payload).forEach(key => {
+                    if (payload[key] === "" || payload[key] === null || payload[key] === undefined) {
+                        delete payload[key]
                     }
                 })
 
-                await articleStore.createArticle(newArticle)
+                await articleStore.createArticle(payload)
 
                 if (articleStore.error) {
                     toast.error("Une erreur est survenue lors de l'enregistrement.")
                     return
                 }
 
-                toast.success("Article enregistré avec succès")
-                router.push('/stocks')
+                toast.success(isEdit.value ? 'Article mis à jour avec succès' : 'Article enregistré avec succès')
+                router.push(props.successTo)
             } catch (error) {
                 toast.error("Une erreur est survenue lors de l'enregistrement.")
             } finally {
@@ -302,7 +354,7 @@ export default {
         }
 
         const cancelAdd = () => {
-            router.push('/stocks')
+            router.push(props.cancelTo)
         }
 
         const categoryQueryOptions = ref({
@@ -341,6 +393,7 @@ export default {
         onMounted(async () => {
             await fetchCategories();
             await fetchPacks();
+            await loadArticle();
         })
 
         return {
@@ -349,6 +402,7 @@ export default {
             errors,
             loader,
             cancelAdd,
+            isEdit,
             articleStore,
             fileInput,
             imagePreview,

@@ -1,7 +1,11 @@
-import { getLists, saveItem } from './api'
+import { getDetails, getLists, saveItem } from './api'
 
 export function getArticles(params) {
   return getLists('node', 'article', params)
+}
+
+export function getArticle(id, params) {
+  return getDetails('node', 'article', id, params)
 }
 
 export function saveArticle(params) {

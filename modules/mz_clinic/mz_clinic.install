@@ -176,3 +176,10 @@ function mz_clinic_update_9005(): void {
 function mz_clinic_update_9006(): void {
   _mz_clinic_create_vue_page('Ajouter un produit', '/stocks/ajouter-produit');
 }
+
+/**
+ * Create Drupal page alias for articles list Vue route.
+ */
+function mz_clinic_update_9007(): void {
+  _mz_clinic_create_vue_page('Catalogue produits', '/articles');
+}

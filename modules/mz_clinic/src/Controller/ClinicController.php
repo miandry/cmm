@@ -647,6 +647,7 @@ class ClinicController extends ControllerBase
             'medecine_consultations' => 'Médecine > Consultations',
             'patients' => 'Patients',
             'stocks' => 'Stocks',
+            'articles' => 'Produits',
         ];
     }
 

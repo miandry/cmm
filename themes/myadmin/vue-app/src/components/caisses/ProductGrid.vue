@@ -28,8 +28,8 @@
 
     <!-- Grille de produits -->
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 xxl-grid-cols-8 gap-2 overflow-y-auto"
-      v-if="store.articles.rows.length">
-      <product-card v-for="article in store.articles.rows" :key="article.nid" :article="article"
+      v-if="publishedArticles.length">
+      <product-card v-for="article in publishedArticles" :key="article.nid" :article="article"
         @add-to-cart="handleAddToCart"
         class="bg-white rounded-lg p-2 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow product-card"></product-card>
     </div>
@@ -51,11 +51,13 @@
 
 
 <script>
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useArticleStore } from '../../stores/index.js'
 import ProductCard from '../caisses/ProductCard.vue'
 import { toast } from 'vue-sonner'
 import { h } from 'vue'
+
+const PUBLISHED_STATUS_FILTER = { val: 1, op: '=' }
 
 export default {
   name: 'ProductGrid',
@@ -66,6 +68,10 @@ export default {
     const searchKeyword = ref('')
     const history = ref([])
     const activeButton = ref('')
+
+    const ensurePublishedFilter = () => {
+      queryOptions.value.filters.status = { ...PUBLISHED_STATUS_FILTER }
+    }
 
     // Paramètres dynamiques de la requête
     const queryOptions = ref({
@@ -80,17 +86,19 @@ export default {
       ],
       sort: { val: 'nid', op: 'desc' },
       filters: {
-        status: {
-          val: 1,
-          op: "="
-        }
+        status: { ...PUBLISHED_STATUS_FILTER },
       },
       pager: 0,
       offset: 12
     })
 
+    const publishedArticles = computed(() =>
+      store.articles.rows.filter((article) => Number(article.status) === 1)
+    )
+
     // Charger les articles (append=true pour "Voir plus")
     const fetchArticles = async (append = false) => {
+      ensurePublishedFilter()
       await store.fetchArticles(queryOptions.value, append, "caisse")
     }
 
@@ -161,16 +169,24 @@ export default {
     watch(
       () => store.articles,
       (articles) => {
-        if (!articles || !articles.rows) return
+        if (!articles?.rows) return
         canLoadMore.value = articles.rows.length < (articles.total || 0)
       },
       { deep: true, immediate: true }
     )
 
-    // Ajouter / supprimer un filtre
+    // Ajouter / supprimer un filtre (ne jamais retirer le filtre "publié")
     const updateFilter = (key, value, op = '=') => {
-      if (!value) delete queryOptions.value.filters[key]
-      else queryOptions.value.filters[key] = { val: value, op }
+      if (key === 'status') {
+        queryOptions.value.filters.status = { ...PUBLISHED_STATUS_FILTER }
+        return
+      }
+      if (!value) {
+        delete queryOptions.value.filters[key]
+      } else {
+        queryOptions.value.filters[key] = { val: value, op }
+      }
+      ensurePublishedFilter()
     }
 
     // Chargement initial
@@ -186,6 +202,7 @@ export default {
 
     return {
       store,
+      publishedArticles,
       searchKeyword,
       history,
       queryOptions,

@@ -50,7 +50,7 @@ export const useUserStore = defineStore("user", () => {
       const query = buildQueryParams(options);
       // Use the new list endpoint which supports filters/sort/pager
       const response = await axios.get(`/api/v2/users/list?${query}`);
-      // API returns { rows: [...], total: n }
+      // API returns { rows: [...], total: n } — uid 1 excluded server-side
       users.value = response.data;
     } catch (err) {
       error.value = err;

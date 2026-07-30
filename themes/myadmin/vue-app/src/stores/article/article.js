@@ -43,9 +43,19 @@ export const useArticleStore = defineStore("article", () => {
   async function fetchArticles(options, append = false, page = null) {
     loading.value = true;
     try {
-      const query = buildQueryParams(options);
+      const queryOptions = { ...options, filters: { ...(options.filters || {}) } };
+
+      if (page === 'caisse') {
+        queryOptions.filters.status = { val: 1, op: '=' };
+      }
+
+      const query = buildQueryParams(queryOptions);
       const response = await getArticles(query);
       const data = response.data;
+
+      if (page === 'caisse' && data?.rows) {
+        data.rows = data.rows.filter((row) => Number(row.status) === 1);
+      }
 
       if (append && articles.value.rows.length) {
         articles.value.rows = [...articles.value.rows, ...data.rows];
@@ -76,7 +86,29 @@ export const useArticleStore = defineStore("article", () => {
     }
   }
 
+  async function updateArticleStatus(nid, published) {
+    try {
+      const response = await saveArticle({
+        entity_type: 'node',
+        bundle: 'article',
+        nid,
+        status: published ? 1 : 0,
+      });
+      return response;
+    } catch (err) {
+      error.value = err;
+      throw err;
+    }
+  }
+
   function addItem(article) {
+    if (Number(article.status) !== 1) {
+      toast.warning(() =>
+        h("div", ["Produit non disponible.", h("br"), h("span", article.title)]),
+      );
+      return;
+    }
+
     const item = cardItems.value.find((i) => i.nid == article.nid);
     const originalStock =
       originalStocks.value.get(article.nid) || article.field_quantite_stock;
@@ -223,6 +255,7 @@ export const useArticleStore = defineStore("article", () => {
     fetchArticles,
     fetchCategories,
     createArticle,
+    updateArticleStatus,
     cardItems,
     addItem,
     removeItem,

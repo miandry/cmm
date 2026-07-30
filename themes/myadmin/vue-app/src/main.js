@@ -15,6 +15,8 @@ import Facture from "./pages/Facture.vue";
 import Ordonnance from "./pages/Ordonnance.vue";
 import Stocks from "./pages/Stocks.vue";
 import AddArticle from "./pages/AddArticle.vue";
+import EditArticle from "./pages/EditArticle.vue";
+import Articles from "./pages/Articles.vue";
 import Login from "./pages/Login.vue";
 import { hasAnyRole } from "./utils/auth.js";
 import { useAuthStore } from "./stores/auth.js";
@@ -165,6 +167,16 @@ const routes = [
     name: "stocks-add-article",
     component: AddArticle,
     meta: { roles: ["gerant", "webmaster", "administrator"] },
+  },
+  {
+    path: "/articles",
+    name: "articles",
+    component: Articles,
+  },
+  {
+    path: "/articles/:id/edit",
+    name: "articles-edit",
+    component: EditArticle,
   },
   {
     path: "/user-profil",
