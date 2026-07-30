@@ -1,0 +1,3 @@
+api_key: ''
+api_url: 'https://eu1.platform.bird.com/v1/email/messages'
+from_address: 'onboarding@messagebird.dev'

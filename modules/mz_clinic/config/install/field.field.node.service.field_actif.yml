@@ -1,0 +1,22 @@
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_actif
+    - node.type.service
+id: node.service.field_actif
+field_name: field_actif
+entity_type: node
+bundle: service
+label: 'Actif (visible à la vente)'
+description: 'Désactivé = masqué du catalogue.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: Activé
+  off_label: Désactivé
+field_type: boolean

@@ -484,4 +484,266 @@ class ClinicController extends ControllerBase
             ], 405);
         }
     }
+
+    /**
+     * Returns invoice header settings for printed invoices.
+     */
+    public function getInvoiceHeader(Request $request)
+    {
+        $user = $this->authenticateApiUser($request);
+        if (!$user) {
+            return $this->unauthorizedResponse();
+        }
+
+        return new JsonResponse([
+            'status' => TRUE,
+            'data' => $this->getInvoiceHeaderData(),
+        ], 200);
+    }
+
+    /**
+     * Saves invoice header settings (Gérant / admin only).
+     */
+    public function saveInvoiceHeader(Request $request)
+    {
+        if ($request->getMethod() !== 'POST') {
+            return new JsonResponse([
+                'message' => 'Méthode non autorisée.',
+                'status' => 'error',
+            ], 405);
+        }
+
+        $user = $this->authenticateApiUser($request);
+        if (!$user) {
+            return $this->unauthorizedResponse();
+        }
+
+        if (!$this->canManageInvoiceHeader($user)) {
+            return new JsonResponse([
+                'message' => 'Accès refusé. Rôle Gérant ou administrateur requis.',
+                'status' => 'error',
+            ], 403);
+        }
+
+        $content = $request->getContent();
+        if (empty($content)) {
+            return new JsonResponse([
+                'message' => 'Données non trouvées',
+                'status' => 'error',
+            ], 400);
+        }
+
+        $data = json_decode($content, TRUE);
+        if (!is_array($data)) {
+            return new JsonResponse([
+                'message' => 'Format JSON invalide',
+                'status' => 'error',
+            ], 400);
+        }
+
+        $editable = ['ville', 'nom', 'titre', 'centre', 'adresse', 'contact', 'immat'];
+        $config = \Drupal::configFactory()->getEditable('mz_clinic.invoice_header');
+
+        foreach ($editable as $key) {
+            if (array_key_exists($key, $data)) {
+                $config->set($key, trim((string) $data[$key]));
+            }
+        }
+
+        $config->save();
+
+        return new JsonResponse([
+            'status' => TRUE,
+            'message' => 'En-tête de facture enregistré.',
+            'data' => $this->getInvoiceHeaderData(),
+        ], 200);
+    }
+
+    /**
+     * Returns menu visibility settings.
+     */
+    public function getMenuSettings(Request $request)
+    {
+        $user = $this->authenticateApiUser($request);
+        if (!$user) {
+            return $this->unauthorizedResponse();
+        }
+
+        return new JsonResponse([
+            'status' => TRUE,
+            'items' => $this->getMenuSettingsItems(),
+            'disabled' => $this->getDisabledMenuKeys(),
+        ], 200);
+    }
+
+    /**
+     * Saves menu visibility settings (Gérant / admin only).
+     */
+    public function saveMenuSettings(Request $request)
+    {
+        if ($request->getMethod() !== 'POST') {
+            return new JsonResponse([
+                'message' => 'Méthode non autorisée.',
+                'status' => 'error',
+            ], 405);
+        }
+
+        $user = $this->authenticateApiUser($request);
+        if (!$user) {
+            return $this->unauthorizedResponse();
+        }
+
+        if (!$this->canManageInvoiceHeader($user)) {
+            return new JsonResponse([
+                'message' => 'Accès refusé. Rôle Gérant ou administrateur requis.',
+                'status' => 'error',
+            ], 403);
+        }
+
+        $content = $request->getContent();
+        if (empty($content)) {
+            return new JsonResponse([
+                'message' => 'Données non trouvées',
+                'status' => 'error',
+            ], 400);
+        }
+
+        $data = json_decode($content, TRUE);
+        if (!is_array($data) || !isset($data['disabled']) || !is_array($data['disabled'])) {
+            return new JsonResponse([
+                'message' => 'Format JSON invalide. Attendu: { disabled: [] }',
+                'status' => 'error',
+            ], 400);
+        }
+
+        $registry = array_keys($this->getMenuRegistry());
+        $disabled = array_values(array_unique(array_filter(array_map('strval', $data['disabled']), function ($key) use ($registry) {
+            return in_array($key, $registry, TRUE);
+        })));
+
+        \Drupal::configFactory()->getEditable('mz_clinic.menu_settings')
+            ->set('disabled', $disabled)
+            ->save();
+
+        return new JsonResponse([
+            'status' => TRUE,
+            'message' => 'Configuration du menu enregistrée.',
+            'items' => $this->getMenuSettingsItems(),
+            'disabled' => $disabled,
+        ], 200);
+    }
+
+    /**
+     * Menu registry with labels for the settings UI.
+     */
+    protected function getMenuRegistry(): array
+    {
+        return [
+            'acceuil' => 'Accueil',
+            'caisses' => 'Caisses',
+            'ventes_commandes' => 'Ventes > Commandes',
+            'ventes_factures' => 'Ventes > Factures',
+            'medecine_rendez_vous' => 'Médecine > Rendez-vous',
+            'medecine_consultations' => 'Médecine > Consultations',
+            'patients' => 'Patients',
+            'stocks' => 'Stocks',
+        ];
+    }
+
+    /**
+     * Returns disabled menu keys from config.
+     */
+    protected function getDisabledMenuKeys(): array
+    {
+        $disabled = $this->config('mz_clinic.menu_settings')->get('disabled') ?? [];
+        return is_array($disabled) ? array_values($disabled) : [];
+    }
+
+    /**
+     * Returns menu items with enabled state for the settings UI.
+     */
+    protected function getMenuSettingsItems(): array
+    {
+        $disabled = $this->getDisabledMenuKeys();
+        $items = [];
+
+        foreach ($this->getMenuRegistry() as $key => $label) {
+            $items[] = [
+                'key' => $key,
+                'label' => $label,
+                'enabled' => !in_array($key, $disabled, TRUE),
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * Authenticates the current API request via auth_token cookie.
+     */
+    protected function authenticateApiUser(Request $request)
+    {
+        $token = $request->cookies->get('auth_token');
+        if (!$token) {
+            return NULL;
+        }
+
+        return \Drupal::service('api.crud')->validateBearerToken($token);
+    }
+
+    /**
+     * Checks if user can edit invoice header settings.
+     */
+    protected function canManageInvoiceHeader($user): bool
+    {
+        $allowed_roles = ['gerant', 'administrator', 'admin'];
+        return (bool) array_intersect($allowed_roles, $user->getRoles());
+    }
+
+    /**
+     * Default invoice header values.
+     */
+    protected function getDefaultInvoiceHeader(): array
+    {
+        return [
+            'ville' => 'Antananarivo',
+            'nom' => 'Pharmacie / Centre Médical Test Santé',
+            'titre' => 'Facturation et Paiements',
+            'centre' => 'VENTE PHARMACEUTIQUE',
+            'adresse' => "45 Avenue de l'Indépendance",
+            'contact' => '032 12 345 67 – 034 98 765 43',
+            'immat' => 'NIF: 12345 678 90 / STAT: 98765 43 2024 0 00001',
+        ];
+    }
+
+    /**
+     * Merges stored config with defaults.
+     */
+    protected function getInvoiceHeaderData(): array
+    {
+        $defaults = $this->getDefaultInvoiceHeader();
+        $config = $this->config('mz_clinic.invoice_header');
+        $data = [];
+
+        foreach ($defaults as $key => $default) {
+            $value = $config->get($key);
+            $data[$key] = ($value !== NULL && $value !== '') ? $value : $default;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Builds a 401 JSON response and clears invalid cookie.
+     */
+    protected function unauthorizedResponse(): JsonResponse
+    {
+        $response = new JsonResponse([
+            'message' => 'Non authentifié. Veuillez vous connecter.',
+            'status' => 'error',
+        ], 401);
+
+        $response->headers->clearCookie('auth_token', '/');
+        return $response;
+    }
 }

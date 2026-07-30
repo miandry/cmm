@@ -30,3 +30,64 @@ mz_clinic.create_order_with_invoice:
     _access: "TRUE"
   options:
     no_cache: TRUE
+
+mz_clinic.invoice_header_get:
+  path: "/api/clinic/invoice-header"
+  defaults:
+    _controller: '\Drupal\mz_clinic\Controller\ClinicController::getInvoiceHeader'
+    _title: "Get invoice header settings"
+  methods: [GET]
+  requirements:
+    _access: "TRUE"
+  options:
+    no_cache: TRUE
+
+mz_clinic.invoice_header_save:
+  path: "/api/clinic/invoice-header"
+  defaults:
+    _controller: '\Drupal\mz_clinic\Controller\ClinicController::saveInvoiceHeader'
+    _title: "Save invoice header settings"
+  methods: [POST]
+  requirements:
+    _access: "TRUE"
+  options:
+    no_cache: TRUE
+
+mz_clinic.menu_settings_get:
+  path: "/api/clinic/menu-settings"
+  defaults:
+    _controller: '\Drupal\mz_clinic\Controller\ClinicController::getMenuSettings'
+    _title: "Get menu visibility settings"
+  methods: [GET]
+  requirements:
+    _access: "TRUE"
+  options:
+    no_cache: TRUE
+
+mz_clinic.menu_settings_save:
+  path: "/api/clinic/menu-settings"
+  defaults:
+    _controller: '\Drupal\mz_clinic\Controller\ClinicController::saveMenuSettings'
+    _title: "Save menu visibility settings"
+  methods: [POST]
+  requirements:
+    _access: "TRUE"
+  options:
+    no_cache: TRUE
+
+service.add:
+  path: '/admin/clinic/service/add'
+  defaults:
+    _title: 'Ajouter un service'
+    _entity_form: 'node.service.default'
+  requirements:
+    _permission: 'create service content'
+    _entity_create_access: 'node:service'
+
+service.collection:
+  path: '/admin/clinic/services'
+  defaults:
+    _title: 'Services clinic'
+    _controller: '\Drupal\mz_clinic\Controller\ServiceAdminController::listServices'
+  requirements:
+    _permission: 'administer clinic services'

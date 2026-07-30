@@ -1,0 +1,7 @@
+name: Bird Mail
+type: module
+description: 'Sends emails through the Bird (MessageBird) Email API via the bird_mail.mailer service.'
+package: Custom
+core_version_requirement: ^9 || ^10
+dependencies:
+  - drupal:system

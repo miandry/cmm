@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Bird Mail module — direct Bird API email sending.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function bird_mail_help($route_name, \Drupal\Core\Routing\RouteMatchInterface $route_match) {
+  if ($route_name === 'help.page.bird_mail') {
+    return '<p>' . t('Sends emails through the Bird (MessageBird) Email API. Configure the API key and From address at <a href=":url">admin/config/system/bird-mail</a>, then use the <code>bird_mail.mailer</code> service.', [
+      ':url' => \Drupal\Core\Url::fromRoute('bird_mail.settings')->toString(),
+    ]) . '</p>';
+  }
+}

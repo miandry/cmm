@@ -188,10 +188,6 @@
             @close="closeStockModal" :suppliers="stockStore.suppliers.rows" @addStocks="addStocks"
             :stock="selectedStock" @updateStock="updateStock" />
 
-        <SaveArticle class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50"
-            :class="openArticleModal ? 'flex' : 'hidden'" @close="$emit('close')"
-            :categories="articleStore.categories.rows" @closeArticleModal="$emit('closeArticleModal')" />
-
     </div>
 </template>
 
@@ -202,21 +198,15 @@ import PageLoader from '../PageLoader.vue';
 import SaveStock from './SaveStock.vue';
 import { formatDate } from '../../utils/formateDate.js';
 import { debounce } from 'lodash';
-import SaveArticle from './SaveArticle.vue';
 
 export default {
     name: "Articles",
     components: {
         PageLoader,
         SaveStock,
-        SaveArticle,
     },
     props: {
         openModal: {
-            type: Boolean,
-            required: true,
-        },
-        openArticleModal: {
             type: Boolean,
             required: true,
         },
@@ -225,7 +215,7 @@ export default {
             default: null
         }
     },
-    emits: ['openModal', 'close', 'closeArticleModal'],
+    emits: ['openModal', 'close'],
     setup(props, { emit }) {
         const articleStore = useArticleStore();
         const stockStore = useStockStore();

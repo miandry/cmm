@@ -14,9 +14,11 @@ import UserManager from "./pages/UserManager.vue";
 import Facture from "./pages/Facture.vue";
 import Ordonnance from "./pages/Ordonnance.vue";
 import Stocks from "./pages/Stocks.vue";
+import AddArticle from "./pages/AddArticle.vue";
 import Login from "./pages/Login.vue";
 import { hasAnyRole } from "./utils/auth.js";
 import { useAuthStore } from "./stores/auth.js";
+import { useMenuStore } from "./stores/menu/menu.js";
 import ConsultationDetails from "./pages/ConsultationDetails.vue";
 import { toast } from "vue-sonner";
 import UserProfile from "./pages/UserProfile.vue";
@@ -25,6 +27,9 @@ import AllAppointment from "./pages/AllAppointment.vue";
 import FactureList from "./pages/FactureList.vue";
 import FactureDetails from "./pages/FactureDetails.vue";
 import ConsultationList from "./pages/ConsultationList.vue";
+import InvoiceHeaderSettings from "./pages/InvoiceHeaderSettings.vue";
+import Parametres from "./pages/Parametres.vue";
+import MenuSettings from "./pages/MenuSettings.vue";
 
 blockZoom();
 
@@ -156,6 +161,12 @@ const routes = [
     meta: { roles: ["gerant", "webmaster", "administrator"] },
   },
   {
+    path: "/stocks/ajouter-produit",
+    name: "stocks-add-article",
+    component: AddArticle,
+    meta: { roles: ["gerant", "webmaster", "administrator"] },
+  },
+  {
     path: "/user-profil",
     name: "user.profil",
     component: UserProfile,
@@ -172,6 +183,24 @@ const routes = [
     },
   },
     {
+    path: "/parametres",
+    name: "parametres",
+    component: Parametres,
+    meta: { roles: ["gerant", "administrator", "admin"] },
+  },
+  {
+    path: "/parametres/menu",
+    name: "menu-settings",
+    component: MenuSettings,
+    meta: { roles: ["gerant", "administrator", "admin"] },
+  },
+  {
+    path: "/parametres/facture",
+    name: "invoice-header-settings",
+    component: InvoiceHeaderSettings,
+    meta: { roles: ["gerant", "administrator", "admin"] },
+  },
+  {
     path: "/factures",
     name: "facture-list",
     component: FactureList,
@@ -228,9 +257,22 @@ router.beforeEach(async (to, from, next) => {
 
 const pinia = createPinia();
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const el = document.querySelector("#vue-app");
-  if (el) {
-    createApp(App).use(pinia).use(router).mount("#vue-app");
+  if (!el) {
+    return;
   }
+
+  const app = createApp(App).use(pinia).use(router);
+  const authStore = useAuthStore(pinia);
+  const menuStore = useMenuStore(pinia);
+
+  menuStore.initFromAppData();
+
+  await authStore.checkAuth();
+  if (authStore.isAuthenticated) {
+    await menuStore.load();
+  }
+
+  app.mount("#vue-app");
 });

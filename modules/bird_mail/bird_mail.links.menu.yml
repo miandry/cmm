@@ -1,0 +1,5 @@
+bird_mail.settings:
+  title: 'Bird Mail'
+  description: 'Configure the Bird API mailer.'
+  route_name: bird_mail.settings
+  parent: system.admin_config_system

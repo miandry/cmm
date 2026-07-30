@@ -1,0 +1,12 @@
+mz_clinic.services:
+  title: 'Services clinic'
+  description: 'Catalogue des prestations vendues par la clinique.'
+  route_name: 'service.collection'
+  parent: system.admin_content
+  weight: 10
+
+mz_clinic.service_add:
+  title: 'Ajouter un service'
+  route_name: 'service.add'
+  parent: mz_clinic.services
+  weight: 0

@@ -1,0 +1,16 @@
+administer clinic services:
+  title: 'Administer clinic services'
+  description: 'Create, edit and delete service content.'
+  restrict access: true
+
+create service content:
+  title: 'Create service content'
+
+edit any service content:
+  title: 'Edit any service content'
+
+delete any service content:
+  title: 'Delete any service content'
+
+view service content:
+  title: 'View service content'

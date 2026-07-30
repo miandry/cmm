@@ -69,6 +69,14 @@
               <span class="text-gray-700 font-medium">Équipe</span>
             </router-link>
 
+            <!-- Paramètres -->
+            <router-link to="/parametres"
+              v-if="roles.some(r => ['gerant', 'administrator', 'admin'].includes(r))"
+              class="flex items-center w-full px-3 py-2 text-left hover:bg-gray-50 text-sm cursor-pointer transition-colors">
+              <i class="fas fa-cog text-gray-500 mr-2 text-xs"></i>
+              <span class="text-gray-700 font-medium">Paramètres</span>
+            </router-link>
+
             <!-- séparation -->
             <div class="border-t my-1"></div>
 
@@ -101,7 +109,10 @@
 
 <script>
 import { toast } from 'vue-sonner';
+import { storeToRefs } from 'pinia';
 import { useAuthStore } from '../stores/auth';
+import { useMenuStore } from '../stores/menu/menu.js';
+import { buildMenuItems } from '../utils/menuFilter.js';
 
 export default {
   name: "AppHeader",
@@ -116,7 +127,9 @@ export default {
 
   setup() {
     const authStore = useAuthStore();
-    return { authStore };
+    const menuStore = useMenuStore();
+    const { disabledKeys } = storeToRefs(menuStore);
+    return { authStore, menuStore, disabledKeys };
   },
 
   computed: {
@@ -147,49 +160,10 @@ export default {
       return this.roles.some(role => highRoles.includes(role));
     },
 
-    // MENU FILTRÉ SELON LES RÔLES
+    // MENU FILTRÉ SELON LES RÔLES ET PARAMÈTRES
     menuItems() {
       const menu = window.APP_DATA?.menu || [];
-      const userRoles = this.roles;
-      const canUseDropdown = this.canUseDropdown;
-
-      return menu.filter(item => {
-        if (!item.roles || item.roles.length === 0) {
-          return true;
-        }
-
-        return item.roles.some(role => userRoles.includes(role));
-      }).reduce((acc, item) => {
-        if (item.isDropdown && item.dropdownItems) {
-          const dropdownItems = item.dropdownItems.filter(dropdownItem =>
-            !dropdownItem.roles || dropdownItem.roles.some(role => userRoles.includes(role))
-          );
-
-          if (!dropdownItems.length) {
-            return acc;
-          }
-
-          if (!canUseDropdown) {
-            dropdownItems.forEach((dropdownItem, index) => {
-              acc.push({
-                ...dropdownItem,
-                id: `${item.id}-${index}`,
-                isDropdown: false,
-              });
-            });
-            return acc;
-          }
-
-          acc.push({
-            ...item,
-            dropdownItems,
-          });
-          return acc;
-        }
-
-        acc.push(item);
-        return acc;
-      }, []);
+      return buildMenuItems(menu, this.roles, this.canUseDropdown, this.disabledKeys);
     }
   },
 

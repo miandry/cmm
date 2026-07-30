@@ -1,0 +1,22 @@
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_duree
+    - node.type.service
+id: node.service.field_duree
+field_name: field_duree
+entity_type: node
+bundle: service
+label: 'Durée (minutes)'
+description: 'Durée estimée de la prestation.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 0
+  max: null
+  prefix: ''
+  suffix: ' min'
+field_type: integer

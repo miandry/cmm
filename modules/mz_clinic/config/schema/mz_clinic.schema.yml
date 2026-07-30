@@ -1,0 +1,35 @@
+mz_clinic.invoice_header:
+  type: config_object
+  label: 'Invoice header settings'
+  mapping:
+    ville:
+      type: string
+      label: 'City'
+    nom:
+      type: string
+      label: 'Name'
+    titre:
+      type: string
+      label: 'Title'
+    centre:
+      type: string
+      label: 'Centre'
+    adresse:
+      type: string
+      label: 'Address'
+    contact:
+      type: string
+      label: 'Contact'
+    immat:
+      type: string
+      label: 'Registration numbers'
+
+mz_clinic.menu_settings:
+  type: config_object
+  label: 'Menu visibility settings'
+  mapping:
+    disabled:
+      type: sequence
+      label: 'Disabled menu keys'
+      sequence:
+        type: string

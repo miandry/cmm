@@ -3,6 +3,19 @@
 use Drupal\node\Entity\Node;
 use Drupal\Core\Url;
 
+/**
+ * Implements hook_preprocess_HOOK() for html templates.
+ */
+function myadmin_preprocess_html(array &$variables): void {
+  $disabled = [];
+  if (\Drupal::moduleHandler()->moduleExists('mz_clinic')) {
+    $config_disabled = \Drupal::config('mz_clinic.menu_settings')->get('disabled');
+    if (is_array($config_disabled)) {
+      $disabled = array_values($config_disabled);
+    }
+  }
+  $variables['menu_disabled'] = $disabled;
+}
 
 /**
  * Implements hook_preprocess_HOOK() for page templates.

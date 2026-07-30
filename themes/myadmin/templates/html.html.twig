@@ -120,6 +120,7 @@ document.addEventListener('touchend', function (event) {
     window.APP_DATA.menu = [
       { 
         id: 2,
+        key: "acceuil",
         name: "Acceuil",
         path: "/assist/dashboard",
         icon: "fas fa-home",
@@ -127,7 +128,8 @@ document.addEventListener('touchend', function (event) {
         roles: ["assistant", "gerant", "webmaster", "administrator"]
       },
       { 
-        id: 2,
+        id: 3,
+        key: "caisses",
         name: "Caisses",
         path: "/",
         icon: "fas fa-shopping-cart",
@@ -137,18 +139,21 @@ document.addEventListener('touchend', function (event) {
       // Transformation de Ventes en dropdown
       { 
         id: 5,
+        key: "ventes",
         name: "Ventes",
         path: "#",
         icon: "fas fa-chart-line",
         isDropdown: true,
         dropdownItems: [
           {
+            key: "ventes_commandes",
             name: "Ventes",
             path: "/commandes",
             icon: "fas fa-list",
             roles: ["caissier", "gerant", "webmaster", "administrator"]
           },
           {
+            key: "ventes_factures",
             name: "Factures",
             path: "/factures",
             icon: "fas fa-file-invoice",
@@ -160,12 +165,14 @@ document.addEventListener('touchend', function (event) {
       // Ajout du dropdown pour les médecins
       { 
         id: 8,
+        key: "medecine",
         name: "Médecine",
         path: "#",
         icon: "fas fa-stethoscope",
         isDropdown: true,
         dropdownItems: [
           {
+            key: "medecine_rendez_vous",
             name: "Rendez-vous",
             path: "/rendez-vous",
             icon: "fas fa-calendar-alt",
@@ -178,6 +185,7 @@ document.addEventListener('touchend', function (event) {
           //   roles: ["docteur", "webmaster", "administrator"]
           // },
           {
+            key: "medecine_consultations",
             name: "Consultations",
             path: "/mes-consultations",
             icon: "fas fa-list",
@@ -187,7 +195,8 @@ document.addEventListener('touchend', function (event) {
         roles: ["docteur", "webmaster", "administrator"]
       },
       { 
-        id: 3,
+        id: 4,
+        key: "patients",
         name: "Patients",
         path: "/patients",
         icon: "fas fa-users",
@@ -195,6 +204,7 @@ document.addEventListener('touchend', function (event) {
       },
       { 
         id: 6,
+        key: "stocks",
         name: "Stocks",
         path: "/stocks",
         icon: "fas fa-boxes",
@@ -208,6 +218,7 @@ document.addEventListener('touchend', function (event) {
       //   roles: ["docteur", "gerant", "webmaster", "administrator"]
       // }
     ];
+    window.APP_DATA.menuDisabled = {{ menu_disabled|default([])|json_encode|raw }};
     window.APP_DATA.baseUrl = "/";
     </script>
     {{ page_top }}

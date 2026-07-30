@@ -8,4 +8,5 @@ export * from "./facture/facture";
 export * from "./appointment/appointment";
 export * from "./user/user";
 export * from "./specialite/specialite";
+export * from "./menu/menu";
 export * from "./auth";

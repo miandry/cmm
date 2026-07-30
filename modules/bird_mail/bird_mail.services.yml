@@ -1,0 +1,7 @@
+services:
+  bird_mail.mailer:
+    class: Drupal\bird_mail\Service\BirdMailService
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@logger.factory'

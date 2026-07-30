@@ -1,0 +1,178 @@
+<?php
+
+/**
+ * @file
+ * Install hooks for mz_clinic module.
+ */
+
+use Drupal\Core\Config\FileStorage;
+use Drupal\node\Entity\Node;
+
+/**
+ * Creates a published page node with a path alias for Vue routes.
+ */
+function _mz_clinic_create_vue_page(string $title, string $alias): ?int {
+  $alias = '/' . ltrim($alias, '/');
+  $repository = \Drupal::service('path_alias.repository');
+  if ($repository->lookupByAlias($alias, 'fr') || $repository->lookupByAlias($alias, 'en')) {
+    return NULL;
+  }
+
+  $node = Node::create([
+    'type' => 'page',
+    'title' => $title,
+    'status' => 1,
+    'uid' => 1,
+    'path' => [
+      'alias' => $alias,
+      'langcode' => 'fr',
+    ],
+  ]);
+  $node->save();
+
+  return (int) $node->id();
+}
+
+/**
+ * Installs config YAML files from the module config/install directory.
+ */
+function _mz_clinic_install_configs(array $config_names): void {
+  $module_path = \Drupal::service('extension.list.module')->getPath('mz_clinic');
+  $source = new FileStorage($module_path . '/config/install');
+
+  foreach ($config_names as $config_name) {
+    if (!$source->exists($config_name)) {
+      continue;
+    }
+
+    $data = $source->read($config_name);
+
+    if (str_starts_with($config_name, 'node.type.')) {
+      $bundle = str_replace('node.type.', '', $config_name);
+      if (!\Drupal::entityTypeManager()->getStorage('node_type')->load($bundle)) {
+        \Drupal::entityTypeManager()->getStorage('node_type')->create($data)->save();
+      }
+      continue;
+    }
+
+    if (str_starts_with($config_name, 'field.storage.node.')) {
+      $field_name = str_replace('field.storage.node.', '', $config_name);
+      if (!\Drupal\field\Entity\FieldStorageConfig::loadByName('node', $field_name)) {
+        \Drupal\field\Entity\FieldStorageConfig::create($data)->save();
+      }
+      continue;
+    }
+
+    if (str_starts_with($config_name, 'field.field.node.')) {
+      $parts = explode('.', $config_name);
+      $bundle = $parts[2];
+      $field_name = $parts[3];
+      if (!\Drupal\field\Entity\FieldConfig::loadByName('node', $bundle, $field_name)) {
+        \Drupal\field\Entity\FieldConfig::create($data)->save();
+      }
+      continue;
+    }
+
+    $editable = \Drupal::configFactory()->getEditable($config_name);
+    $editable->setData($data);
+    $editable->save(TRUE);
+  }
+}
+
+/**
+ * Import invoice header config for existing installations.
+ */
+function mz_clinic_update_9001(): void {
+  $config_path = \Drupal::service('extension.list.module')->getPath('mz_clinic') . '/config/install/mz_clinic.invoice_header.yml';
+  if (!file_exists($config_path)) {
+    return;
+  }
+
+  $data = \Symfony\Component\Yaml\Yaml::parseFile($config_path);
+  $config = \Drupal::configFactory()->getEditable('mz_clinic.invoice_header');
+  if ($config->isNew()) {
+    foreach ($data as $key => $value) {
+      $config->set($key, $value);
+    }
+    $config->save();
+  }
+}
+
+/**
+ * Create Drupal page aliases for Vue parametres routes.
+ */
+function mz_clinic_update_9002(): void {
+  _mz_clinic_create_vue_page('Paramètres', '/parametres');
+  _mz_clinic_create_vue_page('Paramètres facture', '/parametres/facture');
+}
+
+/**
+ * Create Drupal page alias for menu settings route.
+ */
+function mz_clinic_update_9003(): void {
+  _mz_clinic_create_vue_page('Paramètres menu', '/parametres/menu');
+
+  $config_path = \Drupal::service('extension.list.module')->getPath('mz_clinic') . '/config/install/mz_clinic.menu_settings.yml';
+  if (!file_exists($config_path)) {
+    return;
+  }
+
+  $data = \Symfony\Component\Yaml\Yaml::parseFile($config_path);
+  $config = \Drupal::configFactory()->getEditable('mz_clinic.menu_settings');
+  if ($config->isNew()) {
+    foreach ($data as $key => $value) {
+      $config->set($key, $value);
+    }
+    $config->save();
+  }
+}
+
+/**
+ * Create Service content type for clinic sellable prestations.
+ */
+function mz_clinic_update_9004(): void {
+  _mz_clinic_install_configs([
+    'node.type.service',
+    'field.storage.node.field_duree',
+    'field.storage.node.field_actif',
+    'field.field.node.service.field_prix',
+    'field.field.node.service.field_description',
+    'field.field.node.service.field_duree',
+    'field.field.node.service.field_actif',
+    'core.entity_form_display.node.service.default',
+    'core.entity_view_display.node.service.default',
+  ]);
+}
+
+/**
+ * Grant service content permissions to clinic roles.
+ */
+function mz_clinic_update_9005(): void {
+  $permissions = [
+    'administer clinic services',
+    'create service content',
+    'edit any service content',
+    'delete any service content',
+    'view service content',
+  ];
+
+  foreach (['gerant', 'caissier'] as $role_id) {
+    $role = \Drupal\user\Entity\Role::load($role_id);
+    if (!$role) {
+      continue;
+    }
+    foreach ($permissions as $permission) {
+      if (!$role->hasPermission($permission)) {
+        $role->grantPermission($permission);
+      }
+    }
+    $role->save();
+  }
+}
+
+/**
+ * Create Drupal page alias for add product Vue route.
+ */
+function mz_clinic_update_9006(): void {
+  _mz_clinic_create_vue_page('Ajouter un produit', '/stocks/ajouter-produit');
+}

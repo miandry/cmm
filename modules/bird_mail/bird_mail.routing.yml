@@ -1,0 +1,7 @@
+bird_mail.settings:
+  path: '/admin/config/system/bird-mail'
+  defaults:
+    _form: '\Drupal\bird_mail\Form\BirdMailSettingsForm'
+    _title: 'Bird Mail settings'
+  requirements:
+    _permission: 'administer site configuration'

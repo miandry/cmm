@@ -28,13 +28,13 @@
                     </div>
                     <span>Ajouter Stock</span>
                 </button>
-                <button @click="openAddArticleModal"
+                <router-link to="/stocks/ajouter-produit"
                     class="bg-secondary hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors !rounded-button font-medium text-sm whitespace-nowrap">
                     <div class="w-5 h-5 flex items-center justify-center">
                         <i class="ri-add-line"></i>
                     </div>
-                    <span>Ajouter Article</span>
-                </button>
+                    <span>Ajouter un Produit</span>
+                </router-link>
             </div>
         </div>
         <!-- Alertes de Stock -->
@@ -116,8 +116,7 @@
         </div>
         <!-- Recherche, Filtres et Tableau Principal -->
         <Articles :openModal="openSaveArticleModal" @openModal="openEditModal" @close="openSaveArticleModal = false"
-            :selectedStock="selectedStock" :openArticleModal="openArticleModal"
-            @closeArticleModal="openArticleModal = false" />
+            :selectedStock="selectedStock" />
     </main>
 </template>
 
@@ -134,7 +133,6 @@ export default {
     },
     setup() {
         const openSaveArticleModal = ref(false);
-        const openArticleModal = ref(false);
         const selectedStock = ref(null);
         const stockStore = useStockStore();
         const isloading = ref(false);
@@ -216,17 +214,11 @@ export default {
             openSaveArticleModal.value = true;
         };
 
-        const openAddArticleModal = () => {
-            openArticleModal.value = true;
-        };
-
         return {
             openSaveArticleModal,
             selectedStock,
             openEditModal,
             openAddModal,
-            openAddArticleModal,
-            openArticleModal,
             handleRapportInventaire,
             isloading,
             stockStore,

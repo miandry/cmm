@@ -1,0 +1,13 @@
+bird_mail.settings:
+  type: config_object
+  label: 'Bird Mail settings'
+  mapping:
+    api_key:
+      type: string
+      label: 'Bird API key'
+    api_url:
+      type: string
+      label: 'Bird API endpoint URL'
+    from_address:
+      type: string
+      label: 'Default From address'

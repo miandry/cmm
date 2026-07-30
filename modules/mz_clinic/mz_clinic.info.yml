@@ -1,7 +1,10 @@
 name: 'MZ Clinic'
 type: module
-description: 'Custom module for clinic consultation management'
+description: 'Custom module for clinic consultation management and services catalog.'
 core_version_requirement: ^9 || ^10
 package: 'MZ'
 dependencies:
+  - drupal:node
+  - drupal:field
+  - drupal:path
   - mz_crud:mz_crud

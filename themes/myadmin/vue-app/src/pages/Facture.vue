@@ -460,6 +460,7 @@ import { useOrderStore, useInvoiceStore } from '../stores/index.js';
 import { onMounted, ref, computed, watch, nextTick } from 'vue';
 import { toast } from 'vue-sonner';
 import PageLoader from '../components/PageLoader.vue';
+import { defaultInvoiceHeader, getInvoiceHeader } from '../services/invoiceHeader.js';
 
 export default {
     name: "Facture",
@@ -510,34 +511,18 @@ export default {
             isMobile.value = window.innerWidth < 768;
         };
 
-        // Données de la facture
-        const realCabinet = {
-            ville: "Tsiroanomandidy",
-            nom: "Pharmacie / CENTRE MÉDICAL VONJY AINA",
-            titre: "Facturation et Paiements",
-            centre: "VENTE PHARMACEUTIQUE",
-            adresse: "3TH3 Tsarahonena, Tsiroanomandidy",
-            contact: "033 24 427 30 – 034 06 015 13",
-            immat: "NIF: 30024 555 38 / STAT: 65201 14 2016 0 00199"
+        const cabinet = ref({ ...defaultInvoiceHeader });
+
+        const loadCabinetHeader = async () => {
+            try {
+                const response = await getInvoiceHeader();
+                if (response.data?.status && response.data?.data) {
+                    cabinet.value = { ...defaultInvoiceHeader, ...response.data.data };
+                }
+            } catch (error) {
+                console.error('Impossible de charger l\'en-tête de facture:', error);
+            }
         };
-
-        const fakeCabinet = {
-            ville: "Antananarivo",
-            nom: "Pharmacie / Centre Médical Test Santé",
-            titre: "Facturation et Paiements",
-            centre: "VENTE PHARMACEUTIQUE",
-            adresse: "45 Avenue de l'Indépendance",
-            contact: "032 12 345 67 – 034 98 765 43",
-            immat: "NIF: 12345 678 90 / STAT: 98765 43 2024 0 00001"
-        };
-
-        const hostname = window.location.hostname;
-
-        const cabinet = ref(
-            hostname === "vonjyaina.platforme.site"
-                ? realCabinet
-                : fakeCabinet
-        );
 
         const patient = ref({
             nom: "",
@@ -694,6 +679,8 @@ export default {
         // ============== INITIALISATION ==============
 
         onMounted(async () => {
+            await loadCabinetHeader();
+
             if (invoiceId.value) {
                 try {
                     await invoiceStore.fetchInvoice(invoiceId.value, {});
