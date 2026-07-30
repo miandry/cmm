@@ -56,6 +56,18 @@
                 </div>
             </div>
 
+            <div v-if="isEdit" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Quantité en stock</label>
+                    <input type="number" min="0" v-model="form.field_quantite_stock"
+                        class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                        placeholder="0">
+                    <p v-if="errors.field_quantite_stock" class="text-red-500 text-xs mt-1">
+                        La quantité doit être supérieure ou égale à 0
+                    </p>
+                </div>
+            </div>
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Posologie de référence</label>
                 <textarea v-model="form.field_posologie"
@@ -284,6 +296,7 @@ export default {
             errors.field_prix_unitaire = false;
             errors.field_type_pack = false;
             errors.field_nombre_par_unite = false;
+            errors.field_quantite_stock = false;
 
             if (!form.title || form.title.trim() === "") {
                 errors.title = true;
@@ -302,6 +315,11 @@ export default {
 
             if (form.field_type_pack == "") {
                 errors.field_type_pack = true;
+                isValid = false;
+            }
+
+            if (isEdit.value && (form.field_quantite_stock === '' || Number(form.field_quantite_stock) < 0)) {
+                errors.field_quantite_stock = true;
                 isValid = false;
             }
 
