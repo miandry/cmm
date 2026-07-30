@@ -91,3 +91,20 @@ service.collection:
     _controller: '\Drupal\mz_clinic\Controller\ServiceAdminController::listServices'
   requirements:
     _permission: 'administer clinic services'
+
+praticien.add:
+  path: '/admin/clinic/praticien/add'
+  defaults:
+    _title: 'Ajouter un praticien'
+    _entity_form: 'node.praticien.default'
+  requirements:
+    _permission: 'create praticien content'
+    _entity_create_access: 'node:praticien'
+
+praticien.collection:
+  path: '/admin/clinic/praticiens'
+  defaults:
+    _title: 'Praticiens clinic'
+    _controller: '\Drupal\mz_clinic\Controller\PraticienAdminController::listPraticiens'
+  requirements:
+    _permission: 'administer clinic practitioners'

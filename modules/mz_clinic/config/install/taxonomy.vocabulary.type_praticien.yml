@@ -1,0 +1,8 @@
+langcode: fr
+status: true
+dependencies: {  }
+name: 'Type de praticien'
+vid: type_praticien
+description: 'Catégorie professionnelle du praticien (médecin, infirmier, kinésithérapeute, etc.).'
+weight: 0
+new_revision: false

@@ -9,7 +9,7 @@ field_name: field_description
 entity_type: node
 bundle: service
 label: Description
-description: 'Description détaillée de la prestation.'
+description: 'Description détaillée de la prestation (corps).'
 required: false
 translatable: false
 default_value: {  }

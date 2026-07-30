@@ -55,6 +55,14 @@ function _mz_clinic_install_configs(array $config_names): void {
       continue;
     }
 
+    if (str_starts_with($config_name, 'taxonomy.vocabulary.')) {
+      $vid = str_replace('taxonomy.vocabulary.', '', $config_name);
+      if (!\Drupal\taxonomy\Entity\Vocabulary::load($vid)) {
+        \Drupal\taxonomy\Entity\Vocabulary::create($data)->save();
+      }
+      continue;
+    }
+
     if (str_starts_with($config_name, 'field.storage.node.')) {
       $field_name = str_replace('field.storage.node.', '', $config_name);
       if (!\Drupal\field\Entity\FieldStorageConfig::loadByName('node', $field_name)) {
@@ -182,4 +190,220 @@ function mz_clinic_update_9006(): void {
  */
 function mz_clinic_update_9007(): void {
   _mz_clinic_create_vue_page('Catalogue produits', '/articles');
+}
+
+/**
+ * Add extended fields to Service content type.
+ */
+function mz_clinic_update_9008(): void {
+  _mz_clinic_install_configs([
+    'taxonomy.vocabulary.categorie_service',
+    'field.storage.node.field_category',
+    'field.storage.node.field_icon',
+    'field.storage.node.field_duration',
+    'field.storage.node.field_preparation',
+    'field.storage.node.field_practitioners',
+    'field.storage.node.field_image',
+    'field.field.node.service.field_category',
+    'field.field.node.service.field_image',
+    'field.field.node.service.field_icon',
+    'field.field.node.service.field_duration',
+    'field.field.node.service.field_preparation',
+    'field.field.node.service.field_practitioners',
+    'core.entity_form_display.node.service.default',
+    'core.entity_view_display.node.service.default',
+  ]);
+
+  $prix = \Drupal\field\Entity\FieldConfig::loadByName('node', 'service', 'field_prix');
+  if ($prix) {
+    $prix->setLabel('Tarif');
+    $prix->setRequired(FALSE);
+    $prix->setDescription('Tarif du service (Ar), optionnel.');
+    $prix->save();
+  }
+
+  $description = \Drupal\field\Entity\FieldConfig::loadByName('node', 'service', 'field_description');
+  if ($description) {
+    $description->setDescription('Description détaillée de la prestation (corps).');
+    $description->save();
+  }
+}
+
+/**
+ * Creates default taxonomy terms for practitioner types.
+ */
+function _mz_clinic_seed_type_praticien_terms(): void {
+  $terms = [
+    'Médecin',
+    'Infirmier(ère)',
+    'Kinésithérapeute',
+    'Sage-femme',
+    'Dentiste',
+    'Psychologue',
+    'Laborantin',
+    'Autre',
+  ];
+
+  $storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+  foreach ($terms as $name) {
+    $existing = $storage->loadByProperties([
+      'vid' => 'type_praticien',
+      'name' => $name,
+    ]);
+    if ($existing) {
+      continue;
+    }
+    $storage->create([
+      'vid' => 'type_praticien',
+      'name' => $name,
+    ])->save();
+  }
+}
+
+/**
+ * Replaces user-based practitioners field with node reference on service.
+ */
+function _mz_clinic_migrate_service_practitioners_field(): void {
+  $field = \Drupal\field\Entity\FieldConfig::loadByName('node', 'service', 'field_practitioners');
+  if ($field) {
+    $field->delete();
+  }
+
+  $storage = \Drupal\field\Entity\FieldStorageConfig::loadByName('node', 'field_practitioners');
+  if ($storage && $storage->getSetting('target_type') === 'user') {
+    $storage->delete();
+  }
+}
+
+/**
+ * Create Praticien content type and repoint service practitioners field.
+ */
+function mz_clinic_update_9009(): void {
+  _mz_clinic_migrate_service_practitioners_field();
+
+  _mz_clinic_install_configs([
+    'taxonomy.vocabulary.type_praticien',
+    'node.type.praticien',
+    'field.storage.node.field_type_praticien',
+    'field.storage.node.field_specialite',
+    'field.storage.node.field_compte_utilisateur',
+    'field.storage.node.field_titre_civilite',
+    'field.field.node.praticien.field_type_praticien',
+    'field.field.node.praticien.field_specialite',
+    'field.field.node.praticien.field_titre_civilite',
+    'field.field.node.praticien.field_description',
+    'field.field.node.praticien.field_image',
+    'field.field.node.praticien.field_phone',
+    'field.field.node.praticien.field_mail',
+    'field.field.node.praticien.field_compte_utilisateur',
+    'field.field.node.praticien.field_actif',
+    'field.storage.node.field_practitioners',
+    'field.field.node.service.field_practitioners',
+    'core.entity_form_display.node.praticien.default',
+    'core.entity_view_display.node.praticien.default',
+    'core.entity_form_display.node.service.default',
+    'core.entity_view_display.node.service.default',
+  ]);
+
+  _mz_clinic_seed_type_praticien_terms();
+}
+
+/**
+ * Grant praticien content permissions to clinic roles.
+ */
+function mz_clinic_update_9010(): void {
+  $permissions = [
+    'administer clinic practitioners',
+    'create praticien content',
+    'edit any praticien content',
+    'delete any praticien content',
+    'view praticien content',
+  ];
+
+  foreach (['gerant', 'webmaster', 'administrator'] as $role_id) {
+    $role = \Drupal\user\Entity\Role::load($role_id);
+    if (!$role) {
+      continue;
+    }
+    foreach ($permissions as $permission) {
+      if (!$role->hasPermission($permission)) {
+        $role->grantPermission($permission);
+      }
+    }
+    $role->save();
+  }
+
+  foreach (['caissier', 'assistant'] as $role_id) {
+    $role = \Drupal\user\Entity\Role::load($role_id);
+    if (!$role) {
+      continue;
+    }
+    if (!$role->hasPermission('view praticien content')) {
+      $role->grantPermission('view praticien content');
+    }
+    $role->save();
+  }
+}
+
+/**
+ * Create Drupal page alias for services Vue route.
+ */
+function mz_clinic_update_9011(): void {
+  _mz_clinic_create_vue_page('Catalogue services', '/services');
+  _mz_clinic_create_vue_page('Ajouter un service', '/services/add');
+}
+
+/**
+ * Grant service category taxonomy permissions to clinic roles.
+ */
+function mz_clinic_update_9012(): void {
+  $permissions = [
+    'create terms in categorie_service',
+    'edit terms in categorie_service',
+    'delete terms in categorie_service',
+  ];
+
+  foreach (['gerant', 'caissier', 'webmaster', 'administrator'] as $role_id) {
+    $role = \Drupal\user\Entity\Role::load($role_id);
+    if (!$role) {
+      continue;
+    }
+    foreach ($permissions as $permission) {
+      if (!$role->hasPermission($permission)) {
+        $role->grantPermission($permission);
+      }
+    }
+    $role->save();
+  }
+}
+
+/**
+ * Allow service nodes in commande line items and create caisse services page alias.
+ */
+function mz_clinic_update_9013(): void {
+  $field = \Drupal\field\Entity\FieldConfig::loadByName('paragraph', 'commande', 'field_article');
+  if ($field) {
+    $settings = $field->getSettings();
+    $settings['handler_settings']['target_bundles']['service'] = 'service';
+    $field->setSettings($settings);
+    $field->save();
+  }
+
+  _mz_clinic_create_vue_page('Caisse services', '/caisse/services');
+}
+
+/**
+ * Allow caisse roles to create praticiens from the services checkout.
+ */
+function mz_clinic_update_9014(): void {
+  foreach (['caissier', 'assistant', 'gerant'] as $role_id) {
+    $role = \Drupal\user\Entity\Role::load($role_id);
+    if (!$role) {
+      continue;
+    }
+    if (!$role->hasPermission('create praticien content')) {
+      $role->grantPermission('create praticien content');
+    }
+    $role->save();
+  }
 }

@@ -342,7 +342,8 @@ class JsonContentController extends ControllerBase implements ContainerInjection
             ->getStorage('user')
             ->getQuery()
             ->condition('status', 1) // Only active users
-            ->condition('uid', 0, '<>'); // Exclude anonymous
+            ->condition('uid', 0, '<>') // Exclude anonymous
+            ->condition('uid', 1, '<>'); // Exclude super admin
         $query->range($offset, $limit);
 
         // Note: $filters was undefined in the original implementation, so
@@ -381,6 +382,7 @@ class JsonContentController extends ControllerBase implements ContainerInjection
 
         $query = \Drupal::entityQuery('user');
         $query->condition('uid', 0, '<>');
+        $query->condition('uid', 1, '<>');
 
         // Apply generic filters if provided.
         if (is_array($filters)) {
@@ -548,6 +550,12 @@ class JsonContentController extends ControllerBase implements ContainerInjection
                 } elseif (is_object($value_child)) {
                     // Si c'est directement un objet
                     $output[] = $this->getValue($value_child, $key_field);
+                } elseif (is_array($value_child) && isset($value_child['id']) && $key_field === 'field_articles') {
+                    // Paragraph déjà parsé par entity_reference_revisions.
+                    $entity = \Drupal::entityTypeManager()->getStorage('paragraph')->load($value_child['id']);
+                    if ($entity) {
+                        $output[] = $this->getValue($entity, $key_field);
+                    }
                 } elseif (is_array($value_child) && isset($value_child['target_id'])) {
                     // Cas pour les références d'entités standard
                     $entity = \Drupal::entityTypeManager()->getStorage('node')->load($value_child['target_id']);

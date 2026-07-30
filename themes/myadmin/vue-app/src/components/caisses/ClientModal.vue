@@ -71,13 +71,14 @@
                         </div>
                     </div>
                     <div class="flex space-x-3">
-                        <button @click="$emit('close')"
-                            class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 !rounded-button font-medium whitespace-nowrap">
+                        <button @click="$emit('close')" :disabled="confirming"
+                            class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 !rounded-button font-medium whitespace-nowrap disabled:opacity-50">
                             Annuler
                         </button>
-                        <button @click="confirmSelectedClient"
-                            class="flex-1 px-4 py-2 bg-primary text-white hover:bg-blue-600 !rounded-button font-medium whitespace-nowrap">
-                            Confirmer
+                        <button @click="confirmSelectedClient" :disabled="confirming || !selectedClientNid"
+                            class="flex-1 px-4 py-2 bg-primary text-white hover:bg-blue-600 !rounded-button font-medium whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                            <i v-if="confirming" class="ri-loader-4-line animate-spin"></i>
+                            <span>{{ confirming ? 'Chargement...' : 'Confirmer' }}</span>
                         </button>
                     </div>
                 </div>
@@ -100,6 +101,7 @@ export default {
         const selectedIndex = ref(null);
         const clientNameSearch = ref('');
         const loading = ref(false);
+        const confirming = ref(false);
 
         // Paramètres dynamiques de la requête
         const queryOptions = ref({
@@ -128,17 +130,27 @@ export default {
         }
 
         const confirmSelectedClient = async () => {
+            if (confirming.value) {
+                return;
+            }
             if (!selectedClientNid.value) {
                 toast.error("Veuillez sélectionner un client.")
                 return
             }
-            await store.fetchClient(selectedClientNid.value);
-            if (store.error) {
+            confirming.value = true;
+            try {
+                await store.fetchClient(selectedClientNid.value);
+                if (store.error) {
+                    toast.error("Une erreur est survenue lors de la sélection du client.")
+                    return
+                }
+                toast.success('Client sélectionné avec succès !')
+                emit('close')
+            } catch (error) {
                 toast.error("Une erreur est survenue lors de la sélection du client.")
-                return
+            } finally {
+                confirming.value = false;
             }
-            toast.success('Client sélectionné avec succès !')
-            emit('close')
         }
 
         const onSearch = () => {
@@ -157,6 +169,9 @@ export default {
         }
 
         const selectClient = (client, index) => {
+            if (confirming.value || loading.value) {
+                return;
+            }
             selectedIndex.value = index
             selectedClientNid.value = client
         }
@@ -176,7 +191,8 @@ export default {
             clientNameSearch,
             onSearch,
             selectClient,
-            loading
+            loading,
+            confirming,
         }
     }
 

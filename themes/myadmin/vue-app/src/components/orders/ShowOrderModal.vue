@@ -62,27 +62,39 @@
                     </div>
 
                     <div class="mb-6" v-if="orderToShow.field_articles?.length">
-                        <h4 class="font-semibold text-primary mb-3">Produits commandés</h4>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <div class="space-y-3" id="modal-products-list">
-                                <div v-for="article in orderToShow.field_articles" :key="article.nid"
-                                    class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-                                    <div class="flex-1">
-                                        <p class="font-medium text-gray-900">{{ article.field_article.title }}</p>
-                                        <p class="text-sm text-gray-500">Prix unitaire : {{
-                                            Number(article.field_prix_unitaire).toLocaleString('fr-MG', {
-                                                style: 'currency',
-                                                currency: 'MGA'
-                                            }) }}</p>
+                        <h4 class="font-semibold text-gray-900 mb-3">Articles commandés</h4>
+                        <div class="rounded-lg p-4 space-y-3" id="modal-products-list">
+                            <div v-for="article in orderToShow.field_articles" :key="article.id || article.nid"
+                                class="flex justify-between items-start py-3 px-3 rounded-lg border-l-4"
+                                :class="[getLineItemBorderClass(article), getLineItemBgClass(article)]">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap mb-1">
+                                        <span class="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded"
+                                            :class="getLineItemBadgeClass(article)">
+                                            {{ getLineItemLabel(article) }}
+                                        </span>
+                                        <p class="font-medium text-gray-900">{{ article.field_article?.title }}</p>
                                     </div>
-                                    <div class="text-right">
-                                        <p class="font-medium">Qté : {{ article.field_quantite }}</p>
-                                        <p class="text-sm text-primary font-semibold"> {{ (article.field_prix_unitaire *
-                                            article.field_quantite).toLocaleString('fr-MG', {
-                                                style: 'currency',
-                                                currency: 'MGA'
-                                            }) }}</p>
-                                    </div>
+                                    <p class="text-sm text-gray-500">Prix unitaire : {{
+                                        Number(article.field_prix_unitaire).toLocaleString('fr-MG', {
+                                            style: 'currency',
+                                            currency: 'MGA'
+                                        }) }}</p>
+                                    <p v-if="isServiceLine(article) && getPraticienName(article)"
+                                        class="text-sm text-teal-700 mt-1 flex items-center gap-1">
+                                        <i class="ri-user-line"></i>
+                                        Praticien : {{ getPraticienName(article) }}
+                                    </p>
+                                </div>
+                                <div class="text-right ml-3">
+                                    <p class="font-medium">Qté : {{ article.field_quantite }}</p>
+                                    <p class="text-sm font-semibold"
+                                        :class="isServiceLine(article) ? 'text-teal-700' : 'text-blue-700'">
+                                        {{ (article.field_prix_unitaire * article.field_quantite).toLocaleString('fr-MG', {
+                                            style: 'currency',
+                                            currency: 'MGA'
+                                        }) }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -158,6 +170,14 @@
 
 <script>
 import { formatDate } from '../../utils/formateDate';
+import {
+    getLineItemBadgeClass,
+    getLineItemBorderClass,
+    getLineItemBgClass,
+    getLineItemLabel,
+    getPraticienName,
+    isServiceLine,
+} from '../../utils/orderLineItem.js';
 
 export default {
     name: "ShowOrderModal",
@@ -202,6 +222,12 @@ export default {
             showStatusModal,
             formatDate,
             statusMap,
+            getLineItemBadgeClass,
+            getLineItemBorderClass,
+            getLineItemBgClass,
+            getLineItemLabel,
+            getPraticienName,
+            isServiceLine,
         }
     }
 }

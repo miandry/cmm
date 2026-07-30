@@ -41,9 +41,10 @@
                                 class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 !rounded-button font-medium whitespace-nowrap">
                                 Annuler
                             </button>
-                            <button type="submit" :disabled="!!titleError || !form.title"
-                                class="flex-1 px-4 py-2 bg-secondary text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
-                                Enregistrer
+                            <button type="submit" :disabled="!!titleError || !form.title || store.loading"
+                                class="flex-1 px-4 py-2 bg-secondary text-white hover:bg-green-600 !rounded-button font-medium whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                <i v-if="store.loading" class="ri-loader-4-line animate-spin"></i>
+                                <span>{{ store.loading ? 'Enregistrement...' : 'Enregistrer' }}</span>
                             </button>
                         </div>
                     </form>
@@ -84,7 +85,10 @@ export default {
         };
 
         const submitClientForm = async () => {
-            // Valider avant soumission
+            if (store.loading) {
+                return;
+            }
+
             validateTitle();
 
             if (titleError.value) {
@@ -92,22 +96,23 @@ export default {
             }
 
             store.loading = true;
-            await store.createClient(form);
+            try {
+                await store.createClient(form);
 
-            if (store.error) {
-                toast.error("Une erreur est survenue lors de l'ajout client.")
-                return
+                if (store.error) {
+                    toast.error("Une erreur est survenue lors de l'ajout client.")
+                    return
+                }
+
+                form.title = "";
+                form.field_phone = "";
+                titleError.value = "";
+                emit('close-add-customer-modal');
+                emit('close-client-modal');
+                toast.success('Client sélectionné avec succès !')
+            } finally {
+                store.loading = false;
             }
-
-            // reset form
-            form.title = "";
-            form.field_phone = "";
-            titleError.value = ""; // Reset error
-            // fermer modal si c'est ok
-            emit('close-add-customer-modal');
-            emit('close-client-modal');
-            toast.success('Client sélectionné avec succès !')
-            store.loading = false;
         };
 
         return { form, submitClientForm, store, titleError, validateTitle };

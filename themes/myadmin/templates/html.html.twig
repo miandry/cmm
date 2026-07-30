@@ -133,7 +133,7 @@ document.addEventListener('touchend', function (event) {
         name: "Caisses",
         path: "/",
         icon: "fas fa-shopping-cart",
-        paths: ["/", "/caisse", "/fr", "/fr/frontdesk"],
+        paths: ["/", "/caisse", "/caisse/services", "/fr", "/fr/frontdesk"],
         roles: ["caissier", "gerant", "webmaster", "administrator"]
       },
       // Transformation de Ventes en dropdown
@@ -216,6 +216,14 @@ document.addEventListener('touchend', function (event) {
         name: "Produits",
         path: "/articles",
         icon: "fas fa-pills"
+      },
+      { 
+        id: 9,
+        key: "services",
+        name: "Services",
+        path: "/services",
+        icon: "fas fa-stethoscope",
+        roles: ["gerant", "caissier", "webmaster", "administrator"]
       },
       // { 
       //   id: 7,

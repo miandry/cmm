@@ -5,6 +5,7 @@ import blockZoom from "./utils/blockZoom.js";
 
 import App from "./App.vue";
 import Caisse from "./pages/Caisse.vue";
+import CaisseServices from "./pages/CaisseServices.vue";
 import Clients from "./pages/Clients.vue";
 import Order from "./pages/Order.vue";
 import Consultations from "./pages/Consultations.vue";
@@ -17,6 +18,9 @@ import Stocks from "./pages/Stocks.vue";
 import AddArticle from "./pages/AddArticle.vue";
 import EditArticle from "./pages/EditArticle.vue";
 import Articles from "./pages/Articles.vue";
+import Services from "./pages/Services.vue";
+import AddService from "./pages/AddService.vue";
+import EditService from "./pages/EditService.vue";
 import Login from "./pages/Login.vue";
 import { hasAnyRole } from "./utils/auth.js";
 import { useAuthStore } from "./stores/auth.js";
@@ -54,6 +58,14 @@ const routes = [
     path: "/caisse",
     name: "caisse",
     component: Caisse,
+    meta: {
+      roles: ["caissier", "gerant", "webmaster", "administrator"],
+    },
+  },
+  {
+    path: "/caisse/services",
+    name: "caisse-services",
+    component: CaisseServices,
     meta: {
       roles: ["caissier", "gerant", "webmaster", "administrator"],
     },
@@ -177,6 +189,24 @@ const routes = [
     path: "/articles/:id/edit",
     name: "articles-edit",
     component: EditArticle,
+  },
+  {
+    path: "/services",
+    name: "services",
+    component: Services,
+    meta: { roles: ["gerant", "caissier", "webmaster", "administrator"] },
+  },
+  {
+    path: "/services/add",
+    name: "services-add",
+    component: AddService,
+    meta: { roles: ["gerant", "caissier", "webmaster", "administrator"] },
+  },
+  {
+    path: "/services/:id/edit",
+    name: "services-edit",
+    component: EditService,
+    meta: { roles: ["gerant", "caissier", "webmaster", "administrator"] },
   },
   {
     path: "/user-profil",

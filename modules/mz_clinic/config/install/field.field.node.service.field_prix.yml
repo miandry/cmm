@@ -8,9 +8,9 @@ id: node.service.field_prix
 field_name: field_prix
 entity_type: node
 bundle: service
-label: Prix
-description: 'Prix unitaire du service (Ar).'
-required: true
+label: Tarif
+description: 'Tarif du service (Ar), optionnel.'
+required: false
 translatable: false
 default_value: {  }
 default_value_callback: ''

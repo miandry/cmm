@@ -38,7 +38,11 @@ export const useClientStore = defineStore("client", () => {
   }
 
   async function fetchClient(id) {
+    if (loading.value) {
+      return client.value;
+    }
     loading.value = true;
+    error.value = null;
     const query = `filters[nid][val]=${id}`;
     try {
       const response = await getClients(query);
@@ -46,6 +50,7 @@ export const useClientStore = defineStore("client", () => {
       return response.data.rows[0];
     } catch (err) {
       error.value = err;
+      throw err;
     } finally {
       loading.value = false;
     }

@@ -14,3 +14,20 @@ delete any service content:
 
 view service content:
   title: 'View service content'
+
+administer clinic practitioners:
+  title: 'Administer clinic practitioners'
+  description: 'Create, edit and delete praticien content.'
+  restrict access: true
+
+create praticien content:
+  title: 'Create praticien content'
+
+edit any praticien content:
+  title: 'Edit any praticien content'
+
+delete any praticien content:
+  title: 'Delete any praticien content'
+
+view praticien content:
+  title: 'View praticien content'

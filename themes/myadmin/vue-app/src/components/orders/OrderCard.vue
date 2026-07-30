@@ -41,7 +41,7 @@
 
                             <span class="sm:hidden text-xs text-gray-500 me-2" v-if="order.field_articles?.length">{{
                                 order.field_articles.length }} {{
-                                    order.field_articles.length > 1 ? 'produits' : 'produit' }}</span>
+                                    order.field_articles.length > 1 ? 'articles' : 'article' }}</span>
                             <span class="sm:hidden text-xs text-gray-500 me-2"
                                 v-if="!order.field_articles?.length && order.field_examens_order?.length">{{
                                     order.field_examens_order.length }} {{
@@ -56,17 +56,29 @@
                 </div>
             </div>
             <div class="hidden sm:block" v-if="order.field_articles?.length">
-                <h4 class="font-medium text-gray-900 mb-2">Produits vendu</h4>
-                <div class="space-y-1 text-sm text-gray-600">
-                    <div v-for="article in order.field_articles.slice(0, 3)" :key="article.nid"
-                        class="flex justify-between">
-                        <p class="flex">
-                            <span class="block truncate overflow-hidden whitespace-nowrap max-w-[300px]">
-                                {{ article.field_article.title }}
-                            </span>
-                            <span class="ms-3"> × {{ article.field_quantite }}</span>
-                        </p>
-                        <span>
+                <h4 class="font-medium text-gray-900 mb-2">Articles commandés</h4>
+                <div class="space-y-2 text-sm">
+                    <div v-for="article in order.field_articles.slice(0, 3)" :key="article.id || article.nid"
+                        class="flex justify-between items-start py-1.5 px-2 rounded-lg border-l-4"
+                        :class="[getLineItemBorderClass(article), getLineItemBgClass(article)]">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded"
+                                    :class="getLineItemBadgeClass(article)">
+                                    {{ getLineItemLabel(article) }}
+                                </span>
+                                <span class="text-gray-900 truncate max-w-[180px]">
+                                    {{ article.field_article?.title }}
+                                </span>
+                                <span class="text-gray-500">× {{ article.field_quantite }}</span>
+                            </div>
+                            <p v-if="isServiceLine(article) && getPraticienName(article)"
+                                class="text-xs text-teal-700 mt-1 flex items-center gap-1">
+                                <i class="ri-user-line"></i>
+                                {{ getPraticienName(article) }}
+                            </p>
+                        </div>
+                        <span class="text-gray-700 font-medium whitespace-nowrap ml-2">
                             {{ (article.field_prix_unitaire * article.field_quantite).toLocaleString('fr-MG', {
                                 style: 'currency',
                                 currency: 'MGA'
@@ -146,6 +158,14 @@
 
 <script>
 import { formatDate } from '../../utils/formateDate';
+import {
+    getLineItemBadgeClass,
+    getLineItemBorderClass,
+    getLineItemBgClass,
+    getLineItemLabel,
+    getPraticienName,
+    isServiceLine,
+} from '../../utils/orderLineItem.js';
 
 export default {
     name: 'OrderCard',
@@ -202,6 +222,12 @@ export default {
             statusStyle,
             statusLabel,
             formatDate,
+            getLineItemBadgeClass,
+            getLineItemBorderClass,
+            getLineItemBgClass,
+            getLineItemLabel,
+            getPraticienName,
+            isServiceLine,
         }
     }
 }

@@ -45,16 +45,25 @@
                 </div>
             </div>
             <div class="w-full md:w-1/2">
-                <div class="relative">
-                    <input type="date" placeholder="Rechercher avec une date" @change="filterByDate" v-model="dateValue"
-                        class="w-full pl-4 pr-4 py-3 border border-gray-200 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span class="text-xs text-gray-500 whitespace-nowrap">Date entre</span>
+                    <input type="date" v-model="dateStart"
+                        class="w-full px-3 py-3 border border-gray-200 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <span class="text-xs text-gray-400 text-center">et</span>
+                    <input type="date" v-model="dateEnd"
+                        class="w-full px-3 py-3 border border-gray-200 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <button v-if="dateStart || dateEnd" type="button" @click="clearDates"
+                        class="px-3 py-3 text-xs text-gray-500 hover:text-gray-700 whitespace-nowrap"
+                        title="Effacer les dates">
+                        <i class="ri-close-circle-line text-base"></i>
+                    </button>
                 </div>
             </div>
 
         </div>
 
         <!-- FILTER BUTTONS -->
-        <div class="flex space-x-2 overflow-x-auto mb-6">
+        <div class="flex space-x-2 overflow-x-auto mb-3">
             <button v-for="btn in statusOptions" :key="btn.value" @click="changeStatus(btn.value)" :class="[
                 'px-4 py-2 text-sm font-medium whitespace-nowrap !rounded-button filter-btn',
                 status === btn.value
@@ -64,24 +73,38 @@
                 {{ btn.label }}
             </button>
         </div>
+
+        <div class="flex space-x-2 overflow-x-auto mb-6">
+            <button v-for="btn in caisseOptions" :key="btn.value" @click="changeCaisseType(btn.value)" :class="[
+                'px-4 py-2 text-sm font-medium whitespace-nowrap !rounded-button filter-btn flex items-center gap-1.5',
+                caisseType === btn.value
+                    ? btn.activeClass
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ]">
+                <i :class="btn.icon"></i>
+                {{ btn.label }}
+            </button>
+        </div>
     </div>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useClientStore } from '../../stores';
 import { debounce } from 'lodash';
 export default {
     name: 'OrderFilter',
-    emits: ['on-search', 'on-filter', 'on-date-filter'],
+    emits: ['on-search', 'on-filter', 'on-date-filter', 'on-caisse-filter'],
 
     setup(_, { emit }) {
 
         const status = ref('all');
+        const caisseType = ref('all');
         const clientStore = useClientStore();
         const clientId = ref('');
         const searchKeywordClient = ref('');
-        const dateValue = ref('');
+        const dateStart = ref('');
+        const dateEnd = ref('');
         const showList = ref(false);
         const loading = ref(false)
         const queryOptions = ref({
@@ -106,6 +129,12 @@ export default {
             { value: 'payed', label: 'Payé' },
             { value: 'unpayed', label: 'Non payé' },
             { value: 'cancel', label: 'Annulée' }
+        ];
+
+        const caisseOptions = [
+            { value: 'all', label: 'Toutes les caisses', icon: 'ri-store-2-line', activeClass: 'bg-gray-800 text-white' },
+            { value: 'caisse', label: 'Caisse médicaments', icon: 'ri-capsule-line', activeClass: 'bg-blue-600 text-white' },
+            { value: 'caisse-services', label: 'Caisse services', icon: 'ri-service-line', activeClass: 'bg-teal-600 text-white' },
         ];
 
         const fetchClients = async () => {
@@ -135,13 +164,32 @@ export default {
             else queryOptions.value.filters[key] = { val: value, op }
         }
 
-        const filterByDate = () => {
-            emit('on-date-filter', dateValue.value);
-        }
+        const applyDateFilter = () => {
+            if (!dateStart.value && !dateEnd.value) {
+                emit('on-date-filter', { start: '', end: '' });
+                return;
+            }
+            if (dateStart.value && dateEnd.value) {
+                emit('on-date-filter', { start: dateStart.value, end: dateEnd.value });
+            }
+        };
+
+        const clearDates = () => {
+            dateStart.value = '';
+            dateEnd.value = '';
+            emit('on-date-filter', { start: '', end: '' });
+        };
+
+        watch([dateStart, dateEnd], applyDateFilter);
 
         const changeStatus = (value) => {
             status.value = value;
             emit('on-filter', value);
+        };
+
+        const changeCaisseType = (value) => {
+            caisseType.value = value;
+            emit('on-caisse-filter', value);
         };
 
         const handleBlur = async () => {
@@ -156,14 +204,19 @@ export default {
             searchKeywordClient,
             searchByKeyword,
             status,
+            caisseType,
             statusOptions,
+            caisseOptions,
             changeStatus,
+            changeCaisseType,
             clientStore,
             handleBlur,
             showList,
             selectClient,
-            filterByDate,
-            dateValue,
+            applyDateFilter,
+            clearDates,
+            dateStart,
+            dateEnd,
             loading
         };
     }

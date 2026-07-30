@@ -1,0 +1,18 @@
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_titre_civilite
+    - node.type.praticien
+id: node.praticien.field_titre_civilite
+field_name: field_titre_civilite
+entity_type: node
+bundle: praticien
+label: 'Titre / civilité'
+description: 'Ex : Dr., M., Mme, Inf.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

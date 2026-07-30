@@ -3,7 +3,8 @@
         <page-loader v-if="orderStore.loading" />
         <div class="p-4 md:p-6 min-h-[calc(100vh-80px)]">
             <div class="max-w-7xl mx-auto">
-                <order-filter @onSearch="onSearch" @onFilter="onFilter" @onDateFilter="onDateFilter" />
+                <order-filter @onSearch="onSearch" @onFilter="onFilter" @onDateFilter="onDateFilter"
+                    @onCaisseFilter="onCaisseFilter" />
                 <div class="grid gap-4">
                     <order-card v-for="order in orderStore.orders.rows" :key="order.nid" :order="order"
                         class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 order-card"
@@ -66,7 +67,7 @@ export default {
             sort: { val: 'nid', op: 'desc' },
             filters: {},
             values: {
-                field_client: ['title', 'nid', 'field_assurance', 'field_phone']
+                field_client: ['title', 'nid', 'field_assurance', 'field_phone'],
             },
             pager: 0,
             offset: 10
@@ -84,7 +85,7 @@ export default {
                 'created'
             ],
             values: {
-                field_client: ['title', 'nid', 'field_assurance', 'field_phone']
+                field_client: ['title', 'nid', 'field_assurance', 'field_phone'],
             },
         }
 
@@ -112,11 +113,42 @@ export default {
             fetchOrders(false)
         }
 
-        const onDateFilter = (value) => {
-            queryOptions.value.pager = 0
-            updateFilter('field_date', value, '=')
-            fetchOrders(false)
-        }
+        const onDateFilter = (range) => {
+            queryOptions.value.pager = 0;
+
+            if (!range?.start && !range?.end) {
+                delete queryOptions.value.filters.field_date;
+                fetchOrders(false);
+                return;
+            }
+
+            if (range.start && range.end) {
+                queryOptions.value.filters.field_date = {
+                    val: [range.start, range.end],
+                    op: 'BETWEEN',
+                };
+                fetchOrders(false);
+            }
+        };
+
+        const clearCaisseFilters = () => {
+            delete queryOptions.value.filters.field_type;
+            delete queryOptions.value.filters.title;
+        };
+
+        const onCaisseFilter = (value) => {
+            queryOptions.value.pager = 0;
+            clearCaisseFilters();
+
+            if (value === 'caisse') {
+                queryOptions.value.filters.field_type = { val: 'caisse', op: '=' };
+                queryOptions.value.filters.title = { val: '%cmd-srv-%', op: 'NOT LIKE' };
+            } else if (value === 'caisse-services') {
+                queryOptions.value.filters.title = { val: 'cmd-srv-', op: 'STARTS_WITH' };
+            }
+
+            fetchOrders(false);
+        };
 
         const updateFilter = (key, value, op = '=') => {
             if (!value) delete queryOptions.value.filters[key]
@@ -189,6 +221,7 @@ export default {
             onSearch,
             onFilter,
             onDateFilter,
+            onCaisseFilter,
             canLoadMore,
             loadMore,
             updateListView

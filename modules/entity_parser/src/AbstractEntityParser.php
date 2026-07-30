@@ -558,6 +558,7 @@ class AbstractEntityParser
                         "#object" => $node,
                         "title" => $node->label(),
                         "nid" => $value['target_id'],
+                        "type" => $node->bundle(),
                     ];
                 }
 

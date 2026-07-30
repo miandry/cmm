@@ -1,0 +1,22 @@
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_actif
+    - node.type.praticien
+id: node.praticien.field_actif
+field_name: field_actif
+entity_type: node
+bundle: praticien
+label: Actif
+description: 'Praticien visible et disponible pour les rendez-vous / services.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: Oui
+  off_label: Non
+field_type: boolean

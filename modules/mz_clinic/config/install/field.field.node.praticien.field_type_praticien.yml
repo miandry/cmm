@@ -1,0 +1,28 @@
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_type_praticien
+    - node.type.praticien
+    - taxonomy.vocabulary.type_praticien
+id: node.praticien.field_type_praticien
+field_name: field_type_praticien
+entity_type: node
+bundle: praticien
+label: 'Type de praticien'
+description: 'Profession ou catégorie (médecin, infirmier, kinésithérapeute, etc.).'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      type_praticien: type_praticien
+    sort:
+      field: name
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

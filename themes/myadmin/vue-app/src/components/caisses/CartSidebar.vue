@@ -10,7 +10,9 @@
                 <div class="mb-3 p-2 bg-gray-50 rounded-lg">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-700">Client</span>
-                        <button class="text-xs text-primary hover:underline" @click="$emit('open-customer-modal')">
+                        <button class="text-xs text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                            :disabled="store.loading" @click="openCustomerModal">
+                            <i v-if="store.loading" class="ri-loader-4-line animate-spin"></i>
                             {{ store.client && store.client.nid ? 'Changer' : 'Ajouter' }}
                         </button>
                     </div>
@@ -124,7 +126,9 @@
                     <div class="mb-3 p-2 bg-gray-50 rounded-lg">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-gray-700">Client</span>
-                            <button class="text-xs text-primary hover:underline" @click="$emit('open-customer-modal')">
+                            <button class="text-xs text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                                :disabled="store.loading" @click="openCustomerModal">
+                                <i v-if="store.loading" class="ri-loader-4-line animate-spin"></i>
                                 {{ store.client && store.client.nid ? 'Changer' : 'Ajouter' }}
                             </button>
                         </div>
@@ -283,6 +287,13 @@ export default {
         const isCartOpen = ref(false);
         const insurance = ref(false);
         const editPrice = ref(false);
+
+        const openCustomerModal = () => {
+            if (store.loading) {
+                return;
+            }
+            emit('open-customer-modal');
+        };
 
         watch(isCartOpen, (open) => {
             const bodyStyle = document.body.style;
@@ -496,6 +507,7 @@ export default {
             closeEditPrice,
             openEditPrice,
             confirmEditPrice,
+            openCustomerModal,
         }
     }
 }

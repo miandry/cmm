@@ -51,37 +51,37 @@ class StockManagement
    function addStockNumberOnInsertCommande($entity)
    {
       $commande = \Drupal::service('entity_parser.manager')->node_parser($entity);
-      $articles =   $commande["field_articles"];
+      $articles = $commande["field_articles"] ?? [];
       foreach ($articles as $article) {
          $para = \Drupal::service('entity_parser.manager')->paragraph_parser($article["id"]);
-         $article = $para['field_article']["#object"];
-         $nbrStock = 0;
-         if (
-            $article->field_quantite_stock
-            && $article->field_quantite_stock->value
-         ) {
-            $nbrStock = $article->field_quantite_stock->value;
+         if (empty($para['field_article']['#object'])) {
+            continue;
          }
-         $article->field_quantite_stock->value = $nbrStock - $para["field_quantite"];
-         $article->save();
+         $articleNode = $para['field_article']['#object'];
+         if ($articleNode->bundle() !== 'article' || !$articleNode->hasField('field_quantite_stock')) {
+            continue;
+         }
+         $nbrStock = (int) ($articleNode->field_quantite_stock->value ?? 0);
+         $articleNode->field_quantite_stock->value = $nbrStock - (int) ($para['field_quantite'] ?? 0);
+         $articleNode->save();
       }
    }
    function decreaseStockNumberOnCancelCommande($entity)
    {
       $commande = \Drupal::service('entity_parser.manager')->node_parser($entity);
-      $articles =   $commande["field_articles"];
+      $articles = $commande["field_articles"] ?? [];
       foreach ($articles as $article) {
          $para = \Drupal::service('entity_parser.manager')->paragraph_parser($article["id"]);
-         $article = $para['field_article']["#object"];
-         $nbrStock = 0;
-         if (
-            $article->field_quantite_stock
-            && $article->field_quantite_stock->value
-         ) {
-            $nbrStock = $article->field_quantite_stock->value;
+         if (empty($para['field_article']['#object'])) {
+            continue;
          }
-         $article->field_quantite_stock->value = $nbrStock + $para["field_quantite"];
-         $article->save();
+         $articleNode = $para['field_article']['#object'];
+         if ($articleNode->bundle() !== 'article' || !$articleNode->hasField('field_quantite_stock')) {
+            continue;
+         }
+         $nbrStock = (int) ($articleNode->field_quantite_stock->value ?? 0);
+         $articleNode->field_quantite_stock->value = $nbrStock + (int) ($para['field_quantite'] ?? 0);
+         $articleNode->save();
       }
    }
    function updateStockNumberOnDeleteStock($entity)

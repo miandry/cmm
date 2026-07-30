@@ -1,8 +1,15 @@
 <template>
   <div class="flex flex-col sm:flex-row h-[calc(100vh-80px)]">
-    <PageLoader v-if="articleStore.loading || orderStore.loading" />
+    <PageLoader v-if="articleStore.loading || orderStore.loading || clientStore.loading" />
     <!-- Product Grid Section -->
     <div class="flex-1 p-3 order-2 sm:order-1 flex flex-col mw-910">
+      <div class="mb-3 flex items-center justify-end">
+        <router-link to="/caisse/services"
+          class="text-xs text-primary hover:underline flex items-center gap-1 whitespace-nowrap">
+          <i class="ri-stethoscope-line"></i>
+          Caisse services
+        </router-link>
+      </div>
       <ProductGrid />
     </div>
 

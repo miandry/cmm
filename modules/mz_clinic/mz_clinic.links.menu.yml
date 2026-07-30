@@ -10,3 +10,16 @@ mz_clinic.service_add:
   route_name: 'service.add'
   parent: mz_clinic.services
   weight: 0
+
+mz_clinic.praticiens:
+  title: 'Praticiens clinic'
+  description: 'Personnel soignant et praticiens de la clinique.'
+  route_name: 'praticien.collection'
+  parent: system.admin_content
+  weight: 11
+
+mz_clinic.praticien_add:
+  title: 'Ajouter un praticien'
+  route_name: 'praticien.add'
+  parent: mz_clinic.praticiens
+  weight: 0
