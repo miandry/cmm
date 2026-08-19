@@ -15,6 +15,7 @@ import UserManager from "./pages/UserManager.vue";
 import Facture from "./pages/Facture.vue";
 import Ordonnance from "./pages/Ordonnance.vue";
 import Stocks from "./pages/Stocks.vue";
+import Depenses from "./pages/Depenses.vue";
 import AddArticle from "./pages/AddArticle.vue";
 import EditArticle from "./pages/EditArticle.vue";
 import Articles from "./pages/Articles.vue";
@@ -36,6 +37,7 @@ import ConsultationList from "./pages/ConsultationList.vue";
 import InvoiceHeaderSettings from "./pages/InvoiceHeaderSettings.vue";
 import Parametres from "./pages/Parametres.vue";
 import MenuSettings from "./pages/MenuSettings.vue";
+import ArticleReports from "./pages/ArticleReports.vue";
 
 blockZoom();
 
@@ -209,11 +211,32 @@ const routes = [
     meta: { roles: ["gerant", "caissier", "webmaster", "administrator"] },
   },
   {
+    path: "/reports/articles",
+    name: "article.reports",
+    component: ArticleReports,
+    meta: { roles: ["gerant", "webmaster", "administrator"] },
+  },
+  {
+    path: "/depenses",
+    name: "depenses",
+    component: Depenses,
+    meta: {
+      roles: ["caissier", "assistant", "gerant", "webmaster", "administrator"],
+    },
+  },
+  {
     path: "/user-profil",
     name: "user.profil",
     component: UserProfile,
     meta: {
-      roles: ["caissier", "assistant", "docteur", "gerant", "webmaster", "administrator"],
+      roles: [
+        "caissier",
+        "assistant",
+        "docteur",
+        "gerant",
+        "webmaster",
+        "administrator",
+      ],
     },
   },
   {
@@ -224,7 +247,7 @@ const routes = [
       roles: ["docteur", "webmaster", "administrator"],
     },
   },
-    {
+  {
     path: "/parametres",
     name: "parametres",
     component: Parametres,

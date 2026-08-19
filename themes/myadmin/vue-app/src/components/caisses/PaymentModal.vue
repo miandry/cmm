@@ -60,7 +60,8 @@
 
 <script>
 import { toast } from 'vue-sonner';
-import { useArticleStore, useInvoiceStore, useOrderStore } from '../../stores/index.js';
+import { useArticleStore, useInvoiceStore, useOrderStore, useStockStore } from '../../stores/index.js';
+import { createOrderWithInvoice } from '../../services/clinic.js';
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { h } from "vue";
 import { RouterLink } from "vue-router";
@@ -122,6 +123,7 @@ export default {
                     status: 1,
                     field_status: "payed",
                     field_type: 'caisse',
+                    field_is_service: 0,
                 };
 
                 const invoiceData = {
@@ -136,31 +138,33 @@ export default {
                     field_articles_commande: allArticles,
                     field_total_vente: orderToCreate.total,
                     field_reference_facture: orderData.title,
-                    field_tva_facture: 20,
+                    field_tva_facture: 0,
+                    field_remise_facture: 0,
                     field_type: 'caisse',
                     field_status_invoice: 1,
                 };
 
-                // Appel unique à la nouvelle route
-                const response = await fetch('/api/clinic/create-order-with-invoice', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        order: orderData,
-                        invoice: invoiceData
-                    })
-                });
+                // Appel unique via le service backend
+                const res = await createOrderWithInvoice({ order: orderData, invoice: invoiceData });
+                const result = res.data || {};
 
-                const result = await response.json();
-
-                if (!response.ok || !result.status) {
+                if (!res.ok || !result.status) {
                     toast.error(result.message || 'Erreur lors de la création de la commande');
                     orderStore.loading = false;
                     return;
                 }
+
+                // Enregistrer les rapports renvoyés par le backend (si présents)
+                try {
+                    const stockStore = useStockStore();
+                    if (result.results && result.results.report) {
+                        stockStore.setArticleReports(result.results.report);
+                    }
+                } catch (e) {
+                    // Ne doit pas bloquer la création de commande
+                    console.warn('Impossible de stocker les rapports locaux', e);
+                }
+
 
                 articleStore.clearCart(true);
                 emit('close-payment-modal');

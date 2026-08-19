@@ -74,6 +74,9 @@
                         <tr>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Produit</th>
+                            <th
+                                class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">
+                                Prix d'achat</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Prix d'achat</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -103,7 +106,7 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-sm">
+                            <td class="px-6 py-4 text-sm hidden">
                                 {{
                                     Number(stock.field_prix_d_achat).toLocaleString('fr-MG', {
                                         style: 'currency',
@@ -122,7 +125,7 @@
                             <td class="px-6 py-4 text-sm whitespace-nowrap">
                                 <div>
                                     Achat: <span class="text-green-500">{{ formatDate(stock.field_date, null, 'short')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div>
                                     Péremption: <span class="text-red-500">{{ formatDate(stock.field_peremption, null,

@@ -153,7 +153,8 @@
                     <router-link :to="{
                         path: '/facture',
                         query: {
-                            key: orderToShow.title
+                            key: orderToShow.title,
+                            invoice: orderToShow.field_facture?.nid 
                         }
                     }"
                         class="px-4 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 !rounded-button font-medium whitespace-nowrap">

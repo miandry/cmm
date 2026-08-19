@@ -5,6 +5,7 @@ namespace Drupal\mz_clinic\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Drupal\Core\Database\Database;
 
 /**
  * Class ClinicController.
@@ -44,7 +45,7 @@ class ClinicController extends ControllerBase
                 if ($user) {
                     try {
                         $results = [];
-                        
+
                         // 1. Créer/Mettre à jour la consultation
                         $consultationData = $data['consultation'] ?? [];
                         if (!empty($consultationData)) {
@@ -55,12 +56,12 @@ class ClinicController extends ControllerBase
 
                             $entity_type = $consultationData["entity_type"] ?? 'node';
                             $bundle = $consultationData["bundle"] ?? 'consultations';
-                            
+
                             unset($consultationData["entity_type"]);
                             unset($consultationData["bundle"]);
 
                             $consultation = \Drupal::service('crud')->save($entity_type, $bundle, $consultationData);
-                            
+
                             if (is_object($consultation)) {
                                 $consultationId = $consultation->id();
                                 $results['consultation'] = [
@@ -76,15 +77,15 @@ class ClinicController extends ControllerBase
                         if (!empty($data['appointment']) && !empty($consultationId)) {
                             $appointmentData = $data['appointment'];
                             $appointmentData['field_app_consultation'] = $consultationId;
-                            
+
                             $entity_type = $appointmentData["entity_type"] ?? 'node';
                             $bundle = $appointmentData["bundle"] ?? 'rendez_vous_medical';
-                            
+
                             unset($appointmentData["entity_type"]);
                             unset($appointmentData["bundle"]);
 
                             $appointment = \Drupal::service('crud')->save($entity_type, $bundle, $appointmentData);
-                            
+
                             if (is_object($appointment)) {
                                 $results['appointment'] = [
                                     'id' => $appointment->id(),
@@ -97,15 +98,15 @@ class ClinicController extends ControllerBase
                         if (!empty($data['patient']) && !empty($consultationId)) {
                             $patientData = $data['patient'];
                             $patientData['field_consultation'] = $consultationId;
-                            
+
                             $entity_type = $patientData["entity_type"] ?? 'node';
                             $bundle = $patientData["bundle"] ?? 'client';
-                            
+
                             unset($patientData["entity_type"]);
                             unset($patientData["bundle"]);
 
                             $patient = \Drupal::service('crud')->save($entity_type, $bundle, $patientData);
-                            
+
                             if (is_object($patient)) {
                                 $results['patient'] = [
                                     'id' => $patient->id(),
@@ -118,15 +119,15 @@ class ClinicController extends ControllerBase
                         if (!empty($data['order']) && !empty($consultationId)) {
                             $orderData = $data['order'];
                             $orderData['field_consultation_nid'] = $consultationId;
-                            
+
                             $entity_type = $orderData["entity_type"] ?? 'node';
                             $bundle = $orderData["bundle"] ?? 'commande';
-                            
+
                             unset($orderData["entity_type"]);
                             unset($orderData["bundle"]);
 
                             $order = \Drupal::service('crud')->save($entity_type, $bundle, $orderData);
-                            
+
                             if (is_object($order)) {
                                 $orderId = $order->id();
                                 $results['order'] = [
@@ -139,9 +140,9 @@ class ClinicController extends ControllerBase
                                     'nid' => $consultationId,
                                     'field_commande_cons' => $orderId,
                                 ];
-                                
+
                                 \Drupal::service('crud')->save('node', 'consultations', $consultationUpdateData);
-                                
+
                                 $results['consultation_update'] = [
                                     'id' => $consultationId,
                                     'field_commande_cons' => $orderId,
@@ -152,15 +153,15 @@ class ClinicController extends ControllerBase
                                 if (!empty($data['invoice'])) {
                                     $invoiceData = $data['invoice'];
                                     $invoiceData['field_commande'] = $orderId;
-                                    
+
                                     $entity_type = $invoiceData["entity_type"] ?? 'node';
                                     $bundle = $invoiceData["bundle"] ?? 'facture';
-                                    
+
                                     unset($invoiceData["entity_type"]);
                                     unset($invoiceData["bundle"]);
 
                                     $invoice = \Drupal::service('crud')->save($entity_type, $bundle, $invoiceData);
-                                    
+
                                     if (is_object($invoice)) {
                                         $invoiceId = $invoice->id();
                                         $results['invoice'] = [
@@ -175,7 +176,7 @@ class ClinicController extends ControllerBase
                                         ];
 
                                         \Drupal::service('crud')->save('node', 'commande', $orderUpdateData);
-                                        
+
                                         $results['order_update'] = [
                                             'id' => $orderId,
                                             'status' => true
@@ -188,13 +189,13 @@ class ClinicController extends ControllerBase
                         // 7. Nettoyage des anciennes données en mode édition
                         if (!empty($data['cleanup']) && !empty($consultationId)) {
                             $cleanupData = $data['cleanup'];
-                            
+
                             // Supprimer ancienne commande si existe
                             if (!empty($cleanupData['old_order_id'])) {
                                 \Drupal::service('crud')->delete('node', 'commande', $cleanupData['old_order_id']);
                                 $results['cleanup']['old_order_deleted'] = true;
                             }
-                            
+
                             // Supprimer ancienne consultation si en mode édition
                             if (!empty($cleanupData['old_consultation_id']) && $cleanupData['old_consultation_id'] != $consultationId) {
                                 \Drupal::service('crud')->delete('node', 'consultations', $cleanupData['old_consultation_id']);
@@ -208,7 +209,6 @@ class ClinicController extends ControllerBase
                             'results' => $results,
                             'consultation_id' => $consultationId ?? null
                         ], 200);
-
                     } catch (\Exception $e) {
                         return new JsonResponse([
                             'status' => false,
@@ -273,7 +273,7 @@ class ClinicController extends ControllerBase
                 if ($user) {
                     try {
                         $results = [];
-                        
+
                         // 1. Annuler la consultation
                         $consultationId = $data['consultation_id'] ?? null;
                         if (!empty($consultationId)) {
@@ -281,9 +281,9 @@ class ClinicController extends ControllerBase
                                 'nid' => $consultationId,
                                 'field_consultation_status' => 'cancelled'
                             ];
-                            
+
                             \Drupal::service('crud')->save('node', 'consultations', $consultationData);
-                            
+
                             $results['consultation'] = [
                                 'id' => $consultationId,
                                 'status' => 'cancelled',
@@ -298,9 +298,9 @@ class ClinicController extends ControllerBase
                                 'nid' => $orderId,
                                 'field_status' => 'cancel'
                             ];
-                            
+
                             \Drupal::service('crud')->save('node', 'commande', $orderData);
-                            
+
                             $results['order'] = [
                                 'id' => $orderId,
                                 'status' => 'cancel',
@@ -313,7 +313,6 @@ class ClinicController extends ControllerBase
                             'message' => 'Consultation et commande annulées avec succès',
                             'results' => $results
                         ], 200);
-
                     } catch (\Exception $e) {
                         return new JsonResponse([
                             'status' => false,
@@ -378,21 +377,24 @@ class ClinicController extends ControllerBase
                 if ($user) {
                     try {
                         $results = [];
-                        
+                        // Démarrer une transaction DB pour éviter les créations partielles
+                        $connection = Database::getConnection();
+                        $transaction = $connection->startTransaction();
+
                         // 1. Créer la commande
                         $orderData = $data['order'] ?? [];
                         $order = null;
                         $orderId = null;
-                        
+
                         if (!empty($orderData)) {
                             $entity_type = $orderData["entity_type"] ?? 'node';
                             $bundle = $orderData["bundle"] ?? 'commande';
-                            
+
                             unset($orderData["entity_type"]);
                             unset($orderData["bundle"]);
 
                             $order = \Drupal::service('crud')->save($entity_type, $bundle, $orderData);
-                            
+
                             if (is_object($order)) {
                                 $orderId = $order->id();
                                 $results['order'] = [
@@ -404,22 +406,64 @@ class ClinicController extends ControllerBase
                             }
                         }
 
-                        // 2. Créer la facture avec référence à la commande
+                        // 2. Créer les rapports de stock pour chaque article de la commande
+                        if ($orderData["field_is_service"] == 0) {
+                            try {
+                                if (!empty($order) && is_object($order)) {
+                                    $commande_parsed = \Drupal::service('entity_parser.manager')->node_parser($order);
+                                    $articles = $commande_parsed['field_articles'] ?? [];
+                                    if (!empty($articles)) {
+                                        foreach ($articles as $article_ref) {
+                                            // Récupérer le paragraphe détaillé
+                                            $para = \Drupal::service('entity_parser.manager')->paragraph_parser($article_ref['id']);
+                                            $article_entity = $para['field_article']['#object'] ?? NULL;
+                                            $quantity = $para['field_quantite'] ?? 0;
+                                            if ($article_entity && is_object($article_entity)) {
+                                                $reportData = [
+                                                    'entity_type' => 'node',
+                                                    'bundle' => 'rapport_article_stock',
+                                                    'title' => 'rapport-' . $orderId . '-' . $article_entity->id() . '-' . time(),
+                                                    'field_article' => $article_entity->id(),
+                                                    'field_date' => date('Y-m-d'),
+                                                    'field_nombre_vendu' => $quantity,
+                                                    'status' => $order->field_status->value == "payed" ? 1 : 0,
+                                                    'field_commande_nid' => $orderId,
+                                                ];
+    
+                                                $report = \Drupal::service('crud')->save('node', 'rapport_article_stock', $reportData);
+                                                if (is_object($report)) {
+                                                    $results['report'][] = [
+                                                        'id' => $report->id(),
+                                                        'status' => true,
+                                                    ];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch (\Exception $e) {
+                                // Propager l'exception pour rollback via la transaction
+                                throw $e;
+                            }
+                        }
+
+
+                        // 3. Créer la facture avec référence à la commande
                         $invoiceData = $data['invoice'] ?? [];
                         $invoice = null;
                         $invoiceId = null;
-                        
+
                         if (!empty($invoiceData) && !empty($orderId)) {
                             $invoiceData['field_commande'] = $orderId;
-                            
+
                             $entity_type = $invoiceData["entity_type"] ?? 'node';
                             $bundle = $invoiceData["bundle"] ?? 'facture';
-                            
+
                             unset($invoiceData["entity_type"]);
                             unset($invoiceData["bundle"]);
 
                             $invoice = \Drupal::service('crud')->save($entity_type, $bundle, $invoiceData);
-                            
+
                             if (is_object($invoice)) {
                                 $invoiceId = $invoice->id();
                                 $results['invoice'] = [
@@ -439,7 +483,7 @@ class ClinicController extends ControllerBase
                             ];
 
                             \Drupal::service('crud')->save('node', 'commande', $orderUpdateData);
-                            
+
                             $results['order_update'] = [
                                 'id' => $orderId,
                                 'field_facture' => $invoiceId,
@@ -454,7 +498,6 @@ class ClinicController extends ControllerBase
                             'order_id' => $orderId,
                             'invoice_id' => $invoiceId
                         ], 200);
-
                     } catch (\Exception $e) {
                         return new JsonResponse([
                             'status' => false,

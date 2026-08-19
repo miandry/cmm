@@ -1,5 +1,4 @@
 import axios from "axios";
-import { toast } from "vue-sonner";
 
 const api = axios.create({
   baseURL: window.APP_DATA.baseUrl,
@@ -10,6 +9,18 @@ const api = axios.create({
   withCredentials: true,
 });
 
+export async function createOrderWithInvoice(payload) {
+  const response = await fetch("/api/clinic/create-order-with-invoice", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  return { ok: response.ok, status: response.status, data };
+}
+
 export const saveCompleteConsultation = async (data) => {
   try {
     const response = await api.post("/api/clinic/save-consultation", data);
@@ -19,3 +30,5 @@ export const saveCompleteConsultation = async (data) => {
     throw error;
   }
 };
+
+export default { createOrderWithInvoice, saveCompleteConsultation };

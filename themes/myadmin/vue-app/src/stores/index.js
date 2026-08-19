@@ -11,3 +11,5 @@ export * from "./specialite/specialite";
 export * from "./menu/menu";
 export * from "./service/service";
 export * from "./auth";
+export * from "./depense/depense";
+export * from "./articleReports/articleReports";

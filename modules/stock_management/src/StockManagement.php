@@ -51,39 +51,91 @@ class StockManagement
    function addStockNumberOnInsertCommande($entity)
    {
       $commande = \Drupal::service('entity_parser.manager')->node_parser($entity);
-      $articles = $commande["field_articles"] ?? [];
-      foreach ($articles as $article) {
-         $para = \Drupal::service('entity_parser.manager')->paragraph_parser($article["id"]);
-         if (empty($para['field_article']['#object'])) {
-            continue;
+      if ($commande["field_status"] == "payed") {
+         $articles = $commande["field_articles"];
+         foreach ($articles as $article) {
+            $para = \Drupal::service('entity_parser.manager')->paragraph_parser($article["id"]);
+            $article = $para['field_article']["#object"];
+            $nbrStock = 0;
+            if (
+               $article->field_quantite_stock
+               && $article->field_quantite_stock->value
+            ) {
+               $nbrStock = $article->field_quantite_stock->value;
+            }
+            if ($article->hasField('field_quantite_stock')) {
+               $article->field_quantite_stock->value = $nbrStock - $para["field_quantite"];
+            }
+            $article->save();
          }
-         $articleNode = $para['field_article']['#object'];
-         if ($articleNode->bundle() !== 'article' || !$articleNode->hasField('field_quantite_stock')) {
-            continue;
-         }
-         $nbrStock = (int) ($articleNode->field_quantite_stock->value ?? 0);
-         $articleNode->field_quantite_stock->value = $nbrStock - (int) ($para['field_quantite'] ?? 0);
-         $articleNode->save();
       }
    }
    function decreaseStockNumberOnCancelCommande($entity)
    {
       $commande = \Drupal::service('entity_parser.manager')->node_parser($entity);
-      $articles = $commande["field_articles"] ?? [];
+      $articles =   $commande["field_articles"];
       foreach ($articles as $article) {
          $para = \Drupal::service('entity_parser.manager')->paragraph_parser($article["id"]);
-         if (empty($para['field_article']['#object'])) {
-            continue;
+         $article = $para['field_article']["#object"];
+         $nbrStock = 0;
+         if (
+            $article->field_quantite_stock
+            && $article->field_quantite_stock->value
+         ) {
+            $nbrStock = $article->field_quantite_stock->value;
          }
-         $articleNode = $para['field_article']['#object'];
-         if ($articleNode->bundle() !== 'article' || !$articleNode->hasField('field_quantite_stock')) {
-            continue;
-         }
-         $nbrStock = (int) ($articleNode->field_quantite_stock->value ?? 0);
-         $articleNode->field_quantite_stock->value = $nbrStock + (int) ($para['field_quantite'] ?? 0);
-         $articleNode->save();
+         $article->field_quantite_stock->value = $nbrStock + $para["field_quantite"];
+         $article->save();
       }
    }
+
+   function increaseStockNumberOnFinishCommande($entity)
+   {
+      $commande = \Drupal::service('entity_parser.manager')->node_parser($entity);
+      $articles =   $commande["field_articles"];
+      foreach ($articles as $article) {
+         $para = \Drupal::service('entity_parser.manager')->paragraph_parser($article["id"]);
+         $article = $para['field_article']["#object"];
+         $nbrStock = 0;
+         if (
+            $article->field_quantite_stock
+            && $article->field_quantite_stock->value
+         ) {
+            $nbrStock = $article->field_quantite_stock->value;
+         }
+         $article->field_quantite_stock->value = $nbrStock - $para["field_quantite"];
+         $article->save();
+      }
+   }
+
+   public function updateRapportStockStatus($entity, $status)
+   {
+      try {
+         $rapport_storage = \Drupal::entityTypeManager()
+            ->getStorage('node');
+
+         $query = $rapport_storage->getQuery()
+            ->accessCheck(FALSE)
+            ->condition('type', 'rapport_article_stock')
+            ->condition('field_commande_nid.target_id', $entity->id());
+
+         $rapport_ids = $query->execute();
+
+         if (empty($rapport_ids)) {
+            return;
+         }
+
+         $rapports = $rapport_storage->loadMultiple($rapport_ids);
+
+         foreach ($rapports as $rapport) {
+            $rapport->status->value = $status === 'payed' ? 1 : 0;
+            $rapport->save();
+         }
+      } catch (\Exception $e) {
+         \Drupal::logger('stock_management')->error('Error updating rapport stock status: ' . $e->getMessage());
+      }
+   }
+
    function updateStockNumberOnDeleteStock($entity)
    {
       $article = $entity->field_article->entity;
@@ -232,6 +284,7 @@ class StockManagement
       $new_quantity = $current_quantity + $stock_quantity;
 
       // Mise à jour quantité article
+      $article->field_total_entree->value = $article->field_total_entree->value + $stock_quantity;
       $article->field_quantite_stock->value = $new_quantity;
 
       // Mise à jour prix de vente depuis le stock

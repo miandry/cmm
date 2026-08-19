@@ -75,20 +75,33 @@ function stock_management_node_insert(\Drupal\node\Entity\Node $entity) {
         $service->updateArticleQuantityOnInsertStock($entity);
     }
 }
+
 function stock_management_node_update(\Drupal\node\Entity\Node $entity) {
-    if($entity->bundle() == 'commande'){
-            // Load the original node.
-        $original_entity = $entity->original ;
-        $original_field_value = $original_entity->get('field_status')->value;
-        $updated_field_value = $entity->get('field_status')->value;
-        if ($original_field_value !== $updated_field_value && $updated_field_value == "cancel") {    
-            $service = \Drupal::service('stock_management.manager');
-            $service->decreaseStockNumberOnCancelCommande($entity);  
-        }
+   if ($entity->bundle() == 'commande') {
 
+      // Load the original node.
+      $original_entity = $entity->original;
+      $original_field_value = $original_entity->get('field_status')->value;
+      $updated_field_value = $entity->get('field_status')->value;
 
-    }
+      if ($original_field_value !== $updated_field_value) {
+
+         $service = \Drupal::service('stock_management.manager');
+
+         // Mise à jour du status des rapports liés.
+         $service->updateRapportStockStatus($entity, $updated_field_value);
+
+         if ($updated_field_value == "cancel") {
+            $service->decreaseStockNumberOnCancelCommande($entity);
+         }
+
+         if ($updated_field_value == "payed") {
+            $service->increaseStockNumberOnFinishCommande($entity);
+         }
+      }
+   }
 }
+
 //rapport stock
 function computed_field_field_article_rupture_compute($entity_type_manager, $entity, $fields, $delta){
     $service = \Drupal::service('stock_management.manager');

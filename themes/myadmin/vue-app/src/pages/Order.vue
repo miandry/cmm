@@ -82,7 +82,9 @@ export default {
                 'field_date',
                 'field_status',
                 'field_total_vente',
-                'created'
+                'created',
+                'field_facture',
+                'field_type',
             ],
             values: {
                 field_client: ['title', 'nid', 'field_assurance', 'field_phone'],

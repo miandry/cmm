@@ -109,6 +109,7 @@ export default {
                     status: 1,
                     field_status: 'payed',
                     field_type: 'caisse',
+                    field_is_service: 1,
                 };
 
                 const invoiceData = {
@@ -123,7 +124,7 @@ export default {
                     field_reference_facture: orderData.title,
                     field_articles_commande: buildLineItems(),
                     field_total_vente: orderToCreate.total,
-                    field_tva_facture: 20,
+                    field_tva_facture: 0,
                     field_type: 'caisse',
                     field_status_invoice: 1,
                 };

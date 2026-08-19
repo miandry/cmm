@@ -248,7 +248,7 @@
                                         :key="'article-' + getArticleIndex(index)"
                                         class="flex text-xs border-b border-gray-100 items-center group table-field">
                                         <div class="w-4/5 pr-2 pl-1 flex items-center min-w-0">
-                                            <span
+                                            <!-- <span
                                                 class="editable-field font-medium text-medical-red truncate-ellipsis single-line"
                                                 contenteditable="true"
                                                 @blur="(e) => updateArticleDescription(getArticleIndex(index), e)"
@@ -258,28 +258,38 @@
                                                 :ref="el => setArticleFieldRef(el, 'description', getArticleIndex(index), 'articles')"
                                                 :title="article.description">
                                                 {{ article.description }}
+                                            </span> -->
+                                            <span
+                                                class="font-medium text-medical-red truncate-ellipsis single-line py-1">
+                                                {{ article.description }}
                                             </span>
                                             <button v-if="fieldType !== 'caisse'"
                                                 @click="removeArticle(getArticleIndex(index), 'articles')"
                                                 class="no-print text-red-400 hover:text-red-600 font-bold px-2 text-lg transition-opacity ml-1 opacity-0 group-hover:opacity-100 align-text-bottom flex-shrink-0">×</button>
                                         </div>
                                         <div class="w-1/5 text-center">
-                                            <span class="editable-field text-gray-700" contenteditable="true"
+                                            <!-- <span class="editable-field text-gray-700" contenteditable="true"
                                                 @blur="(e) => updateArticleQuantity(getArticleIndex(index), e)"
                                                 @keydown.enter="saveAndBlur($event)"
                                                 @focus="(e) => handleArticleFocus(e, getArticleIndex(index), 'quantity')"
                                                 @input="preventVueUpdate($event)"
                                                 :ref="el => setArticleFieldRef(el, 'quantity', getArticleIndex(index), 'articles')">
                                                 {{ article.quantity }}
+                                            </span> -->
+                                            <span class="text-gray-700">
+                                                {{ article.quantity }}
                                             </span>
                                         </div>
                                         <div class="w-1/5 numeric-col pr-1">
-                                            <span class="editable-field text-gray-700" contenteditable="true"
+                                            <!-- <span class="editable-field text-gray-700" contenteditable="true"
                                                 @blur="(e) => updateArticlePrice(getArticleIndex(index), e)"
                                                 @keydown.enter="saveAndBlur($event)"
                                                 @focus="(e) => handleArticleFocus(e, getArticleIndex(index), 'price')"
                                                 @input="preventVueUpdate($event)"
                                                 :ref="el => setArticleFieldRef(el, 'price', getArticleIndex(index), 'articles')">
+                                                {{ formatCurrencyDisplay(article.unitPrice) }}
+                                            </span> -->
+                                            <span class="text-gray-700">
                                                 {{ formatCurrencyDisplay(article.unitPrice) }}
                                             </span>
                                         </div>
@@ -392,6 +402,21 @@
                                     <span class="font-bold numeric-col">{{ formatCurrency(pageSubTotal) }}</span>
                                 </div>
 
+                                <!-- Remise pour la page courante -->
+                                <div v-if="pageSubTotal > 0" class="flex justify-between py-1 border-t border-gray-300">
+                                    <span class="font-medium text-gray-700">Remise (
+                                        <span class="editable-field" contenteditable="true" @blur="updateRemiseRate"
+                                            @keydown.enter="saveAndBlur($event)"
+                                            @focus="handleFocus($event, 'remiseRate')" @input="preventVueUpdate($event)"
+                                            ref="remiseRateField">
+                                            {{ remiseRate }}%
+                                        </span>
+                                        ) Page :
+                                    </span>
+                                    <span class="font-bold numeric-col text-green-600">- {{
+                                        formatCurrency(pageRemiseAmount) }}</span>
+                                </div>
+
                                 <!-- TVA pour la page courante -->
                                 <div v-if="pageSubTotal > 0" class="flex justify-between py-1 border-t border-gray-300"
                                     :class="{ 'no-print': tvaRate == 0 }">
@@ -411,7 +436,8 @@
                                     class="flex justify-between py-1 border-y-2 border-medical-blue mt-1">
                                     <span class="font-bold text-medical-blue text-xs uppercase">Total Page TTC :</span>
                                     <span class="font-extrabold text-medical-blue text-xs numeric-col">{{
-                                        formatCurrency(pageGrandTotal) }}</span>
+                                        formatCurrency(pageTotalAfterRemise) }}</span>
+                                    <!--  pageGrandTotal -->
                                 </div>
 
                                 <!-- Mode de paiement -->
@@ -500,6 +526,7 @@ export default {
         const patientAgeField = ref(null);
         const patientDossierField = ref(null);
         const tvaRateField = ref(null);
+        const remiseRateField = ref(null);
         const paymentMethodField = ref(null);
         const invoiceNotesField = ref(null);
         const articleFields = ref([]);
@@ -534,7 +561,8 @@ export default {
         const examens = ref([]);
         const factureRef = ref("");
         const currentDate = ref("");
-        const tvaRate = ref(20);
+        const tvaRate = ref(0);
+        const remiseRate = ref(0);
         const paymentMethod = ref("Espèces / Chèque");
         const invoiceNotes = ref("Paiement dû à réception de la facture. Les médicaments non utilisés ne sont pas remboursables.");
 
@@ -606,13 +634,22 @@ export default {
             }
         });
 
-        const pageTvaAmount = computed(() => {
+        const pageRemiseAmount = computed(() => {
             if (pageSubTotal.value === 0) return 0;
-            return pageSubTotal.value * (tvaRate.value / 100);
+            return pageSubTotal.value * (remiseRate.value / 100);
+        });
+
+        const pageTotalAfterRemise = computed(() => {
+            return pageSubTotal.value - pageRemiseAmount.value;
+        });
+
+        const pageTvaAmount = computed(() => {
+            if (pageTotalAfterRemise.value === 0) return 0;
+            return pageTotalAfterRemise.value * (tvaRate.value / 100);
         });
 
         const pageGrandTotal = computed(() => {
-            return pageSubTotal.value + pageTvaAmount.value;
+            return pageTotalAfterRemise.value + pageTvaAmount.value;
         });
 
         const nextPage = () => {
@@ -739,7 +776,7 @@ export default {
 
             // Charger les articles de la commande (avec fromOrder: true)
             articles.value = parseArticles(data.field_articles_commande);
-            
+
             // Charger les articles sauvegardés précédemment dans field_facture_medicaments (avec fromOrder: false)
             if (data.field_facture_medicaments) {
                 const savedArticles = (() => {
@@ -763,10 +800,10 @@ export default {
                 })();
                 articles.value = [...articles.value, ...savedArticles];
             }
-            
+
             // Charger les examens de la commande (avec fromOrder: true)
             examens.value = parseExamens(data.field_examens_dans_commande);
-            
+
             // Charger les examens sauvegardés précédemment dans field_facture_examens (avec fromOrder: false)
             if (data.field_facture_examens) {
                 const savedExamens = (() => {
@@ -790,7 +827,8 @@ export default {
                 examens.value = [...examens.value, ...savedExamens];
             }
 
-            tvaRate.value = data.field_tva_facture || 20;
+            tvaRate.value = data.field_tva_facture || 0;
+            remiseRate.value = data.field_remise_facture || 0;
             paymentMethod.value = data.field_mode_paiement || "Espèces / Chèque";
             invoiceNotes.value = data.field_notes || "Paiement dû à réception de la facture. Les médicaments non utilisés ne sont pas remboursables.";
 
@@ -1027,6 +1065,15 @@ export default {
             }
         };
 
+        const updateRemiseRate = (event) => {
+            const newValue = event.target.textContent.trim();
+            if (newValue !== editingValues.value.remiseRate) {
+                const rateText = newValue.replace('%', '').trim();
+                const rate = cleanNumericText(rateText);
+                remiseRate.value = rate;
+            }
+        };
+
         const updatePaymentMethod = (event) => {
             const newValue = event.target.textContent.trim();
             if (newValue && newValue !== editingValues.value.paymentMethod) {
@@ -1225,6 +1272,7 @@ export default {
                     field_patient_age: patient.value.age,
                     field_reference_facture: factureRef.value,
                     field_tva_facture: tvaRate.value,
+                    field_remise_facture: remiseRate.value,
                 };
 
                 if (!isEditingInvoice.value || !invoiceId.value) {
@@ -1316,6 +1364,12 @@ export default {
             isEditingInvoice,
             isLoading,
             fieldType,
+
+            remiseRate,
+            remiseRateField,
+            pageRemiseAmount,
+            pageTotalAfterRemise,
+            updateRemiseRate,
         };
     }
 }
@@ -1940,6 +1994,11 @@ button:focus-visible {
     overflow: hidden;
 }
 
+/* Style pour la remise (vert) */
+.text-green-600 {
+    color: #16a34a;
+}
+
 /* Pour le bouton de suppression à côté */
 .flex-shrink-0 {
     flex-shrink: 0;
@@ -1971,6 +2030,13 @@ button:focus-visible {
     /* Cacher le tooltip à l'impression */
     [title] {
         text-decoration: none !important;
+    }
+
+    .text-green-600 {
+        color: #16a34a !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
     }
 }
 </style>

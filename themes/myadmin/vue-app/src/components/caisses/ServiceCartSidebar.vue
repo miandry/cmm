@@ -374,6 +374,7 @@ export default {
             status: 1,
             field_status: status,
             field_type: 'caisse',
+            field_is_service: 1,
         });
 
         const buildInvoicePayload = (orderTitle, paid) => ({
@@ -388,7 +389,7 @@ export default {
             field_reference_facture: orderTitle,
             field_articles_commande: buildLineItems(),
             field_total_vente: serviceStore.savedOrder.total,
-            field_tva_facture: 20,
+            field_tva_facture: 0,
             field_type: 'caisse',
             field_status_invoice: paid ? 1 : 0,
         });

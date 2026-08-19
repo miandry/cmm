@@ -204,10 +204,31 @@ document.addEventListener('touchend', function (event) {
       },
       { 
         id: 6,
-        key: "stocks",
         name: "Stocks",
-        path: "/stocks",
+        path: "#",
         icon: "fas fa-boxes",
+        isDropdown: true,
+        dropdownItems: [
+          {
+            name: "Gestion des stocks",
+            path: "/stocks",
+            icon: "fas fa-clipboard-list",
+            roles: ["gerant", "webmaster", "administrator"]
+          },
+          {
+            name: "Rapport de vente",
+            path: "/reports/articles",
+            icon: "fas fa-file-invoice",
+            roles: ["gerant", "webmaster", "administrator"]
+          }
+        ],
+        roles: ["gerant", "webmaster", "administrator"]
+      },
+      { 
+        id: 9,
+        name: "Dépenses",
+        path: "/depenses",
+        icon: "fas fa-money-bill-wave",
         roles: ["gerant", "webmaster", "administrator"]
       },
       { 

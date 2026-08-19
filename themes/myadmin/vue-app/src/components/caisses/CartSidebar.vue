@@ -10,7 +10,8 @@
                 <div class="mb-3 p-2 bg-gray-50 rounded-lg">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-700">Client</span>
-                        <button class="text-xs text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        <button
+                            class="text-xs text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                             :disabled="store.loading" @click="openCustomerModal">
                             <i v-if="store.loading" class="ri-loader-4-line animate-spin"></i>
                             {{ store.client && store.client.nid ? 'Changer' : 'Ajouter' }}
@@ -126,7 +127,8 @@
                     <div class="mb-3 p-2 bg-gray-50 rounded-lg">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-gray-700">Client</span>
-                            <button class="text-xs text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                            <button
+                                class="text-xs text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                                 :disabled="store.loading" @click="openCustomerModal">
                                 <i v-if="store.loading" class="ri-loader-4-line animate-spin"></i>
                                 {{ store.client && store.client.nid ? 'Changer' : 'Ajouter' }}
@@ -274,7 +276,8 @@
 import { toast } from 'vue-sonner';
 import { h } from "vue";
 import { RouterLink } from "vue-router";
-import { useArticleStore, useClientStore, useOrderStore, useInvoiceStore } from '../../stores/index.js';
+import { useArticleStore, useClientStore, useOrderStore, useInvoiceStore, useStockStore } from '../../stores/index.js';
+import { createOrderWithInvoice } from '../../services/clinic.js';
 import { ref, watch } from 'vue';
 
 export default {
@@ -411,6 +414,7 @@ export default {
                         status: 1,
                         field_status: "unpayed",
                         field_type: 'caisse',
+                        field_is_service: 0,
                     };
 
                     const invoiceData = {
@@ -425,30 +429,32 @@ export default {
                         field_reference_facture: orderData.title,
                         field_articles_commande: allArticles,
                         field_total_vente: orderToCreate.total,
-                        field_tva_facture: 20,
+                        field_tva_facture: 0,
+                        field_remise_facture: 0,
                         field_type: 'caisse',
                         field_status_invoice: 0,
                     };
 
-                    // Appel unique à la nouvelle route
-                    const response = await fetch('/api/clinic/create-order-with-invoice', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        credentials: 'include',
-                        body: JSON.stringify({
-                            order: orderData,
-                            invoice: invoiceData
-                        })
-                    });
 
-                    const result = await response.json();
+                    // Appel unique via le service backend
+                    const res = await createOrderWithInvoice({ order: orderData, invoice: invoiceData });
 
-                    if (!response.ok || !result.status) {
+                    const result = res.data || {};
+
+                    if (!res.ok || !result.status) {
                         toast.error(result.message || 'Erreur lors de la création de la commande');
                         orderStore.loading = false;
                         return;
+                    }
+
+                    // Enregistrer les rapports renvoyés par le backend (si présents)
+                    try {
+                        const stockStore = useStockStore();
+                        if (result.results && result.results.report) {
+                            stockStore.setArticleReports(result.results.report);
+                        }
+                    } catch (e) {
+                        console.warn('Impossible de stocker les rapports locaux', e);
                     }
 
                     articleStore.clearCart(true);

@@ -95,20 +95,8 @@
                             </p>
                         </div>
                     </div>
-                    <div class="mb-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Fournisseurs</label>
-                        <div class="relative">
-                            <select v-model="form.field_fournisseur"
-                                class="w-full px-3 py-2 bg-white border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
-                                <option value="">Sélectionner le fournisseur</option>
-                                <option v-for="supp in suppliers" :key="supp.nid" :value="supp.nid">
-                                    {{ supp.title }}
-                                </option>
-                            </select>
-                        </div>
-                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
-                        <div>
+                        <div class="hidden">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Prix unitaire (Ar)<span
                                     class="text-red-500"> *</span></label>
                             <input type="number" v-model="form.field_prix_d_achat" min="1"
@@ -117,6 +105,18 @@
                             <p v-if="errors.field_prix_d_achat" class="text-red-500 text-xs">Veuillez ajouter un prix
                                 valide
                             </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fournisseurs</label>
+                            <div class="relative">
+                                <select v-model="form.field_fournisseur"
+                                    class="w-full px-3 py-2 bg-white border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                                    <option value="">Sélectionner le fournisseur</option>
+                                    <option v-for="supp in suppliers" :key="supp.nid" :value="supp.nid">
+                                        {{ supp.title }}
+                                    </option>
+                                </select>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Prix de vente (Ar)<span
@@ -165,7 +165,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useArticleStore, useStockStore } from '../../stores/index.js';
 import PageLoader from '../PageLoader.vue';
-import { toast } from 'vue-sonner';
+import plugin, { toast } from 'vue-sonner';
 import { debounce } from 'lodash';
 
 export default {
@@ -255,13 +255,13 @@ export default {
             }
 
             // Prix > 0
-            if (
-                !form.field_prix_d_achat ||
-                Number(form.field_prix_d_achat) <= 0
-            ) {
-                errors.field_prix_d_achat = true;
-                isValid = false;
-            }
+            // if (
+            //     !form.field_prix_d_achat ||
+            //     Number(form.field_prix_d_achat) <= 0
+            // ) {
+            //     errors.field_prix_d_achat = true;
+            //     isValid = false;
+            // }
 
             // Quantité > 0
             if (
@@ -302,6 +302,8 @@ export default {
                     // MODE ADD
                     delete payload.nid; // sécurité
                 }
+
+                payload.field_prix_d_achat = payload.field_prix_unitaire;
 
                 loader.value = true
                 await stockStore.createStock(payload)
