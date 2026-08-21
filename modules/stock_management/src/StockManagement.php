@@ -294,4 +294,93 @@ class StockManagement
 
       $article->save();
    }
+
+   function updateArticleQuantityOnInsertRetourArticle($entity)
+   {
+      // Utiliser une transaction pour éviter les erreurs de coordination
+      $transaction = \Drupal::database()->startTransaction();
+
+      try {
+         // Parser comme dans les autres méthodes
+         $retour = \Drupal::service('entity_parser.manager')->node_parser($entity);
+
+         // Vérifier la référence article
+         if (
+            empty($retour['field_article']) ||
+            empty($retour['field_article']['#object'])
+         ) {
+            $transaction->rollBack();
+            \Drupal::logger('stock_management')->error('Retour article: Article reference is missing');
+            return;
+         }
+
+         $article = $retour['field_article']['#object'];
+
+         // Quantité saisie dans le retour
+         if (empty($retour['field_quantite'])) {
+            $transaction->rollBack();
+            \Drupal::logger('stock_management')->error('Retour article: Quantity is missing');
+            return;
+         }
+
+         $retour_quantity = (int) $retour['field_quantite'];
+         if ($retour_quantity <= 0) {
+            $transaction->rollBack();
+            \Drupal::logger('stock_management')->error('Retour article: Quantity must be greater than 0');
+            return;
+         }
+
+         // Recharger l'article pour avoir les valeurs à jour
+         $article = \Drupal\node\Entity\Node::load($article->id());
+         if (!$article) {
+            $transaction->rollBack();
+            \Drupal::logger('stock_management')->error('Retour article: Failed to reload article');
+            return;
+         }
+
+         // Quantité actuelle article
+         $current_quantity = 0;
+         if (
+            isset($article->field_quantite_stock) &&
+            isset($article->field_quantite_stock->value)
+         ) {
+            $current_quantity = (int) $article->field_quantite_stock->value;
+         }
+
+         // Total entrée actuel
+         $current_total_entree = 0;
+         if (
+            isset($article->field_total_entree) &&
+            isset($article->field_total_entree->value)
+         ) {
+            $current_total_entree = (int) $article->field_total_entree->value;
+         }
+
+         // Nouvelle quantité = ancien + quantité retournée
+         $new_quantity = $current_quantity + $retour_quantity;
+         $new_total_entree = $current_total_entree + $retour_quantity;
+
+         // Mise à jour quantité article
+         $article->field_quantite_stock->value = $new_quantity;
+         $article->field_total_entree->value = $new_total_entree;
+
+         // Sauvegarder l'article
+         $article->save();
+
+         // Valider la transaction
+         unset($transaction);
+
+         \Drupal::logger('stock_management')->info('Retour article: Successfully updated article @article_id with quantity @quantity', [
+            '@article_id' => $article->id(),
+            '@quantity' => $retour_quantity
+         ]);
+
+      } catch (\Exception $e) {
+         if (isset($transaction)) {
+            $transaction->rollBack();
+         }
+         \Drupal::logger('stock_management')->error('Retour article: Error updating article quantity - ' . $e->getMessage());
+         throw $e;
+      }
+   }
 }

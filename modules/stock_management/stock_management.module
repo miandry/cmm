@@ -74,6 +74,11 @@ function stock_management_node_insert(\Drupal\node\Entity\Node $entity) {
         $service = \Drupal::service('stock_management.manager');
         $service->updateArticleQuantityOnInsertStock($entity);
     }
+
+    if ($entity->bundle() === 'retour_article') {
+        $service = \Drupal::service('stock_management.manager');
+        $service->updateArticleQuantityOnInsertRetourArticle($entity);
+    }
 }
 
 function stock_management_node_update(\Drupal\node\Entity\Node $entity) {

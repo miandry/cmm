@@ -19,6 +19,7 @@ import Depenses from "./pages/Depenses.vue";
 import AddArticle from "./pages/AddArticle.vue";
 import EditArticle from "./pages/EditArticle.vue";
 import Articles from "./pages/Articles.vue";
+import ArticlesRetour from "./pages/ArticlesRetour.vue";
 import Services from "./pages/Services.vue";
 import AddService from "./pages/AddService.vue";
 import EditService from "./pages/EditService.vue";
@@ -186,6 +187,11 @@ const routes = [
     path: "/articles",
     name: "articles",
     component: Articles,
+  },
+  {
+    path: "/articles/retour",
+    name: "articles-retour",
+    component: ArticlesRetour,
   },
   {
     path: "/articles/:id/edit",
