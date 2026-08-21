@@ -349,20 +349,20 @@ class StockManagement
 
          // Total entrée actuel
          $current_total_entree = 0;
-         if (
-            isset($article->field_total_entree) &&
-            isset($article->field_total_entree->value)
-         ) {
-            $current_total_entree = (int) $article->field_total_entree->value;
-         }
+         // if (
+         //    isset($article->field_total_entree) &&
+         //    isset($article->field_total_entree->value)
+         // ) {
+         //    $current_total_entree = (int) $article->field_total_entree->value;
+         // }
 
          // Nouvelle quantité = ancien + quantité retournée
          $new_quantity = $current_quantity + $retour_quantity;
-         $new_total_entree = $current_total_entree + $retour_quantity;
+         // $new_total_entree = $current_total_entree + $retour_quantity;
 
          // Mise à jour quantité article
          $article->field_quantite_stock->value = $new_quantity;
-         $article->field_total_entree->value = $new_total_entree;
+         // $article->field_total_entree->value = $new_total_entree;
 
          // Sauvegarder l'article
          $article->save();
