@@ -78,8 +78,6 @@
                                 class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">
                                 Prix d'achat</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Prix d'achat</th>
-                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Prix de vente</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Quantité</th>
