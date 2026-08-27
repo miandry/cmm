@@ -20,7 +20,7 @@
             <button @click="goToFacture"
               class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 !rounded-button font-medium text-sm whitespace-nowrap">
               <i class="ri-printer-line"></i>
-              Imprimer
+              Imprimer / Modifier la facture
             </button>
             <button @click="openStatusModal"
               class="flex items-center justify-center gap-2 px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 !rounded-button font-medium text-sm whitespace-nowrap">
@@ -33,7 +33,8 @@
         <!-- Status Badge -->
         <div class="flex items-center gap-2">
           <span class="text-sm text-gray-600">Statut:</span>
-          <span :class="['px-3 py-1 rounded-full text-xs font-medium', getStatusBadgeClass(invoiceData?.field_status_invoice)]">
+          <span
+            :class="['px-3 py-1 rounded-full text-xs font-medium', getStatusBadgeClass(invoiceData?.field_status_invoice)]">
             {{ invoiceData?.field_status_invoice == 1 ? 'Payé' : 'Non Payé' }}
           </span>
         </div>
@@ -56,12 +57,13 @@
                   <p class="text-sm text-gray-500">Détails des produits facturés</p>
                 </div>
                 <div class="flex items-center gap-2">
-                  <span class="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                    {{ articles.filter(a => a.fromOrder).length }} caisse
+                  <span
+                    class="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                    {{articles.filter(a => a.fromOrder).length}} caisse
                   </span>
                   <span v-if="articles.filter(a => !a.fromOrder).length > 0"
-                        class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                    {{ articles.filter(a => !a.fromOrder).length }} manuel
+                    class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                    {{articles.filter(a => !a.fromOrder).length}} manuel
                   </span>
                   <span class="text-sm text-gray-500">
                     ({{ articles.length }} total)
@@ -72,29 +74,36 @@
                 <table class="w-full min-w-full table-auto">
                   <thead class="bg-gray-50">
                     <tr>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Description</th>
-                      <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Quantité</th>
-                      <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Prix unité</th>
-                      <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Total</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        Description</th>
+                      <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        Quantité</th>
+                      <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Prix
+                        unité</th>
+                      <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Total
+                      </th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-200">
                     <tr v-for="(article, index) in articles" :key="index"
-                        :class="article.fromOrder ? 'hover:bg-gray-50 bg-white' : 'hover:bg-amber-50 bg-amber-25'">
+                      :class="article.fromOrder ? 'hover:bg-gray-50 bg-white' : 'hover:bg-amber-50 bg-amber-25'">
                       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div>
                           <div>
                             <span>{{ article.description }}</span>
                           </div>
                           <span v-if="!article.fromOrder"
-                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
                             autre
                           </span>
                         </div>
                       </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ article.quantity }}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">{{ article.unitPrice.toLocaleString() }} Ar</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold text-primary">
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ article.quantity }}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">{{
+                        article.unitPrice.toLocaleString() }} Ar</td>
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold text-primary">
                         <span :class="article.fromOrder ? 'text-primary' : 'text-gray-500'">
                           {{ (article.unitPrice * article.quantity).toLocaleString() }} Ar
                         </span>
@@ -122,12 +131,13 @@
                   <p class="text-sm text-gray-500">Examens facturés</p>
                 </div>
                 <div class="flex items-center gap-2">
-                  <span class="inline-flex items-center rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700">
-                    {{ examens.filter(e => e.fromOrder).length }} caisse
+                  <span
+                    class="inline-flex items-center rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700">
+                    {{examens.filter(e => e.fromOrder).length}} caisse
                   </span>
                   <span v-if="examens.filter(e => !e.fromOrder).length > 0"
-                        class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                    {{ examens.filter(e => !e.fromOrder).length }} manuel
+                    class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                    {{examens.filter(e => !e.fromOrder).length}} manuel
                   </span>
                   <span class="text-sm text-gray-500">
                     ({{ examens.length }} total)
@@ -138,25 +148,28 @@
                 <table class="w-full min-w-full table-auto">
                   <thead class="bg-gray-50">
                     <tr>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Description</th>
-                      <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Prix</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        Description</th>
+                      <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Prix
+                      </th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-200">
                     <tr v-for="(examen, index) in examens" :key="'examen-' + index"
-                        :class="examen.fromOrder ? 'hover:bg-gray-50 bg-white' : 'hover:bg-amber-50 bg-amber-25'">
+                      :class="examen.fromOrder ? 'hover:bg-gray-50 bg-white' : 'hover:bg-amber-50 bg-amber-25'">
                       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div>
                           <div>
                             <span>{{ examen.description }}</span>
                           </div>
                           <span v-if="!examen.fromOrder"
-                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
                             autre
                           </span>
                         </div>
                       </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold text-primary">
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold text-primary">
                         <span :class="examen.fromOrder ? 'text-primary' : 'text-gray-500'">
                           {{ examen.price.toLocaleString() }} Ar
                         </span>
@@ -182,7 +195,8 @@
                   <i class="ri-information-line text-blue-600 mt-0.5"></i>
                   <div class="text-sm text-blue-800">
                     <p class="font-medium">Note importante</p>
-                    <p>Les totaux ci-dessous ne tiennent compte que des éléments issus de la caisse. Les articles et examens ajoutés manuellement sont affichés à titre informatif uniquement.</p>
+                    <p>Les totaux ci-dessous ne tiennent compte que des éléments issus de la caisse. Les articles et
+                      examens ajoutés manuellement sont affichés à titre informatif uniquement.</p>
                   </div>
                 </div>
               </div>
@@ -191,14 +205,19 @@
                   <span class="text-gray-600">Articles et Examens</span>
                   <span class="font-medium">{{ (articlesTotal + examensTotal)?.toLocaleString() }} Ar</span>
                 </div>
-                <div v-if="consultationAmount"
-                  class="flex justify-between items-center pb-3 border-b border-gray-200">
+                <div v-if="consultationAmount" class="flex justify-between items-center pb-3 border-b border-gray-200">
                   <span class="text-gray-600">Montant Consultation</span>
                   <span class="font-medium">{{ consultationAmount?.toLocaleString() }} Ar</span>
                 </div>
                 <div class="flex justify-between items-center pb-3 border-b border-gray-200">
                   <span class="text-gray-600">Sous-total</span>
                   <span class="font-medium">{{ subTotal?.toLocaleString() }} Ar</span>
+                </div>
+                <!-- Remise en pourcentage -->
+                <div v-if="remisePercent && remisePercent > 0"
+                  class="flex justify-between items-center pb-3 border-b border-gray-200">
+                  <span class="text-gray-600">Remise ({{ remisePercent }}%)</span>
+                  <span class="font-medium text-red-600">-{{ remiseAmount?.toLocaleString() }} Ar</span>
                 </div>
                 <div class="flex justify-between items-center pb-3 border-b border-gray-200">
                   <span class="text-gray-600">TVA ({{ parseNumber(invoiceData?.field_tva_facture) || 0 }}%)</span>
@@ -246,11 +265,18 @@
                 </div>
                 <div>
                   <div class="text-xs text-gray-500">Type</div>
-                  <div class="font-medium text-gray-900">{{ invoiceData?.field_type === 'caisse' ? 'Caisse' : invoiceData?.field_type === 'ordonnance' ? 'Ordonnance' : invoiceData?.field_type }}</div>
+                  <div class="font-medium text-gray-900">{{ invoiceData?.field_type === 'caisse' ? 'Caisse' :
+                    invoiceData?.field_type === 'ordonnance' ? 'Ordonnance' : invoiceData?.field_type }}</div>
                 </div>
                 <div>
                   <div class="text-xs text-gray-500">Paiement</div>
                   <div class="font-medium text-gray-900">{{ invoiceData?.field_mode_paiement || '-' }}</div>
+                </div>
+                <!-- Affichage de la remise en pourcentage dans les infos facture -->
+                <div v-if="remisePercent && remisePercent > 0">
+                  <div class="text-xs text-gray-500">Remise</div>
+                  <div class="font-medium text-red-600">{{ remisePercent }}% ({{ remiseAmount?.toLocaleString() }} Ar)
+                  </div>
                 </div>
               </div>
             </div>
@@ -272,17 +298,20 @@
         <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
 
         <!-- Modal -->
-        <div class="relative inline-block align-middle bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
+        <div
+          class="relative inline-block align-middle bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
           <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div class="sm:flex sm:items-start">
-              <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+              <div
+                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
                 <i class="ri-alert-line text-yellow-600"></i>
               </div>
               <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">Modifier le statut de la facture</h3>
                 <div class="mt-4">
                   <label class="block text-sm text-gray-700 mb-2">Nouveau Statut</label>
-                  <select v-model="newStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                  <select v-model="newStatus"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
                     <option :value="0">Non Payé</option>
                     <option :value="1">Payé</option>
                   </select>
@@ -291,10 +320,12 @@
             </div>
           </div>
           <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button @click="updateInvoiceStatus" :disabled="updatingStatus" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-yellow-600 text-base font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto sm:text-sm">
+            <button @click="updateInvoiceStatus" :disabled="updatingStatus"
+              class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-yellow-600 text-base font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto sm:text-sm">
               {{ updatingStatus ? 'Mise à jour...' : 'Mettre à jour' }}
             </button>
-            <button @click="closeStatusModal" type="button" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+            <button @click="closeStatusModal" type="button"
+              class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
               Annuler
             </button>
           </div>
@@ -354,17 +385,36 @@ export default {
       return parseNumber(invoiceData.value?.field_montant_cons || 0);
     });
 
+    // Récupérer le pourcentage de remise
+    const remisePercent = computed(() => {
+      const remise = parseNumber(invoiceData.value?.field_remise_facture || 0);
+      return remise > 0 ? remise : 0;
+    });
+
+    // Calculer le montant de la remise en valeur
+    const remiseAmount = computed(() => {
+      const subTotalValue = subTotal.value;
+      const percent = remisePercent.value;
+      if (percent > 0 && subTotalValue > 0) {
+        return Math.round((subTotalValue * percent) / 100);
+      }
+      return 0;
+    });
+
     const subTotal = computed(() => {
       return articlesTotal.value + examensTotal.value + consultationAmount.value;
     });
 
     const tvaAmount = computed(() => {
       const tvaRate = (invoiceData.value?.field_tva_facture || 0) / 100;
-      return Math.round(subTotal.value * tvaRate);
+      // La TVA s'applique sur le sous-total après remise
+      const subTotalAfterRemise = subTotal.value - remiseAmount.value;
+      return Math.round(subTotalAfterRemise * tvaRate);
     });
 
     const totalTTC = computed(() => {
-      return subTotal.value + tvaAmount.value;
+      // Total TTC = (sous-total - remise) + TVA
+      return subTotal.value - remiseAmount.value + tvaAmount.value;
     });
 
     // Récupérer les détails de la facture
@@ -395,7 +445,8 @@ export default {
             'field_tva_facture',
             'field_articles_commande',
             'field_examens_dans_commande',
-            'field_montant_cons'
+            'field_montant_cons',
+            'field_remise_facture'
           ],
         });
 
@@ -579,6 +630,8 @@ export default {
       articlesTotal,
       examensTotal,
       consultationAmount,
+      remisePercent,
+      remiseAmount,
       subTotal,
       tvaAmount,
       totalTTC,

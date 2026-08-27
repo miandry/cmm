@@ -28,6 +28,13 @@
                                 placeholder="Ex: +261 34 12 345 67">
                         </div>
 
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
+                            <input type="text" v-model="form.field_adresse"
+                                class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                                placeholder="Ex: 123 Rue de la Liberté">
+                        </div>
+
                         <div class="flex items-center space-x-2">
                             <label class="text-sm text-gray-700">
                                 <input type="checkbox" :checked="form.field_assurance === 1"
@@ -73,6 +80,7 @@ export default {
             title: "",
             field_phone: "",
             field_assurance: 0,
+            field_adresse: "",
             status: 1,
         });
 
@@ -106,6 +114,7 @@ export default {
 
                 form.title = "";
                 form.field_phone = "";
+                form.field_adresse = "";
                 titleError.value = "";
                 emit('close-add-customer-modal');
                 emit('close-client-modal');

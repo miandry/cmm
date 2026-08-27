@@ -13,14 +13,13 @@
       <ProductGrid />
     </div>
 
-    <!-- Cart Sidebar sm:w-80 md:w-80 lg:w-80 -->
+    <!-- Cart Sidebar -->
     <div
       class="w-full sm:w-2/5 md:w-2/6 bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col order-1 sm:order-2 h-auto">
       <CartSidebar @open-customer-modal="showCustomerModal = true" @open-payment-modal="showPaymentModal = true" />
     </div>
 
     <!-- Modals -->
-
     <ClientModal v-show="showCustomerModal" @close="showCustomerModal = false"
       @open-add-customer-modal="openAddCustomerModal" />
 
@@ -28,6 +27,9 @@
       @close-client-modal="showCustomerModal = false" />
 
     <PaymentModal v-if="showPaymentModal" @close-payment-modal="showPaymentModal = false" />
+
+    <!-- Floating Action Button Component -->
+    <FloatingActionButton position="bottom-right" @add-submit="handleAddSubmit" @waiting-list="handleWaitingList" class="hidden"/>
   </div>
 </template>
 
@@ -37,8 +39,9 @@ import CartSidebar from '../components/caisses/CartSidebar.vue'
 import ClientModal from '../components/caisses/ClientModal.vue'
 import AddClientModal from '../components/caisses/AddClientModal.vue'
 import PaymentModal from '../components/caisses/PaymentModal.vue'
-import PageLoader from '../components/PageLoader.vue';
-import { useArticleStore, useClientStore, useOrderStore } from '../stores/index.js';
+import PageLoader from '../components/PageLoader.vue'
+import FloatingActionButton from '../components/checkoutLine/FloatingActionButton.vue'
+import { useArticleStore, useClientStore, useOrderStore } from '../stores/index.js'
 
 export default {
   name: 'Caisse',
@@ -48,7 +51,8 @@ export default {
     ClientModal,
     AddClientModal,
     PaymentModal,
-    PageLoader
+    PageLoader,
+    FloatingActionButton
   },
   data() {
     return {
@@ -65,6 +69,20 @@ export default {
     closeAddCustomerModal() {
       this.showAddCustomerModal = false;
       this.showCustomerModal = true;
+    },
+    handleAddSubmit(formData) {
+      // Traiter les données du formulaire
+      console.log('Données du formulaire:', formData);
+
+      // Ici vous pouvez appeler votre API ou store pour ajouter l'élément
+      // Exemple: this.articleStore.addArticle(formData);
+
+      // Notification
+      // toast.success('Élément ajouté avec succès');
+    },
+    handleWaitingList() {
+      console.log('Navigation vers la liste d\'attente');
+      // La navigation est déjà gérée dans le composant FAB
     }
   },
   setup() {

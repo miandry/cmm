@@ -38,9 +38,9 @@ export const useClientStore = defineStore("client", () => {
   }
 
   async function fetchClient(id) {
-    if (loading.value) {
-      return client.value;
-    }
+    // if (loading.value) {
+    //   return client.value;
+    // }
     loading.value = true;
     error.value = null;
     const query = `filters[nid][val]=${id}`;

@@ -278,7 +278,7 @@ import { h } from "vue";
 import { RouterLink } from "vue-router";
 import { useArticleStore, useClientStore, useOrderStore, useInvoiceStore, useStockStore } from '../../stores/index.js';
 import { createOrderWithInvoice } from '../../services/clinic.js';
-import { ref, watch } from 'vue';
+import { ref, watch, toRaw } from 'vue';
 
 export default {
     name: 'CardSidebar',
@@ -310,6 +310,7 @@ export default {
         watch(
             () => store.client,
             (client) => {
+                console.log("Client changed:", client);
                 if (client && client.field_assurance == 1) {
                     insurance.value = true;
                 } else {
