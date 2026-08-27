@@ -500,8 +500,10 @@ class RagController extends ControllerBase
     // Sales for the period
     $salesQuery = $connection->select('node_field_data', 'n');
     $salesQuery->leftJoin('node__field_total_vente', 'total', 'total.entity_id = n.nid');
+    $salesQuery->leftJoin('node__field_status', 'status', 'status.entity_id = n.nid');
     $salesQuery->condition('n.type', 'commande')
       ->condition('n.status', 1)
+      ->condition('status.field_status_value', 'payed')
       ->condition('n.created', [$start, $end], 'BETWEEN');
     $salesQuery->addExpression('COUNT(*)', 'count');
     $salesQuery->addExpression('SUM(total.field_total_vente_value)', 'total_amount');
