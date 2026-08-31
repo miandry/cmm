@@ -199,6 +199,8 @@ import PageLoader from '../PageLoader.vue';
 import SaveStock from './SaveStock.vue';
 import { formatDate } from '../../utils/formateDate.js';
 import { debounce } from 'lodash';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default {
     name: "Articles",
@@ -481,6 +483,134 @@ export default {
 
         watch([dateStart, dateEnd], applyDateBetweenFilter);
 
+        // Fonction d'export PDF du tableau de stock
+        const exportPDF = () => {
+            try {
+                // Créer un nouveau document PDF en paysage
+                const doc = new jsPDF('landscape', 'mm', 'a4')
+
+                // Ajouter un titre
+                doc.setFontSize(18)
+                doc.setTextColor(41, 128, 185)
+                doc.text('Rapport de Stock', 14, 20)
+
+                // Ajouter la date d'exportation
+                doc.setFontSize(10)
+                doc.setTextColor(100, 100, 100)
+                const today = new Date()
+                const dateStr = today.toLocaleDateString('fr-FR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })
+                doc.text(`Exporté le : ${dateStr}`, 14, 28)
+
+                // Ajouter la période filtrée si présente
+                if (dateStart.value && dateEnd.value) {
+                    doc.text(
+                        `Période filtrée : du ${formatDate(dateStart.value, null, 'short')} au ${formatDate(dateEnd.value, null, 'short')}`,
+                        14, 34
+                    )
+                } else {
+                    doc.text('Période filtrée : Toutes les dates', 14, 34)
+                }
+
+                // Ajouter un sous-titre avec le nombre de lignes
+                doc.setFontSize(9)
+                doc.text(`Total des articles en stock : ${stockStore.stocks.rows.length}`, 14, 40)
+
+                // Préparer les données pour le tableau
+                const formatPdfPrice = (value) => {
+                    const amount = Number(value || 0)
+                    const formatted = new Intl.NumberFormat('fr-FR', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                        useGrouping: true
+                    }).format(amount)
+
+                    return `${formatted.replace(/\u202F|\u00A0/g, ' ')} Ar`
+                }
+
+                const tableData = stockStore.stocks.rows.map(stock => [
+                    stock.field_article?.title || '-',
+                    formatPdfPrice(stock.field_prix_unitaire),
+                    (stock.field_quantite <= 0 ? 0 : stock.field_quantite).toString(),
+                    formatDate(stock.field_date, null, 'short'),
+                    formatDate(stock.field_peremption, null, 'short')
+                ])
+
+                // Ajouter le tableau au PDF
+                autoTable(doc, {
+                    head: [['Produit', 'Prix de vente', 'Quantité', 'Date achat', 'Péremption']],
+                    body: tableData,
+                    startY: 46,
+                    theme: 'grid',
+                    styles: {
+                        fontSize: 8,
+                        cellPadding: 2,
+                        valign: 'middle',
+                        halign: 'left'
+                    },
+                    headStyles: {
+                        fillColor: [41, 128, 185],
+                        textColor: [255, 255, 255],
+                        fontSize: 9,
+                        fontStyle: 'bold',
+                        halign: 'center'
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 'auto', halign: 'left' },
+                        1: { cellWidth: 40, halign: 'center' },
+                        2: { cellWidth: 25, halign: 'center' },
+                        3: { cellWidth: 30, halign: 'center' },
+                        4: { cellWidth: 30, halign: 'center' }
+                    },
+                    alternateRowStyles: {
+                        fillColor: [245, 245, 245]
+                    },
+                    margin: {
+                        top: 46,
+                        bottom: 20,
+                        left: 10,
+                        right: 10
+                    },
+                    didDrawPage: function (data) {
+                        // Ajouter un pied de page
+                        doc.setFontSize(8)
+                        doc.setTextColor(150, 150, 150)
+                        const pageCount = doc.internal.getNumberOfPages()
+                        doc.text(
+                            `Page ${data.pageNumber} sur ${pageCount}`,
+                            data.settings.margin.left,
+                            doc.internal.pageSize.height - 10
+                        )
+
+                        // Ajouter une ligne de séparation en bas
+                        doc.setDrawColor(200, 200, 200)
+                        doc.line(
+                            data.settings.margin.left,
+                            doc.internal.pageSize.height - 15,
+                            doc.internal.pageSize.width - data.settings.margin.right,
+                            doc.internal.pageSize.height - 15
+                        )
+                    }
+                })
+
+                // Générer le nom du fichier
+                const fileName = `rapport_stock_${today.toISOString().slice(0, 10)}.pdf`
+
+                // Sauvegarder le PDF
+                doc.save(fileName)
+
+                console.log('PDF exporté avec succès:', fileName)
+            } catch (error) {
+                console.error('Erreur lors de l\'export PDF:', error)
+                alert('Une erreur est survenue lors de l\'export du PDF. Veuillez réessayer.')
+            }
+        }
+
         return {
             articleStore,
             stockStore,
@@ -504,7 +634,8 @@ export default {
             editStock,
             closeStockModal,
             dateStart,
-            dateEnd
+            dateEnd,
+            exportPDF
         }
     }
 }

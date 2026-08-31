@@ -2,14 +2,14 @@
     <!-- Contenu Principal -->
     <main class="px-6 py-8 max-w-7xl mx-auto">
         <!-- Titre et Actions Principales -->
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+        <div class="flex flex-col gap-4 mb-8 lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Gestion du Stock</h1>
-                <p class="text-gray-600">Gérez l'inventaire des produits médicaux de votre clinique</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Gestion du Stock</h1>
+                <p class="text-sm sm:text-base text-gray-600">Gérez l'inventaire des produits médicaux de votre clinique</p>
             </div>
-            <div class="flex flex-wrap gap-3 mt-4 lg:mt-0">
+            <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3 lg:mt-0">
                 <button @click="handleRapportInventaire"
-                    class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors !rounded-button whitespace-nowrap">
+                    class="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white px-4 sm:px-6 py-2.5 rounded-lg flex items-center justify-center sm:justify-normal space-x-2 transition-colors !rounded-button whitespace-nowrap">
                     <div v-if="isloading" class="w-5 h-5 flex items-center justify-center">
                         <div class="w-5 h-5 border-2 border-white-500 border-t-orange-600 rounded-full animate-spin">
                         </div>
@@ -21,15 +21,22 @@
                     <span v-if="isloading">Chargement</span>
                     <span v-else>Rapport Inventaire</span>
                 </button>
+                <button @click="exportStockPDF"
+                    class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-4 sm:px-6 py-2.5 rounded-lg flex items-center justify-center sm:justify-normal space-x-2 transition-colors !rounded-button whitespace-nowrap">
+                    <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-file-pdf-line"></i>
+                    </div>
+                    <span>Exporter PDF</span>
+                </button>
                 <button @click="openAddModal"
-                    class="px-4 py-2 bg-primary text-white !rounded-button font-medium text-sm whitespace-nowrap flex items-center space-x-2">
+                    class="w-full sm:w-auto px-4 py-2.5 bg-primary text-white !rounded-button font-medium text-sm whitespace-nowrap flex items-center justify-center sm:justify-normal space-x-2">
                     <div class="w-5 h-5 flex items-center justify-center">
                         <i class="ri-add-line"></i>
                     </div>
                     <span>Ajouter Stock</span>
                 </button>
                 <router-link to="/stocks/ajouter-produit"
-                    class="bg-secondary hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors !rounded-button font-medium text-sm whitespace-nowrap">
+                    class="w-full sm:w-auto bg-secondary hover:bg-green-700 text-white px-4 sm:px-6 py-2.5 rounded-lg flex items-center justify-center sm:justify-normal space-x-2 transition-colors !rounded-button font-medium text-sm whitespace-nowrap">
                     <div class="w-5 h-5 flex items-center justify-center">
                         <i class="ri-add-line"></i>
                     </div>
@@ -115,7 +122,7 @@
 
         </div>
         <!-- Recherche, Filtres et Tableau Principal -->
-        <Articles :openModal="openSaveArticleModal" @openModal="openEditModal" @close="openSaveArticleModal = false"
+        <Articles ref="articlesRef" :openModal="openSaveArticleModal" @openModal="openEditModal" @close="openSaveArticleModal = false"
             :selectedStock="selectedStock" />
     </main>
 </template>
@@ -134,6 +141,7 @@ export default {
     setup() {
         const openSaveArticleModal = ref(false);
         const selectedStock = ref(null);
+        const articlesRef = ref(null);
         const stockStore = useStockStore();
         const isloading = ref(false);
         const form = reactive({
@@ -214,12 +222,18 @@ export default {
             openSaveArticleModal.value = true;
         };
 
+        const exportStockPDF = () => {
+            articlesRef.value?.exportPDF?.();
+        };
+
         return {
             openSaveArticleModal,
             selectedStock,
+            articlesRef,
             openEditModal,
             openAddModal,
             handleRapportInventaire,
+            exportStockPDF,
             isloading,
             stockStore,
             formatNumber
