@@ -39,6 +39,7 @@ import InvoiceHeaderSettings from "./pages/InvoiceHeaderSettings.vue";
 import Parametres from "./pages/Parametres.vue";
 import MenuSettings from "./pages/MenuSettings.vue";
 import ArticleReports from "./pages/ArticleReports.vue";
+import QueueList from "./pages/QueueList.vue";
 
 blockZoom();
 
@@ -283,6 +284,14 @@ const routes = [
     path: "/factures/details",
     name: "facture-details",
     component: FactureDetails,
+    meta: {
+      roles: ["caissier", "gerant", "webmaster", "administrator"],
+    },
+  },
+  {
+    path: "/file-d-attente",
+    name: "queue-list",
+    component: QueueList,
     meta: {
       roles: ["caissier", "gerant", "webmaster", "administrator"],
     },

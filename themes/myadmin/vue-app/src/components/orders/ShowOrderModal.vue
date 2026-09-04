@@ -135,7 +135,7 @@
                             <div class="flex justify-between text-lg font-semibold pt-2 border-t border-gray-200">
                                 <span>Total :</span>
                                 <span class="text-primary">{{ Number((orderToShow.field_total_vente ||
-                                    0) * 1.2).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' })
+                                    0)).toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' })
                                 }}</span>
                             </div>
                         </div>
@@ -143,6 +143,7 @@
                 </div>
                 <div class="flex flex-wrap gap-3 px-6 pb-6">
                     <button
+                        v-if="!hideStatusAction"
                         class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 !rounded-button font-medium whitespace-nowrap"
                         @click="showStatusModal">
                         <div class="w-4 h-4 flex items-center justify-center inline-block mr-1">
@@ -186,7 +187,11 @@ export default {
         orderToShow: {
             type: Object,
             required: true,
-        }
+        },
+        hideStatusAction: {
+            type: Boolean,
+            default: false,
+        },
     },
     emit: ['close-details-modal', 'show-edit-status-modal'],
     setup(props, { emit }) {

@@ -406,8 +406,51 @@ class ClinicController extends ControllerBase
                             }
                         }
 
-                        // 2. Créer les rapports de stock pour chaque article de la commande
-                        if ($orderData["field_is_service"] == 0) {
+                        // 2. Créer un seul ticket de file d'attente pour une commande de services
+                        if (!empty($order) && is_object($order) && (int) ($orderData['field_is_service'] ?? 0) === 1) {
+                            $serviceItems = $orderData['field_articles'] ?? [];
+                            $firstService = reset($serviceItems);
+                            $serviceId = is_array($firstService['field_article'] ?? NULL)
+                                ? ($firstService['field_article']['target_id'] ?? NULL)
+                                : ($firstService['field_article'] ?? NULL);
+                            if (empty($serviceId)) {
+                                throw new \Exception("La commande de services ne contient aucun service");
+                            }
+
+                            $timezone = $user->getTimeZone()
+                                ?: \Drupal::config('system.date')->get('timezone.default')
+                                ?: date_default_timezone_get();
+                            $ticketDate = new \DateTimeImmutable('now', new \DateTimeZone($timezone));
+                            $ticketDateValue = $ticketDate
+                                ->setTimezone(new \DateTimeZone('UTC'))
+                                ->format('Y-m-d\\TH:i:s');
+
+                            $ticket = \Drupal::service('crud')->save('node', 'fil_d_attentes', [
+                                'title' => 'caisse-fil_d_attente-en-cours-' . $ticketDate->format('Y-m-d'),
+                                'field_client' => $orderData['field_client'] ?? NULL,
+                                'field_service' => $serviceId,
+                                'field_commande_nid' => $orderId,
+                                'field_date_ticket' => $ticketDateValue,
+                                'field_status_fil' => 'pending',
+                            ]);
+
+                            if (!is_object($ticket)) {
+                                throw new \Exception("Erreur lors de la création du ticket de file d'attente");
+                            }
+
+                            $ticketId = $ticket->id();
+                            $ticket->setTitle('caisse-' . $ticketId . '-' . $ticketDate->format('Y-m-d'));
+                            $ticket->save();
+
+                            $results['ticket'] = [
+                                'id' => $ticketId,
+                                'service_id' => $serviceId,
+                                'status' => 'pending',
+                            ];
+                        }
+
+                        // 3. Créer les rapports de stock pour chaque article de la commande
+                        if ((int) ($orderData['field_is_service'] ?? 0) === 0) {
                             try {
                                 if (!empty($order) && is_object($order)) {
                                     $commande_parsed = \Drupal::service('entity_parser.manager')->node_parser($order);
@@ -429,7 +472,7 @@ class ClinicController extends ControllerBase
                                                     'status' => $order->field_status->value == "payed" ? 1 : 0,
                                                     'field_commande_nid' => $orderId,
                                                 ];
-    
+
                                                 $report = \Drupal::service('crud')->save('node', 'rapport_article_stock', $reportData);
                                                 if (is_object($report)) {
                                                     $results['report'][] = [
@@ -448,7 +491,7 @@ class ClinicController extends ControllerBase
                         }
 
 
-                        // 3. Créer la facture avec référence à la commande
+                        // 4. Créer la facture avec référence à la commande
                         $invoiceData = $data['invoice'] ?? [];
                         $invoice = null;
                         $invoiceId = null;
@@ -475,7 +518,7 @@ class ClinicController extends ControllerBase
                             }
                         }
 
-                        // 3. Mettre à jour la commande avec la référence à la facture
+                        // 5. Mettre à jour la commande avec la référence à la facture
                         if (!empty($orderId) && !empty($invoiceId)) {
                             $orderUpdateData = [
                                 'nid' => $orderId,

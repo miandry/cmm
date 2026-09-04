@@ -66,17 +66,17 @@
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Produit</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Statut</th>
+                                Stock</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Prix unitaire</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Catégorie</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Type pack</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Prix unitaire</th>
-                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Stock</th>
-                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Unités / pack</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Statut</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Actions</th>
                         </tr>
@@ -87,8 +87,8 @@
                                 Aucun produit trouvé.
                             </td>
                         </tr>
-                        <tr v-for="article in articleStore.articles.rows" :key="article.nid"
-                            class="hover:bg-gray-50" :class="{ 'opacity-60': !isPublished(article) }">
+                        <tr v-for="article in articleStore.articles.rows" :key="article.nid" class="hover:bg-gray-50"
+                            :class="{ 'opacity-60': !isPublished(article) }">
                             <td class="px-6 py-4">
                                 <div class="flex items-center space-x-3">
                                     <div
@@ -104,10 +104,13 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="publishBadgeClass(article)"
+                                <span :class="stockBadgeClass(article.field_quantite_stock)"
                                     class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-                                    {{ isPublished(article) ? 'Publié' : 'Non publié' }}
+                                    {{ article.field_quantite_stock ?? 0 }}
                                 </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                                {{ formatPrice(article.field_prix_unitaire) }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-600">
                                 {{ getTaxonomyLabel(article.field_categorie, articleStore.categories.rows) }}
@@ -115,17 +118,14 @@
                             <td class="px-6 py-4 text-sm text-gray-600">
                                 {{ getTaxonomyLabel(article.field_type_pack, articleStore.packs.rows) }}
                             </td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
-                                {{ formatPrice(article.field_prix_unitaire) }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="stockBadgeClass(article.field_quantite_stock)"
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-                                    {{ article.field_quantite_stock ?? 0 }}
-                                </span>
-                            </td>
                             <td class="px-6 py-4 text-sm text-gray-600 text-center">
                                 {{ article.field_nombre_par_unite ?? '—' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span :class="publishBadgeClass(article)"
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                                    {{ isPublished(article) ? 'Publié' : 'Non publié' }}
+                                </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center gap-2">
@@ -136,8 +136,7 @@
                                         Modifier
                                     </router-link>
                                     <button type="button" :disabled="togglingId === article.nid"
-                                        @click="togglePublish(article)"
-                                        :class="isPublished(article)
+                                        @click="togglePublish(article)" :class="isPublished(article)
                                             ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
                                             : 'bg-green-100 text-green-700 hover:bg-green-200'"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50">
