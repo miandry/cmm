@@ -192,7 +192,7 @@ export default {
         const loader = ref(false);
         const searchKeyword = ref('');
         const selectedCategory = ref('');
-        const statusFilter = ref('all');
+        const statusFilter = ref('1');
         const currentPage = ref(1);
         const togglingId = ref(null);
         const perPage = 15;
@@ -210,7 +210,7 @@ export default {
                 'field_image',
             ],
             sort: { val: 'title', op: 'asc' },
-            filters: {},
+            filters: { status: { val: 1, op: '=' }},
             values: {
                 field_categorie: ['tid', 'name', 'title'],
                 field_type_pack: ['tid', 'name', 'title'],
