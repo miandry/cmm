@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+  <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm w-full min-w-0">
     <h3 class="text-sm font-semibold text-gray-700 mb-4">
       Évolution des Ventes
     </h3>

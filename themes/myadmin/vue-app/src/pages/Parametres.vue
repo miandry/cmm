@@ -39,6 +39,12 @@ export default {
           icon: "fas fa-bars",
         },
         {
+          path: "/parametres/dashboard",
+          title: "Tableau de bord",
+          description: "Activer ou désactiver les éléments affichés sur le Dashboard.",
+          icon: "fas fa-chart-line",
+        },
+        {
           path: "/parametres/facture",
           title: "En-tête de facture",
           description: "Nom du cabinet, adresse, contact et NIF affichés sur les factures.",

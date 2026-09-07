@@ -75,6 +75,28 @@ mz_clinic.menu_settings_save:
   options:
     no_cache: TRUE
 
+mz_clinic.dashboard_settings_get:
+  path: "/api/clinic/dashboard-settings"
+  defaults:
+    _controller: '\Drupal\mz_clinic\Controller\ClinicController::getDashboardSettings'
+    _title: "Get dashboard visibility settings"
+  methods: [GET]
+  requirements:
+    _access: "TRUE"
+  options:
+    no_cache: TRUE
+
+mz_clinic.dashboard_settings_save:
+  path: "/api/clinic/dashboard-settings"
+  defaults:
+    _controller: '\Drupal\mz_clinic\Controller\ClinicController::saveDashboardSettings'
+    _title: "Save dashboard visibility settings"
+  methods: [POST]
+  requirements:
+    _access: "TRUE"
+  options:
+    no_cache: TRUE
+
 service.add:
   path: '/admin/clinic/service/add'
   defaults:

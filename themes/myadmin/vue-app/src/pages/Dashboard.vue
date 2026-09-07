@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <div class="min-h-screen w-full bg-gray-50 p-4 md:p-6">
     <!-- Header -->
     <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
@@ -25,11 +25,11 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+    <div v-if="hasVisibleStats" class="dashboard-grid-stats mb-6">
 
       <!-- Consultations -->
-      <div
-        class="relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+      <div v-if="isEnabled('stat_consultations')"
+        class="dashboard-card relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white">
         <div class="flex items-center justify-between font-bold">
           <div>
             <p class="text-xs uppercase opacity-80">Consultations</p>
@@ -44,8 +44,8 @@
       </div>
 
       <!-- Sales -->
-      <div
-        class="relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+      <div v-if="isEnabled('stat_sales')"
+        class="dashboard-card relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white">
         <div class="flex items-center justify-between font-bold">
           <div>
             <p class="text-xs uppercase opacity-80">Ventes</p>
@@ -60,8 +60,8 @@
       </div>
 
       <!-- Patients -->
-      <div
-        class="relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white">
+      <div v-if="isEnabled('stat_patients')"
+        class="dashboard-card relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white">
         <div class="flex items-center justify-between font-bold">
           <div>
             <p class="text-xs uppercase opacity-80">Patients</p>
@@ -76,8 +76,8 @@
       </div>
 
       <!-- Low Stock -->
-      <div
-        class="relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-orange-500 to-red-500 text-white">
+      <div v-if="isEnabled('stat_low_stock')"
+        class="dashboard-card relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-orange-500 to-red-500 text-white">
         <div class="flex items-center justify-between font-bold">
           <div>
             <p class="text-xs uppercase opacity-80">Stock Bas</p>
@@ -94,12 +94,12 @@
     </div>
 
     <!-- Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div v-if="hasVisibleCharts" class="dashboard-grid-wide mb-6">
       <!-- Sales Chart -->
-      <SalesChart />
+      <SalesChart v-if="isEnabled('chart_sales')" class="dashboard-panel w-full min-w-0" />
 
       <!-- Consultations Chart -->
-      <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+      <div v-if="isEnabled('chart_consultations')" class="dashboard-panel bg-white p-4 rounded-xl border border-gray-100 shadow-sm w-full min-w-0">
         <h3 class="text-sm font-semibold text-gray-700 mb-4">Consultations Récentes</h3>
         <div class="h-64 w-full relative">
           <Bar v-if="consultationsChartData.labels.length > 0" :data="consultationsChartData" :options="chartOptions" />
@@ -112,9 +112,9 @@
     </div>
 
     <!-- Tables Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div v-if="hasVisibleTables" class="dashboard-grid-wide">
       <!-- Low Stock Table -->
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+      <div v-if="isEnabled('table_low_stock')" class="dashboard-panel bg-white rounded-xl border border-gray-100 shadow-sm p-4 w-full min-w-0">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-gray-700">Stocks Critiques</h3>
           <span class="text-xs text-red-600 font-medium">{{ lowStockItems.length }} articles</span>
@@ -141,7 +141,7 @@
       </div>
 
       <!-- Recent Consultations Table -->
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+      <div v-if="isEnabled('table_recent_consultations')" class="dashboard-panel bg-white rounded-xl border border-gray-100 shadow-sm p-4 w-full min-w-0">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-gray-700">Consultations Récentes</h3>
           <span class="text-xs text-blue-600 font-medium">{{ recentConsultations.length }} consultations</span>
@@ -172,6 +172,8 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useDashboardStore } from '../stores/dashboard/dashboard.js';
 import {
   Chart as ChartJS,
   Title,
@@ -193,6 +195,27 @@ export default {
     SalesChart
   },
   setup() {
+    const dashboardStore = useDashboardStore();
+    const { disabledKeys } = storeToRefs(dashboardStore);
+
+    const isEnabled = (key) => !disabledKeys.value.includes(key);
+
+    const hasVisibleStats = computed(() =>
+      ['stat_consultations', 'stat_sales', 'stat_patients', 'stat_low_stock'].some((key) => !disabledKeys.value.includes(key))
+    );
+
+    const hasVisibleCharts = computed(() =>
+      ['chart_sales', 'chart_consultations'].some((key) => !disabledKeys.value.includes(key))
+    );
+
+    const hasVisibleTables = computed(() =>
+      ['table_low_stock', 'table_recent_consultations'].some((key) => !disabledKeys.value.includes(key))
+    );
+
+    const needsStats = computed(() =>
+      ['stat_consultations', 'stat_sales', 'stat_patients', 'stat_low_stock', 'table_recent_consultations'].some((key) => !disabledKeys.value.includes(key))
+    );
+
     const currentPeriod = ref('today');
     const todayStats = ref({
       consultations_count: 0,
@@ -236,7 +259,9 @@ export default {
 
     const changePeriod = (period) => {
       currentPeriod.value = period;
-      fetchStats(period);
+      if (needsStats.value) {
+        fetchStats(period);
+      }
     };
 
     const fetchLowStock = async () => {
@@ -366,12 +391,22 @@ export default {
     };
 
     onMounted(() => {
-      fetchStats("today");
-      fetchLowStock();
-      fetchConsultations();
+      if (needsStats.value) {
+        fetchStats("today");
+      }
+      if (!disabledKeys.value.includes('table_low_stock') || !disabledKeys.value.includes('stat_low_stock')) {
+        fetchLowStock();
+      }
+      if (!disabledKeys.value.includes('chart_consultations')) {
+        fetchConsultations();
+      }
     });
 
     return {
+      isEnabled,
+      hasVisibleStats,
+      hasVisibleCharts,
+      hasVisibleTables,
       currentPeriod,
       periodLabel,
       todayStats,
@@ -386,3 +421,22 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.dashboard-grid-stats {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+
+.dashboard-grid-wide {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
+}
+
+.dashboard-card,
+.dashboard-panel {
+  min-width: 0;
+}
+</style>

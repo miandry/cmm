@@ -33,3 +33,13 @@ mz_clinic.menu_settings:
       label: 'Disabled menu keys'
       sequence:
         type: string
+
+mz_clinic.dashboard_settings:
+  type: config_object
+  label: 'Dashboard visibility settings'
+  mapping:
+    disabled:
+      type: sequence
+      label: 'Disabled dashboard widget keys'
+      sequence:
+        type: string

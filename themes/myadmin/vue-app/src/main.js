@@ -27,6 +27,7 @@ import Login from "./pages/Login.vue";
 import { hasAnyRole } from "./utils/auth.js";
 import { useAuthStore } from "./stores/auth.js";
 import { useMenuStore } from "./stores/menu/menu.js";
+import { useDashboardStore } from "./stores/dashboard/dashboard.js";
 import ConsultationDetails from "./pages/ConsultationDetails.vue";
 import { toast } from "vue-sonner";
 import UserProfile from "./pages/UserProfile.vue";
@@ -38,6 +39,7 @@ import ConsultationList from "./pages/ConsultationList.vue";
 import InvoiceHeaderSettings from "./pages/InvoiceHeaderSettings.vue";
 import Parametres from "./pages/Parametres.vue";
 import MenuSettings from "./pages/MenuSettings.vue";
+import DashboardSettings from "./pages/DashboardSettings.vue";
 import ArticleReports from "./pages/ArticleReports.vue";
 import QueueList from "./pages/QueueList.vue";
 
@@ -267,6 +269,12 @@ const routes = [
     meta: { roles: ["gerant", "administrator", "admin"] },
   },
   {
+    path: "/parametres/dashboard",
+    name: "dashboard-settings",
+    component: DashboardSettings,
+    meta: { roles: ["gerant", "administrator", "admin"] },
+  },
+  {
     path: "/parametres/facture",
     name: "invoice-header-settings",
     component: InvoiceHeaderSettings,
@@ -346,12 +354,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const app = createApp(App).use(pinia).use(router);
   const authStore = useAuthStore(pinia);
   const menuStore = useMenuStore(pinia);
+  const dashboardStore = useDashboardStore(pinia);
 
   menuStore.initFromAppData();
+  dashboardStore.initFromAppData();
 
   await authStore.checkAuth();
   if (authStore.isAuthenticated) {
-    await menuStore.load();
+    await Promise.all([menuStore.load(), dashboardStore.load()]);
   }
 
   app.mount("#vue-app");

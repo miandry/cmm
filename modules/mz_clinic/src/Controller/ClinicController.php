@@ -766,6 +766,125 @@ class ClinicController extends ControllerBase
     }
 
     /**
+     * Returns dashboard widget visibility settings.
+     */
+    public function getDashboardSettings(Request $request)
+    {
+        $user = $this->authenticateApiUser($request);
+        if (!$user) {
+            return $this->unauthorizedResponse();
+        }
+
+        return new JsonResponse([
+            'status' => TRUE,
+            'items' => $this->getDashboardSettingsItems(),
+            'disabled' => $this->getDisabledDashboardKeys(),
+        ], 200);
+    }
+
+    /**
+     * Saves dashboard widget visibility settings (Gérant / admin only).
+     */
+    public function saveDashboardSettings(Request $request)
+    {
+        if ($request->getMethod() !== 'POST') {
+            return new JsonResponse([
+                'message' => 'Méthode non autorisée.',
+                'status' => 'error',
+            ], 405);
+        }
+
+        $user = $this->authenticateApiUser($request);
+        if (!$user) {
+            return $this->unauthorizedResponse();
+        }
+
+        if (!$this->canManageInvoiceHeader($user)) {
+            return new JsonResponse([
+                'message' => 'Accès refusé. Rôle Gérant ou administrateur requis.',
+                'status' => 'error',
+            ], 403);
+        }
+
+        $content = $request->getContent();
+        if (empty($content)) {
+            return new JsonResponse([
+                'message' => 'Données non trouvées',
+                'status' => 'error',
+            ], 400);
+        }
+
+        $data = json_decode($content, TRUE);
+        if (!is_array($data) || !isset($data['disabled']) || !is_array($data['disabled'])) {
+            return new JsonResponse([
+                'message' => 'Format JSON invalide. Attendu: { disabled: [] }',
+                'status' => 'error',
+            ], 400);
+        }
+
+        $registry = array_keys($this->getDashboardRegistry());
+        $disabled = array_values(array_unique(array_filter(array_map('strval', $data['disabled']), function ($key) use ($registry) {
+            return in_array($key, $registry, TRUE);
+        })));
+
+        \Drupal::configFactory()->getEditable('mz_clinic.dashboard_settings')
+            ->set('disabled', $disabled)
+            ->save();
+
+        return new JsonResponse([
+            'status' => TRUE,
+            'message' => 'Configuration du tableau de bord enregistrée.',
+            'items' => $this->getDashboardSettingsItems(),
+            'disabled' => $disabled,
+        ], 200);
+    }
+
+    /**
+     * Dashboard widget registry with labels for the settings UI.
+     */
+    protected function getDashboardRegistry(): array
+    {
+        return [
+            'stat_consultations' => 'Carte Consultations',
+            'stat_sales' => 'Carte Ventes',
+            'stat_patients' => 'Carte Patients',
+            'stat_low_stock' => 'Carte Stock bas',
+            'chart_sales' => 'Graphique Évolution des ventes',
+            'chart_consultations' => 'Graphique Consultations récentes',
+            'table_low_stock' => 'Tableau Stocks critiques',
+            'table_recent_consultations' => 'Tableau Consultations récentes',
+        ];
+    }
+
+    /**
+     * Returns disabled dashboard widget keys from config.
+     */
+    protected function getDisabledDashboardKeys(): array
+    {
+        $disabled = $this->config('mz_clinic.dashboard_settings')->get('disabled') ?? [];
+        return is_array($disabled) ? array_values($disabled) : [];
+    }
+
+    /**
+     * Returns dashboard widgets with enabled state for the settings UI.
+     */
+    protected function getDashboardSettingsItems(): array
+    {
+        $disabled = $this->getDisabledDashboardKeys();
+        $items = [];
+
+        foreach ($this->getDashboardRegistry() as $key => $label) {
+            $items[] = [
+                'key' => $key,
+                'label' => $label,
+                'enabled' => !in_array($key, $disabled, TRUE),
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
      * Authenticates the current API request via auth_token cookie.
      */
     protected function authenticateApiUser(Request $request)

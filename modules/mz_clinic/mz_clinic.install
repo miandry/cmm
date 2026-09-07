@@ -407,3 +407,24 @@ function mz_clinic_update_9014(): void {
     $role->save();
   }
 }
+
+/**
+ * Create Drupal page alias for dashboard settings and default config.
+ */
+function mz_clinic_update_9015(): void {
+  _mz_clinic_create_vue_page('Paramètres dashboard', '/parametres/dashboard');
+
+  $config_path = \Drupal::service('extension.list.module')->getPath('mz_clinic') . '/config/install/mz_clinic.dashboard_settings.yml';
+  if (!file_exists($config_path)) {
+    return;
+  }
+
+  $data = \Symfony\Component\Yaml\Yaml::parseFile($config_path);
+  $config = \Drupal::configFactory()->getEditable('mz_clinic.dashboard_settings');
+  if ($config->isNew()) {
+    foreach ($data as $key => $value) {
+      $config->set($key, $value);
+    }
+    $config->save();
+  }
+}

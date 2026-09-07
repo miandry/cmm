@@ -9,6 +9,7 @@ export * from "./appointment/appointment";
 export * from "./user/user";
 export * from "./specialite/specialite";
 export * from "./menu/menu";
+export * from "./dashboard/dashboard";
 export * from "./service/service";
 export * from "./auth";
 export * from "./depense/depense";

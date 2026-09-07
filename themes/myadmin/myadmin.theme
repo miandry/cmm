@@ -8,13 +8,19 @@ use Drupal\Core\Url;
  */
 function myadmin_preprocess_html(array &$variables): void {
   $disabled = [];
+  $dashboard_disabled = [];
   if (\Drupal::moduleHandler()->moduleExists('mz_clinic')) {
     $config_disabled = \Drupal::config('mz_clinic.menu_settings')->get('disabled');
     if (is_array($config_disabled)) {
       $disabled = array_values($config_disabled);
     }
+    $config_dashboard_disabled = \Drupal::config('mz_clinic.dashboard_settings')->get('disabled');
+    if (is_array($config_dashboard_disabled)) {
+      $dashboard_disabled = array_values($config_dashboard_disabled);
+    }
   }
   $variables['menu_disabled'] = $disabled;
+  $variables['dashboard_disabled'] = $dashboard_disabled;
 }
 
 /**

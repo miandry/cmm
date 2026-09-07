@@ -268,6 +268,7 @@ document.addEventListener('touchend', function (event) {
       // }
     ];
     window.APP_DATA.menuDisabled = {{ menu_disabled|default([])|json_encode|raw }};
+    window.APP_DATA.dashboardDisabled = {{ dashboard_disabled|default([])|json_encode|raw }};
     window.APP_DATA.baseUrl = "/";
     </script>
     {{ page_top }}
