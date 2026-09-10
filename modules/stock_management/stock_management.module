@@ -64,6 +64,7 @@ function stock_management_node_insert(\Drupal\node\Entity\Node $entity) {
     if($entity->bundle() == 'commande'){
         $service = \Drupal::service('stock_management.manager');
         $service->addStockNumberOnInsertCommande($entity);
+        $service->increaseStockNumberOnFinishCommande($entity);
     }
     if($entity->bundle() == 'defectueux'){
         $service = \Drupal::service('stock_management.manager');
@@ -93,6 +94,8 @@ function stock_management_node_update(\Drupal\node\Entity\Node $entity) {
 
          $service = \Drupal::service('stock_management.manager');
 
+            $service->synchronizeCommandeFactureStatus($entity, 'field_status');
+
          // Mise à jour du status des rapports liés.
          $service->updateRapportStockStatus($entity, $updated_field_value);
 
@@ -100,9 +103,19 @@ function stock_management_node_update(\Drupal\node\Entity\Node $entity) {
             $service->decreaseStockNumberOnCancelCommande($entity);
          }
 
-         if ($updated_field_value == "payed") {
-            $service->increaseStockNumberOnFinishCommande($entity);
-         }
+        // if ($updated_field_value == "payed") {
+        //    $service->increaseStockNumberOnFinishCommande($entity);
+        // }
+      }
+   }
+
+   if ($entity->bundle() == 'facture' && $entity->hasField('field_status_invoice')) {
+      $original_field_value = $entity->original->get('field_status_invoice')->value;
+      $updated_field_value = $entity->get('field_status_invoice')->value;
+
+      if ($original_field_value !== $updated_field_value) {
+         $service = \Drupal::service('stock_management.manager');
+         $service->synchronizeCommandeFactureStatus($entity, 'field_status_invoice');
       }
    }
 }

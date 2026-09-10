@@ -16,6 +16,35 @@ use Drupal\Core\Database\Database;
 class StockManagement
 {
 
+   public function synchronizeCommandeFactureStatus($entity, $source_field)
+   {
+      if ($source_field === 'field_status' && $entity->hasField('field_facture')) {
+         $facture = $entity->get('field_facture')->entity;
+
+         if ($facture && $facture->hasField('field_status_invoice')) {
+            $status_invoice = $entity->get('field_status')->value === 'payed' ? 1 : 0;
+
+            if ((int) $facture->get('field_status_invoice')->value !== $status_invoice) {
+               $facture->set('field_status_invoice', $status_invoice);
+               $facture->save();
+            }
+         }
+      }
+
+      if ($source_field === 'field_status_invoice' && $entity->hasField('field_commande')) {
+         $commande = $entity->get('field_commande')->entity;
+
+         if ($commande && $commande->hasField('field_status')) {
+            $status = (int) $entity->get('field_status_invoice')->value === 1 ? 'payed' : 'unpayed';
+
+            if ($commande->get('field_status')->value !== $status) {
+               $commande->set('field_status', $status);
+               $commande->save();
+            }
+         }
+      }
+   }
+
    function calculatePrixDeVente($achat, $marge)
    {
       return  $achat + ($achat * $marge) / 100;
