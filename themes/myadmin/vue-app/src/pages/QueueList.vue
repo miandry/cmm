@@ -362,11 +362,13 @@ export default {
         async function printTicket(ticket) {
             printTicketData.value = ticket;
             await nextTick();
+            document.body.classList.add('thermal-print-mode');
             window.print();
         }
 
         function clearPrintTicket() {
             printTicketData.value = null;
+            document.body.classList.remove('thermal-print-mode');
         }
 
         onMounted(fetchTickets);
@@ -400,7 +402,7 @@ function toLocalDateInput(date) {
         margin: 0;
     }
 
-    body * {
+    body.thermal-print-mode * {
         visibility: hidden !important;
     }
 

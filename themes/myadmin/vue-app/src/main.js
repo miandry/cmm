@@ -360,9 +360,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   dashboardStore.initFromAppData();
 
   await authStore.checkAuth();
-  if (authStore.isAuthenticated) {
-    await Promise.all([menuStore.load(), dashboardStore.load()]);
-  }
-
   app.mount("#vue-app");
+
+  if (authStore.isAuthenticated) {
+    void Promise.all([menuStore.load(), dashboardStore.load()]);
+  }
 });
