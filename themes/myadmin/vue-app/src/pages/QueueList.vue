@@ -402,7 +402,7 @@ function toLocalDateInput(date) {
         margin: 0;
     }
 
-    body.thermal-print-mode * {
+    body.thermal-print-mode #vue-app > * {
         visibility: hidden !important;
     }
 
