@@ -35,11 +35,14 @@ class StockManagement
          $commande = $entity->get('field_commande')->entity;
 
          if ($commande && $commande->hasField('field_status')) {
+
             $status = (int) $entity->get('field_status_invoice')->value === 1 ? 'payed' : 'unpayed';
 
             if ($commande->get('field_status')->value !== $status) {
-               $commande->set('field_status', $status);
-               $commande->save();
+               if ($commande->get('field_status')->value !== 'cancel') {
+                  $commande->set('field_status', $status);
+                  $commande->save();
+               }
             }
          }
       }
@@ -80,7 +83,7 @@ class StockManagement
    function addStockNumberOnInsertCommande($entity)
    {
       $commande = \Drupal::service('entity_parser.manager')->node_parser($entity);
-      if ($commande["field_status"] == "payed") {
+      // if ($commande["field_status"] == "payed") {
          $articles = $commande["field_articles"];
          foreach ($articles as $article) {
             $para = \Drupal::service('entity_parser.manager')->paragraph_parser($article["id"]);
@@ -97,7 +100,7 @@ class StockManagement
             }
             $article->save();
          }
-      }
+      // }
    }
    function decreaseStockNumberOnCancelCommande($entity)
    {

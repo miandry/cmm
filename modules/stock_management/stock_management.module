@@ -64,7 +64,6 @@ function stock_management_node_insert(\Drupal\node\Entity\Node $entity) {
     if($entity->bundle() == 'commande'){
         $service = \Drupal::service('stock_management.manager');
         $service->addStockNumberOnInsertCommande($entity);
-        $service->increaseStockNumberOnFinishCommande($entity);
     }
     if($entity->bundle() == 'defectueux'){
         $service = \Drupal::service('stock_management.manager');
@@ -103,9 +102,13 @@ function stock_management_node_update(\Drupal\node\Entity\Node $entity) {
             $service->decreaseStockNumberOnCancelCommande($entity);
          }
 
-        // if ($updated_field_value == "payed") {
-        //    $service->increaseStockNumberOnFinishCommande($entity);
-        // }
+         if ($updated_field_value == "payed" && $original_field_value == "cancel") {
+            $service->increaseStockNumberOnFinishCommande($entity);
+         }
+
+         if ($updated_field_value == "unpayed" && $original_field_value == "cancel") {
+            $service->increaseStockNumberOnFinishCommande($entity);
+         }
       }
    }
 
