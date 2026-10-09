@@ -163,6 +163,29 @@
                     </section>
 
                     <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+                        v-if="consultation.field_services && consultation.field_services.length > 0">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-6">Services associés</h2>
+                        <div class="space-y-4">
+                            <div v-for="service in consultation.field_services" :key="service.nid"
+                                class="flex items-start justify-between gap-4 p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 bg-teal-500 rounded-full mt-2"></div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900">{{ service.title || 'Service' }}</h3>
+                                        <p v-if="service.field_preparation" class="text-sm text-gray-600 mt-1">
+                                            {{ service.field_preparation }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <span v-if="service.field_prix !== null && service.field_prix !== undefined"
+                                    class="text-sm font-medium text-gray-700 whitespace-nowrap">
+                                    {{ Number(service.field_prix).toLocaleString('fr-FR') }} Ar
+                                </span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
                         v-if="consultation.field_examens && consultation.field_examens.length > 0">
                         <h2 class="text-xl font-semibold text-gray-900 mb-6">Examens prescrits</h2>
                         <div class="space-y-4">
@@ -519,6 +542,7 @@ export default {
                 'field_client',
                 'field_conseils',
                 'field_examens',
+                'field_services',
                 'field_instructions',
                 'field_montant',
                 'field_motif',
@@ -548,7 +572,8 @@ export default {
                 field_client: ['title', 'nid', 'field_adresse', 'field_sexe',
                     'field_allergies', 'field_assurance', 'field_consultation', 'field_email', 'field_notes_medicales',
                     'field_phone', 'field_phone', 'field_age'],
-                field_rendez_vous: ['nid', 'field_app_status']
+                field_rendez_vous: ['nid', 'field_app_status'],
+                field_services: ['nid', 'title', 'field_prix', 'field_preparation'],
             },
             pager: 0,
             offset: 1

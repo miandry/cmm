@@ -351,7 +351,7 @@ class CRUDService extends CRUDBaseService
         if (is_numeric($field_value)) {
             $entity_parent->{$field_name}->target_id = $field_value;
         }
-        if (is_array($field_value) && !empty($field_value)) {
+        if (is_array($field_value)) {
             $field_items = [];
             foreach ($field_value as $item) {
                 // [Array,Array]
@@ -404,7 +404,7 @@ class CRUDService extends CRUDBaseService
                     }
                 }
             }
-            if (!empty($field_items)) {
+            if (empty($field_value) || !empty($field_items)) {
                 $entity_parent->set($field_name, $field_items);
             }
         }

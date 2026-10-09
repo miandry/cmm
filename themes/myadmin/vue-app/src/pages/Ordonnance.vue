@@ -62,7 +62,7 @@
                             ? 'bg-medical-blue text-white'
                             : 'text-gray-700 hover:bg-gray-100'
                     ]">
-                        Examens
+                        Services
                     </button>
                 </div>
             </div>
@@ -353,7 +353,7 @@
                     <div class="mb-3 mt-4">
                         <h2
                             class="font-sans text-base font-bold text-medical-blue border-b border-gray-300 mb-3 pb-0.5">
-                            Examens Prescrits
+                            Services prescrits
                         </h2>
 
                         <ul class="examen-counter">
@@ -394,7 +394,7 @@
                         <div v-if="pageNumber === totalExamensPages" class="mt-3 no-print">
                             <button @click="addExamenWithPageCheck"
                                 class="flex items-center text-xs font-bold text-medical-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
-                                <span class="text-lg mr-1 leading-none">+</span> Ajouter un examen
+                                <span class="text-lg mr-1 leading-none">+</span> Ajouter un service
                             </button>
                         </div>
                     </div>
@@ -645,9 +645,16 @@ export default {
                         }));
                     }
 
-                    // Convertir les examens de la consultation
-                    if (consultationsStore.consultation.field_examens?.length > 0) {
-                        ordonnanceData.value.examens = consultationsStore.consultation.field_examens.map(ex => ({
+                    // Convertir les services prescrits et conserver les anciennes ordonnances.
+                    const services = consultationsStore.consultation.field_services || [];
+                    const examens = consultationsStore.consultation.field_examens || [];
+                    if (services.length > 0) {
+                        ordonnanceData.value.examens = services.map((service) => ({
+                            nom: service.title || service.field_service?.title || "Service",
+                            description: service.field_preparation || service.field_description || "",
+                        }));
+                    } else if (examens.length > 0) {
+                        ordonnanceData.value.examens = examens.map(ex => ({
                             nom: ex.field_examen?.title || "Examen",
                             description: ex.field_description || "Inscriptions a suivre"
                         }));

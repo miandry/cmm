@@ -1,26 +1,24 @@
 <template>
     <div>
         <div class="flex items-center justify-between mb-4">
-            <h4 class="text-base font-medium text-gray-900">Liste des examens</h4>
+            <h4 class="text-base font-medium text-gray-900">Services prescrits</h4>
             <button @click="isModalOpen = true" v-if="!isEdit"
                 class="px-3 py-2 bg-primary text-white !rounded-button text-sm font-medium whitespace-nowrap flex items-center space-x-2 cursor-pointer">
                 <div class="w-4 h-4 flex items-center justify-center">
                     <i class="ri-add-line"></i>
                 </div>
-                <span>Prescrire examen</span>
+                <span>Ajouter un service</span>
             </button>
         </div>
-        <div class="space-y-3 mb-4" v-if="Object.keys(examenStore.savedExamen).length > 0">
-            <div v-for="ex in examenStore.savedExamen.items" :key="ex.nid"
+        <div class="space-y-3 mb-4" v-if="selectedServices.length">
+            <div v-for="service in selectedServices" :key="service.nid"
                 class="flex items-center justify-between p-3 border border-gray-200 !rounded-button">
                 <div class="flex-1">
-                    <h4 class="font-medium text-gray-900 text-xs">{{ ex.title }}</h4>
-                    <p class="text-xs text-gray-800">{{ ex.field_justification }}</p>
-                    <p class="text-xs text-gray-400">{{ ex.field_description }}</p>
+                    <h4 class="font-medium text-gray-900 text-xs">{{ service.title }}</h4>
+                    <p class="text-xs text-gray-500">{{ Number(service.field_prix || 0).toLocaleString() }} Ar</p>
                 </div>
                 <div class="flex items-center">
-                    <p class="text-xs text-green-600 font-medium hidden">{{ Number(ex.field_prix).toLocaleString() }} Ar</p>
-                    <button @click="removeFromList(ex.nid, ex.field_prix)" v-if="!isEdit"
+                    <button @click="removeService(service.nid)" v-if="!isEdit"
                         class="text-red-500 hover:text-red-700 cursor-pointer">
                         <div class="w-5 h-5 flex items-center justify-center">
                             <i class="ri-delete-bin-line"></i>
@@ -29,11 +27,10 @@
                 </div>
             </div>
         </div>
-        <div class="bg-gray-50 rounded-lg p-3 mb-4" v-if="Object.keys(examenStore.savedExamen).length > 0">
+        <div class="bg-gray-50 rounded-lg p-3 mb-4" v-if="selectedServices.length">
             <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-700">Total examens:</span>
-                <span class="text-lg font-semibold text-primary hidden">{{
-                    Number(examenStore.savedExamen.total).toLocaleString() }} Ar</span>
+                <span class="text-sm font-medium text-gray-700">Total des services :</span>
+                <span class="text-sm font-semibold text-primary">{{ serviceTotal.toLocaleString() }} Ar</span>
             </div>
         </div>
         <div class="space-y-4">
@@ -66,7 +63,7 @@
                 <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Prescrire un examen</h3>
+                            <h3 class="text-lg font-semibold text-gray-900">Ajouter un service</h3>
                             <button @click="isModalOpen = false"
                                 class="text-gray-400 hover:text-gray-600 cursor-pointer">
                                 <div class="w-6 h-6 flex items-center justify-center">
@@ -76,84 +73,47 @@
                         </div>
                         <form class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Type d'examen <span
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Service <span
                                         class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <div
                                         class="w-4 h-4 flex items-center justify-center absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                                         <i class="ri-search-line text-sm"></i>
                                     </div>
-                                    <input type="text" v-model="searchKeywords" @keyup="examSearch"
-                                        placeholder="Rechercher ou saisir un nouvel examen..."
+                                    <input type="text" v-model="searchKeywords" @input="serviceSearch"
+                                        placeholder="Rechercher un service..."
                                         class="w-full pl-10 pr-4 py-2 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                                         autocomplete="off">
-                                    <div v-if="showExamList"
+                                    <div v-if="showServiceList"
                                         class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg mt-1 max-h-48 overflow-y-auto z-10">
-                                        <div v-for="ex in examenStore.examens.rows" :key="ex.nid"
-                                            @click="selectedExam(ex)"
-                                            class="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 exam-suggestion">
+                                        <div v-for="service in serviceResults" :key="service.nid"
+                                            @click="selectService(service)"
+                                            class="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0">
                                             <div class="flex items-center justify-between">
                                                 <div class="flex-1">
-                                                    <h5 class="text-xs font-medium text-gray-900">
-                                                        {{ ex.title }}
-                                                    </h5>
+                                                    <h5 class="text-xs font-medium text-gray-900">{{ service.title }}</h5>
                                                 </div>
-                                                <span class="text-xs font-semibold text-primary hidden">{{
-                                                    Number(ex.field_prix).toLocaleString() }} Ar</span>
+                                                <span class="text-xs font-semibold text-primary">{{
+                                                    Number(service.field_prix || 0).toLocaleString() }} Ar</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <p class="text-xs text-red-500" v-if="formError.nid">Ce champ est requis</p>
+                                <p class="text-xs text-red-500" v-if="formError.nid">Sélectionnez un service</p>
                                 <div class="flex items-center justify-between mt-2">
-                                    <span class="text-xs text-gray-500">Tapez pour rechercher</span>
-                                    <!--  ou créer un nouvel
-                                        examen -->
-                                    <button type="button"
-                                        class="text-xs text-primary hover:underline cursor-pointer hidden">+ Créer
-                                        nouvel
-                                        examen</button>
+                                    <span class="text-xs text-gray-500">Seuls les services actifs sont proposés</span>
                                 </div>
                             </div>
-                            <div v-if="showSelectedExam" class="p-2 bg-blue-50 rounded-lg border border-blue-200">
+                            <div v-if="selectedService" class="p-2 bg-blue-50 rounded-lg border border-blue-200">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <h4 class="text-sm font-medium text-blue-900">
-                                            {{ exTitle }}
-                                        </h4>
+                                        <h4 class="text-sm font-medium text-blue-900">{{ selectedService.title }}</h4>
                                     </div>
-                                    <div class="text-right hidden">
+                                    <div class="text-right">
                                         <p class="text-sm font-semibold text-blue-900">{{
-                                            Number(exFieldPrix).toLocaleString() }} Ar</p>
-                                        <p class="text-xs text-blue-600 hidden">Prix estimé</p>
+                                            Number(selectedService.field_prix || 0).toLocaleString() }} Ar</p>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="hidden">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Prix personnalisé <span
-                                        class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <input type="number" v-model="exFieldPrix"
-                                        class="w-full px-3 py-2 pr-12 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                                        placeholder="0">
-                                    <span
-                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">Ar</span>
-                                </div>
-                                <p class="text-xs text-red-500" v-if="formError.field_prix">Entrez un prix valide</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Instructions
-                                    particulières</label>
-                                <textarea v-model="exFieldDescription" rows="3"
-                                    class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm resize-none"
-                                    placeholder="Instructions spécifiques pour l'examen..."></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Justification
-                                    clinique</label>
-                                <textarea v-model="exFieldJustification" rows="2"
-                                    class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm resize-none"
-                                    placeholder="Justification médicale de la prescription..."></textarea>
                             </div>
                         </form>
                         <div class="flex space-x-3 mt-6">
@@ -161,9 +121,9 @@
                                 class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 !rounded-button font-medium whitespace-nowrap cursor-pointer">
                                 Annuler
                             </button>
-                            <button @click="saveExamen"
+                            <button @click="addSelectedService"
                                 class="flex-1 px-4 py-2 bg-primary text-white hover:bg-blue-600 !rounded-button font-medium whitespace-nowrap cursor-pointer">
-                                Prescrire
+                                Ajouter
                             </button>
                         </div>
                     </div>
@@ -174,8 +134,9 @@
 </template>
 
 <script>
-import { reactive, ref, defineExpose } from 'vue';
-import { useExamenStore } from '../../stores/index.js';
+import { computed, reactive, ref, defineExpose } from 'vue';
+import { getServices } from '../../services/service.js';
+import { buildQueryParams } from '../../utils/queryBuilder.js';
 import { toast } from 'vue-sonner';
 
 export default {
@@ -183,35 +144,36 @@ export default {
     setup() {
         const isModalOpen = ref(false);
         const isEdit = ref(false);
-        const showExamList = ref(false);
-        const showSelectedExam = ref(false);
-        const examenStore = useExamenStore();
-        const isValid = ref(false);
+        const showServiceList = ref(false);
+        const serviceResults = ref([]);
+        const selectedService = ref(null);
+        const selectedServices = ref([]);
         const conseils = ref('');
         const precautions = ref('');
         const signes = ref('');
-        // -----
         const searchKeywords = ref('');
-        const exNid = ref('')
-        const exFieldDescription = ref('');
-        const exFieldJustification = ref('');
-        const exFieldPrix = ref('');
-        const exTitle = ref('');
+        const serviceTotal = computed(() => selectedServices.value.reduce(
+            (total, service) => total + (Number(service.field_prix) || 0), 0
+        ));
         const formError = reactive({
             nid: false,
-            field_prix: false,
         })
 
-        // Paramètres dynamiques de la requête pour examen
-        const examenQueryOptions = ref({
+        const serviceQueryOptions = ref({
             fields: [
                 'nid',
                 'title',
                 'field_prix',
+                'status',
+                'field_actif',
             ],
-            sort: { val: 'nid', op: 'desc' },
+            sort: { val: 'title', op: 'asc' },
             filters: {
                 status: {
+                    val: 1,
+                    op: "="
+                },
+                field_actif: {
                     val: 1,
                     op: "="
                 }
@@ -220,77 +182,63 @@ export default {
             offset: 20
         })
 
-        const examSearch = async () => {
-            showExamList.value = true;
-            updateFilter('title', searchKeywords.value, 'CONTAINS')
-            await examenStore.fetchExamens(examenQueryOptions.value);
-            if (searchKeywords.value == '') {
-                showExamList.value = false
+        const serviceSearch = async () => {
+            const keyword = searchKeywords.value.trim();
+            showServiceList.value = Boolean(keyword);
+            selectedService.value = null;
+            formError.nid = false;
+            if (!keyword) {
+                serviceResults.value = [];
+                return;
+            }
+            serviceQueryOptions.value.filters.title = { val: keyword, op: 'CONTAINS' };
+            try {
+                const query = buildQueryParams(serviceQueryOptions.value);
+                const response = await getServices(query);
+                serviceResults.value = response.data?.rows || [];
+            } catch (error) {
+                console.error('Erreur lors du chargement des services', error);
+                serviceResults.value = [];
             }
         }
 
-        // Ajouter / supprimer un filtre
-        const updateFilter = (key, value, op = '=') => {
-            if (!value) delete examenQueryOptions.value.filters[key]
-            else examenQueryOptions.value.filters[key] = { val: value, op }
-        }
-
-
-        const selectedExam = (exam) => {
-            exFieldPrix.value = exam.field_prix;
-            exTitle.value = exam.title;
-            exNid.value = exam.nid;
-            searchKeywords.value = exam.title
-            showExamList.value = false;
-            showSelectedExam.value = true;
-        }
-
-        const validateForm = () => {
-            isValid.value = true;
-            if (exNid.value == '') {
-                formError.nid = true;
-                isValid.value = false;
-            } else {
-                formError.nid = false;
-            }
-
-            if (exFieldPrix.value == '' || exFieldPrix.value == 0) {
-                formError.field_prix = true;
-                isValid.value = false;
-            } else {
-                formError.field_prix = false;
-            }
+        const selectService = (service) => {
+            selectedService.value = service;
+            searchKeywords.value = service.title;
+            showServiceList.value = false;
         }
 
         function resetForm() {
-            showExamList.value = false
-            showSelectedExam.value = false;
-            searchKeywords.value = "";
-            exNid.value = '';
-            exTitle.value = '';
-            exFieldDescription.value = '';
-            exFieldJustification.value = '';
-            exFieldPrix.value = '';
+            showServiceList.value = false;
+            serviceResults.value = [];
+            selectedService.value = null;
+            searchKeywords.value = '';
+            formError.nid = false;
         }
 
-        const saveExamen = async () => {
-            validateForm()
-            if (!isValid.value) return;
-            const data = {
-                nid: exNid.value,
-                title: exTitle.value,
-                field_description: exFieldDescription.value,
-                field_justification: exFieldJustification.value,
-                field_prix: exFieldPrix.value,
+        const addSelectedService = () => {
+            if (!selectedService.value) {
+                formError.nid = true;
+                return;
             }
-            await examenStore.saveExamen(data)
-            resetForm()
+            const service = selectedService.value;
+            if (selectedServices.value.some((item) => String(item.nid) === String(service.nid))) {
+                toast.error('Ce service est déjà ajouté.');
+                return;
+            }
+            selectedServices.value.push({
+                nid: service.nid,
+                title: service.title,
+                field_prix: Number(service.field_prix) || 0,
+            });
+            resetForm();
             isModalOpen.value = false;
         }
 
-        const removeFromList = async (nid, prix) => {
-            examenStore.removeFromList(nid, prix);
-            toast.success('element enlevé !');
+        const removeService = (nid) => {
+            selectedServices.value = selectedServices.value.filter(
+                (service) => String(service.nid) !== String(nid)
+            );
         };
 
         function getRecommandationData() {
@@ -298,39 +246,33 @@ export default {
                 conseil: conseils.value,
                 precautions: precautions.value,
                 signes: signes.value,
+                services: selectedServices.value,
             }
         }
 
         function resetAll() {
             resetForm();
-            examenStore.savedExamen = {};
-            examenStore.resetExamen();
+            selectedServices.value = [];
             conseils.value = "";
             precautions.value = "";
             signes.value = "";
         }
 
-        function setData(examens = [], otherFields = {}) {
-            resetAll(); // vide tout et le store
+        function setData(services = [], otherFields = {}) {
+            resetAll();
             conseils.value = otherFields.conseil || '';
             precautions.value = otherFields.precaution || '';
             signes.value = otherFields.signe || '';
 
-            if (!examens || examens.length === 0) {
-                isEdit.value = false;
-            } else {
-                isEdit.value = true;
-                examens.forEach(ex => {
-                    examenStore.saveExamen({
-                        nid: ex.field_examen.nid,
-                        title: ex.field_examen.title,
-                        field_description: ex.field_description,
-                        field_justification: ex.field_justification,
-                        field_prix: ex.field_prix
-                    });
-                });
-            }
-
+            selectedServices.value = (services || []).map((service) => {
+                const reference = service.field_service || service;
+                return {
+                    nid: reference.nid || reference.target_id || service.target_id,
+                    title: reference.title || service.title || 'Service',
+                    field_prix: Number(reference.field_prix ?? service.field_prix) || 0,
+                };
+            }).filter((service) => service.nid);
+            isEdit.value = selectedServices.value.length > 0;
         }
 
         defineExpose({
@@ -342,20 +284,17 @@ export default {
 
         return {
             isModalOpen,
-            examSearch,
-            examenStore,
-            showExamList,
-            selectedExam,
-            showSelectedExam,
+            serviceSearch,
+            serviceResults,
+            showServiceList,
+            selectService,
+            selectedService,
+            selectedServices,
+            serviceTotal,
             formError,
-            saveExamen,
+            addSelectedService,
             searchKeywords,
-            exNid,
-            exFieldDescription,
-            exFieldJustification,
-            exFieldPrix,
-            exTitle,
-            removeFromList,
+            removeService,
             conseils,
             precautions,
             signes,

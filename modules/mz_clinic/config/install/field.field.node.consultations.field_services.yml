@@ -1,0 +1,28 @@
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_services
+    - node.type.consultations
+    - node.type.service
+id: node.consultations.field_services
+field_name: field_services
+entity_type: node
+bundle: consultations
+label: Services prescrits
+description: Services du catalogue associés à la consultation.
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      service: service
+    sort:
+      field: title
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

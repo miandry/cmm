@@ -322,6 +322,12 @@ class ApiController extends ControllerBase
                             'status' => 1
                         ]);
 
+                        if (!empty($data['field_specialite'])) {
+                            $user->set('field_specialite', [
+                                'target_id' => (int) $data['field_specialite'],
+                            ]);
+                        }
+
                         $user->setPassword($data['pass']);
 
                         // Ajouter plusieurs roles
@@ -431,6 +437,16 @@ class ApiController extends ControllerBase
                         if (!empty($data['roles']) && is_array($data['roles']) && array_intersect($allowed_roles, $current_user->getRoles())) {
                             // Seul l'admin peut changer les rôles
                             $user->set('roles', $data['roles']);
+                        }
+
+                        if (array_key_exists('field_specialite', $data) && array_intersect($allowed_roles, $current_user->getRoles())) {
+                            if (!empty($data['field_specialite'])) {
+                                $user->set('field_specialite', [
+                                    'target_id' => (int) $data['field_specialite'],
+                                ]);
+                            } else {
+                                $user->set('field_specialite', []);
+                            }
                         }
 
                         $saved = $user->save();

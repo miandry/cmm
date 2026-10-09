@@ -428,3 +428,13 @@ function mz_clinic_update_9015(): void {
     $config->save();
   }
 }
+
+/**
+ * Add service references to consultations.
+ */
+function mz_clinic_update_9016(): void {
+  _mz_clinic_install_configs([
+    'field.storage.node.field_services',
+    'field.field.node.consultations.field_services',
+  ]);
+}

@@ -8,7 +8,7 @@
                 placeholder="Décrivez le motif principal de la consultation..."></textarea>
             <p v-if="errors.consultationMotif" class="text-red-500 text-xs">Le motif est requis</p>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Température (°C)</label>
                 <input type="number" v-model="form.temperature"
@@ -29,7 +29,7 @@
                     class="w-full px-3 py-2 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="70">
             </div>
-            <div>
+            <div class="hidden">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Montant du consultation (Ar)</label>
                 <div class="relative">
                     <!-- v-model="form.montant" -->
@@ -186,14 +186,14 @@ export default {
 
                     // Attendre que les données utilisateur soient chargées si nécessaire
                     if (userStore.users.rows.length) {
-                        form.montant = userStore.users.rows[0].field_specialite.field_montant_consultation;
+                        form.montant = userStore.users.rows[0].field_specialite?.field_montant_consultation ?? '';
                     } else {
                         // Si pas encore chargé, attendre un court instant ou utiliser un watcher
                         const unwatch = watch(
                             () => userStore.users.rows,
                             (rows) => {
                                 if (rows.length) {
-                                    form.montant = rows[0].field_specialite.field_montant_consultation;
+                                    form.montant = rows[0].field_specialite?.field_montant_consultation ?? '';
                                     unwatch(); // Nettoyer le watcher
                                 }
                             },

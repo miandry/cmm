@@ -14,7 +14,7 @@
                         <div>
                             <div class="font-medium text-gray-900">Dr. {{ userStore.users.rows[0].name }}</div>
                             <div class="text-sm text-gray-600 capitalize">{{
-                                userStore.users.rows[0].field_specialite.title }}</div>
+                                userStore.users.rows[0].field_specialite?.title || 'Spécialité non définie' }}</div>
                         </div>
                     </div>
                     <div class="w-3 h-3 bg-green-500 rounded-full"></div>
@@ -156,9 +156,13 @@ export default {
                 // prescriptionEtSuiviData
                 const medicamentsData = prescriptionEtSuiviData.medication;
                 const recommandationData = prescriptionEtSuiviData.recommandation;
+                const selectedServices = recommandationData.services || [];
                 const suiviData = prescriptionEtSuiviData.suivi;
                 let totalMedicament = 0;
                 let totalExamen = 0;
+                const totalServices = selectedServices.reduce(
+                    (total, service) => total + (Number(service.field_prix) || 0), 0
+                );
 
                 /** validation global */
 
@@ -228,6 +232,10 @@ export default {
                     field_consultation_status: consultationStatus,
                 }
 
+                consulatationGlobalData.field_services = selectedServices.map(
+                    (service) => parseInt(service.nid)
+                );
+
                 // Ajouter seulement si NON vide
                 if (allMedications && allMedications.length > 0) {
                     consulatationGlobalData.field_medicaments = allMedications;
@@ -272,7 +280,7 @@ export default {
                 };
 
                 // Ajouter la commande et facture si finalisation
-                if (withOrder && (hasExamens || hasMedications)) {
+                if (withOrder && (hasExamens || hasMedications || selectedServices.length > 0)) {
                     const formatDateUS = () => {
                         const now = new Date();
                         const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -281,17 +289,27 @@ export default {
                         return `${year}-${month}-${day}`;
                     };
 
-                    let allArticles = null;
+                    let allArticles = [];
                     if (allMedications && allMedications.length > 0) {
-                        allArticles = allMedications.map(item => ({
+                        allArticles.push(...allMedications.map(item => ({
                             entity_type: "paragraph",
                             bundle: "commande",
                             field_article: item.field_articles,
                             field_quantite: item.field_quantite,
                             field_prix_d_achat: item.field_prix,
                             field_prix_unitaire: item.field_prix,
-                        }));
+                        })));
                     }
+                    allArticles.push(...selectedServices.map((service) => ({
+                        entity_type: "paragraph",
+                        bundle: "commande",
+                        field_article: service.nid,
+                        field_quantite: 1,
+                        field_prix_d_achat: Number(service.field_prix) || 0,
+                        field_prix_unitaire: Number(service.field_prix) || 0,
+                    })));
+
+                    const totalVente = totalExamen + totalMedicament + totalServices;
 
                     completeConsultationData.order = {
                         entity_type: "node",
@@ -299,8 +317,8 @@ export default {
                         title: "cmd-" + Date.now(),
                         field_client: patienStore.client.nid,
                         clientName: patienStore.client.title,
-                        field_total_vente: totalExamen + totalMedicament,
-                        field_articles: allArticles || [],
+                        field_total_vente: totalVente,
+                        field_articles: allArticles,
                         field_examens_order: allExamens || [],
                         field_date: formatDateUS(),
                         status: 1,
@@ -313,9 +331,9 @@ export default {
                         bundle: "facture",
                         status: 1,
                         title: `facture-${Date.now()}`,
-                        field_articles_commande: allArticles || [],
+                        field_articles_commande: allArticles,
                         field_examens_dans_commande: allExamens || [],
-                        field_total_vente: totalExamen + totalMedicament,
+                        field_total_vente: totalVente,
                         field_patient_dossier: completeConsultationData.consultation.title,
                         field_patient_nom: patienStore.client.title,
                         field_reference_facture: completeConsultationData.consultation.title,
@@ -427,8 +445,9 @@ export default {
                     await loadConsultationForEdit(newId);
                     canChange.value = false;
                 } else {
-                    generalFormRef.value.resetForm();
-                    prescriptionEtSuivi.value.resetAll();
+                    await nextTick();
+                    generalFormRef.value?.resetForm();
+                    prescriptionEtSuivi.value?.resetAll();
                     patienStore.resetClient();
                     canChange.value = true;
                 }
@@ -497,6 +516,7 @@ export default {
         const loadLastconsultation = async (consultation) => {
             await patienStore.fetchClient(consultation.field_client.nid);
             generalFormRef.value?.setFormData(consultation);
+            prescriptionEtSuivi.value?.setData(consultation);
             canChange.value = false;
             consultationReference.value = consultation.nid
         }
