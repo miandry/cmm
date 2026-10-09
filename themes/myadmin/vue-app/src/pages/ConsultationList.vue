@@ -59,8 +59,8 @@
                             <select v-model="statusFilter" @change="filterByStatus"
                                 class="pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm w-full sm:w-40 bg-white">
                                 <option value="">Tous les statuts</option>
-                                <option value="completed">Payé</option>
-                                <option value="draft">Non payé</option>
+                                <option value="completed">Achevée</option>
+                                <option value="draft">Non achevée</option>
                                 <option value="cancelled">Annulée</option>
                             </select>
                         </div>
@@ -187,7 +187,7 @@
                                             : 'ri-time-line',
                                             'mr-1'
                                         ]"></i>
-                                        {{ cons.field_consultation_status === 'completed' ? 'Payé' : cons.field_consultation_status === 'cancelled' ? 'Annulée' : 'Non payé' }}
+                                        {{ cons.field_consultation_status === 'completed' ? 'Achevée' : cons.field_consultation_status === 'cancelled' ? 'Annulée' : 'Non achevée' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
