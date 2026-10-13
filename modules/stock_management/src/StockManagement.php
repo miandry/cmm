@@ -324,6 +324,14 @@ class StockManagement
          $article->field_prix_unitaire->value = (float) $stock['field_prix_unitaire'];
       }
 
+      if (
+         $article->hasField('field_prix_de_vente_externe') &&
+         isset($stock['field_prix_de_vente_externe']) &&
+         $stock['field_prix_de_vente_externe'] !== ''
+      ) {
+         $article->field_prix_de_vente_externe->value = (int) $stock['field_prix_de_vente_externe'];
+      }
+
       $article->save();
    }
 

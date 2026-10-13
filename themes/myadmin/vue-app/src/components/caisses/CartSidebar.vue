@@ -41,6 +41,11 @@
                             <span class="text-xs font-medium">Non</span>
                         </label>
                     </div>
+                    <label class="flex items-center justify-between mt-2 text-xs text-gray-600">
+                        <span>Vente interne</span>
+                        <input v-model="useInternalPrice" type="checkbox"
+                            class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                    </label>
                     <div class="cursor-pointer" v-if="insurance && articleStore.cardItems.length"
                         @click="openEditPrice">
                         <span class="text-xs text-primary">Modifier les prix</span>
@@ -54,7 +59,7 @@
                         </div>
                         <div class="flex-1 min-w-0 pr-2">
                             <h3 class="font-medium text-gray-900 text-xs truncate">{{ item.title }}</h3>
-                            <p class="text-xs text-gray-500">{{ item.field_prix_unitaire }} Ar chacun</p>
+                            <p class="text-xs text-gray-500">{{ getItemPrice(item) }} Ar chacun</p>
                         </div>
                         <div class="flex items-center space-x-1">
                             <button @click="decrementQuantity(item)"
@@ -67,7 +72,7 @@
                                 <i class="ri-add-line text-xs"></i>
                             </button>
                         </div>
-                        <div class="w-22 text-right font-semibold text-primary text-xs">{{ (item.field_prix_unitaire *
+                        <div class="w-22 text-right font-semibold text-primary text-xs">{{ (getItemPrice(item) *
                             item.quantity).toLocaleString() }} Ar</div>
                     </div>
                 </div>
@@ -78,7 +83,7 @@
                 <div class="space-y-1 mb-3">
                     <div class="flex justify-between text-xs">
                         <span class="text-gray-600">Sous-total</span>
-                        <span class="font-medium">{{ articleStore.total.toLocaleString() }} Ar</span>
+                        <span class="font-medium">{{ cartTotal.toLocaleString() }} Ar</span>
                     </div>
                     <div class="flex justify-between text-xs hidden">
                         <span class="text-gray-600">TVA (20%)</span>
@@ -87,7 +92,7 @@
                     <div class="border-t border-gray-200 pt-1">
                         <div class="flex justify-between text-sm font-semibold">
                             <span>Total</span>
-                            <span class="text-primary">{{ articleStore.total.toLocaleString() }} Ar</span>
+                            <span class="text-primary">{{ cartTotal.toLocaleString() }} Ar</span>
                         </div>
                     </div>
                 </div>
@@ -158,6 +163,11 @@
                                 <span class="text-xs font-medium">Non</span>
                             </label>
                         </div>
+                        <label class="flex items-center justify-between mt-2 text-xs text-gray-600">
+                            <span>Vente interne</span>
+                            <input v-model="useInternalPrice" type="checkbox"
+                                class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                        </label>
                         <div class="cursor-pointer" v-if="insurance && articleStore.cardItems.length"
                             @click="openEditPrice">
                             <span class="text-xs text-primary">Modifier les prix</span>
@@ -171,7 +181,7 @@
                             </div>
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-medium text-gray-900 text-xs truncate">{{ item.title }}</h3>
-                                <p class="text-xs text-gray-500">{{ item.field_prix_unitaire }} Ar chacun</p>
+                                <p class="text-xs text-gray-500">{{ getItemPrice(item) }} Ar chacun</p>
                             </div>
                             <div class="flex items-center space-x-1">
                                 <button @click="decrementQuantity(item)"
@@ -185,7 +195,7 @@
                                 </button>
                             </div>
                             <div class="w-22 text-right font-semibold text-primary text-xs">
-                                {{ (item.field_prix_unitaire * item.quantity).toLocaleString() }} Ar</div>
+                                {{ (getItemPrice(item) * item.quantity).toLocaleString() }} Ar</div>
                         </div>
                     </div>
                     <div class="space-y-2 mb-3 max-h-32 overflow-y-auto text-center" v-else>
@@ -195,7 +205,7 @@
                     <div class="space-y-1 mb-3">
                         <div class="flex justify-between text-xs">
                             <span class="text-gray-600">Sous-total</span>
-                            <span class="font-medium">{{ articleStore.total.toLocaleString() }} Ar</span>
+                            <span class="font-medium">{{ cartTotal.toLocaleString() }} Ar</span>
                         </div>
                         <div class="flex justify-between text-xs hidden">
                             <span class="text-gray-600">TVA (20%)</span>
@@ -204,7 +214,7 @@
                         <div class="border-t border-gray-200 pt-1">
                             <div class="flex justify-between text-sm font-semibold">
                                 <span>Total</span>
-                                <span class="text-primary">{{ articleStore.total.toLocaleString() }} Ar</span>
+                                <span class="text-primary">{{ cartTotal.toLocaleString() }} Ar</span>
                             </div>
                         </div>
                     </div>
@@ -246,12 +256,13 @@
                                 v-for="item in articleStore.cardItems" :key="item.nid">
                                 <div class="min-w-0 pr-2 w-4/6">
                                     <h3 class="font-medium text-gray-900 text-xs truncate">{{ item.title }}</h3>
-                                    <p class="text-xs text-gray-500">{{ item.field_prix_unitaire }} Ar chacun</p>
+                                    <p class="text-xs text-gray-500">{{ getItemPrice(item) }} Ar chacun</p>
                                 </div>
                                 <div class="text-right font-semibold text-xs w-2/6">
                                     <input
                                         class="w-full border border-gray-200 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ps-2 py-1"
-                                        type="number" min="0" v-model.number="item.field_prix_unitaire">
+                                        type="number" min="0"
+                                        v-model.number="item[useInternalPrice ? 'field_prix_unitaire' : 'field_prix_de_vente_externe']">
                                 </div>
                             </div>
                         </div>
@@ -278,7 +289,7 @@ import { h } from "vue";
 import { RouterLink } from "vue-router";
 import { useArticleStore, useClientStore, useOrderStore, useInvoiceStore, useStockStore } from '../../stores/index.js';
 import { createOrderWithInvoice } from '../../services/clinic.js';
-import { ref, watch, toRaw } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 export default {
     name: 'CardSidebar',
@@ -290,6 +301,18 @@ export default {
         const isCartOpen = ref(false);
         const insurance = ref(false);
         const editPrice = ref(false);
+        const useInternalPrice = ref(true);
+        const cartTotal = computed(() => articleStore.cardItems.reduce(
+            (total, item) => total + getItemPrice(item) * item.quantity,
+            0,
+        ));
+
+        const getItemPrice = (item) => {
+            const price = useInternalPrice.value
+                ? item.field_prix_unitaire
+                : item.field_prix_de_vente_externe;
+            return Number(price) || 0;
+        };
 
         const openCustomerModal = () => {
             if (store.loading) {
@@ -310,7 +333,6 @@ export default {
         watch(
             () => store.client,
             (client) => {
-                console.log("Client changed:", client);
                 if (client && client.field_assurance == 1) {
                     insurance.value = true;
                 } else {
@@ -322,14 +344,8 @@ export default {
 
         watch(insurance, (value) => {
             if (!value) {
-                // assurance désactivée → remettre les prix initiaux
-                articleStore.cardItems.forEach(item => {
-                    if (item._original_price) {
-                        item.field_prix_unitaire = item._original_price;
-                    }
-                });
-
-                articleStore.saveOrder(store.client);
+                restoreOriginalPrices();
+                articleStore.saveOrder(store.client, useInternalPrice.value);
                 toast.info("Prix réinitialisés aux valeurs d'origine");
             }
         });
@@ -356,7 +372,7 @@ export default {
                 toast.error("Ajoutez au moins un article.")
                 return null;
             }
-            return articleStore.saveOrder(store.client);
+            return articleStore.saveOrder(store.client, useInternalPrice.value);
         }
 
         function handleFinalizeSale() {
@@ -399,7 +415,7 @@ export default {
                         bundle: "commande",
                         field_article: item.nid,
                         field_quantite: item.quantity,
-                        field_prix_d_achat: item.field_prix_unitaire,
+                        field_prix_d_achat: item.field_prix_d_achat,
                         field_prix_unitaire: item.field_prix_unitaire,
                     }));
 
@@ -482,7 +498,7 @@ export default {
 
         const confirmEditPrice = () => {
             // recalcul automatique du total via le store
-            articleStore.saveOrder(store.client);
+            articleStore.saveOrder(store.client, useInternalPrice.value);
 
             toast.success("Prix mis à jour !");
             editPrice.value = false;
@@ -490,17 +506,23 @@ export default {
 
         const restoreOriginalPrices = () => {
             articleStore.cardItems.forEach(item => {
-                if (item._original_price) {
+                if (item._original_price !== undefined) {
                     item.field_prix_unitaire = item._original_price;
                 }
+                if (item._original_external_price !== undefined) {
+                    item.field_prix_de_vente_externe = item._original_external_price;
+                }
             });
-            return articleStore.saveOrder(store.client);
+            return articleStore.saveOrder(store.client, useInternalPrice.value);
         };
 
 
         return {
             store,
             articleStore,
+            useInternalPrice,
+            cartTotal,
+            getItemPrice,
             incrementQuantity,
             decrementQuantity,
             removeItem,

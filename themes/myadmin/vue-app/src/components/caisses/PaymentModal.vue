@@ -107,7 +107,7 @@ export default {
                     bundle: "commande",
                     field_article: item.nid,
                     field_quantite: item.quantity,
-                    field_prix_d_achat: item.field_prix_unitaire,
+                    field_prix_d_achat: item.field_prix_d_achat,
                     field_prix_unitaire: item.field_prix_unitaire,
                 }));
 

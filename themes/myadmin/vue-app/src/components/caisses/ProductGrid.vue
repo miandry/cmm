@@ -79,6 +79,7 @@ export default {
         'nid',
         'title',
         'field_prix_unitaire',
+        'field_prix_de_vente_externe',
         'field_nombre_par_unite',
         'field_quantite_stock',
         'field_image',

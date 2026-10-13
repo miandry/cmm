@@ -133,6 +133,7 @@ export const useArticleStore = defineStore("article", () => {
           ...article,
           quantity: 1,
           _original_price: article.field_prix_unitaire,
+          _original_external_price: article.field_prix_de_vente_externe,
         });
 
         updateDisplayedStocks(); // Mettre à jour tous les stocks affichés
@@ -194,12 +195,27 @@ export const useArticleStore = defineStore("article", () => {
     }, 0);
   });
 
-  function saveOrder(client) {
+  function saveOrder(client, useInternalPrice = true) {
+    const items = cardItems.value.map((item) => ({
+      ...item,
+      field_prix_d_achat: useInternalPrice
+        ? item.field_prix_unitaire
+        : item._original_price ?? item.field_prix_unitaire,
+      field_prix_unitaire: Number(
+        useInternalPrice
+          ? item.field_prix_unitaire
+          : item.field_prix_de_vente_externe,
+      ) || 0,
+    }));
+
     savedOrder.value = {
       clientId: client.nid,
       clientName: client.title,
-      items: cardItems.value.map((item) => ({ ...item })), // copie des articles
-      total: total.value,
+      items,
+      total: items.reduce(
+        (sum, item) => sum + item.field_prix_unitaire * item.quantity,
+        0,
+      ),
     };
 
     // Réinitialiser les stocks originaux après la commande

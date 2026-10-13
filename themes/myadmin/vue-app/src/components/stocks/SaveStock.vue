@@ -119,13 +119,19 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Prix de vente (Ar)<span
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Prix de vente interne (Ar)<span
                                     class="text-red-500"> *</span></label>
                             <input type="number" v-model="form.field_prix_unitaire" min="1"
                                 class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                                 placeholder="0">
                             <p v-if="errors.field_prix_unitaire" class="text-red-500 text-xs">Veuillez ajouter un prix
                                 valide</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Prix de vente externe (Ar)</label>
+                            <input type="number" v-model="form.field_prix_de_vente_externe" min="0"
+                                class="w-full px-3 py-2 border border-gray-300 !rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                                placeholder="0">
                         </div>
                     </div>
 
@@ -202,6 +208,7 @@ export default {
             status: 1,
             field_prix_d_achat: "",
             field_prix_unitaire: "",
+            field_prix_de_vente_externe: "",
             field_quantite: 0,
             field_quantite_unitaire: 0,
             field_date: "",
@@ -336,6 +343,7 @@ export default {
             form.field_fournisseur = "";
             form.field_prix_d_achat = "";
             form.field_prix_unitaire = "";
+            form.field_prix_de_vente_externe = "";
             form.field_date = "";
             form.field_peremption = "";
         }
@@ -424,6 +432,7 @@ export default {
                 form.field_fournisseur = stock.field_fournisseur?.nid || "";
                 form.field_prix_d_achat = stock.field_prix_d_achat;
                 form.field_prix_unitaire = stock.field_prix_unitaire;
+                form.field_prix_de_vente_externe = stock.field_prix_de_vente_externe ?? "";
                 form.field_date = stock.field_date;
                 form.field_peremption = stock.field_peremption;
             },

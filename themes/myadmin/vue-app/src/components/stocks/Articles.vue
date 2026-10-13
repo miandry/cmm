@@ -245,6 +245,7 @@ export default {
                 'field_fournisseur',
                 'field_prix_d_achat',
                 'field_prix_unitaire',
+                'field_prix_de_vente_externe',
                 'field_quantite',
             ],
             sort: { val: 'nid', op: 'desc' },
