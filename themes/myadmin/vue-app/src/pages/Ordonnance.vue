@@ -80,14 +80,14 @@
                                 contenteditable="true" @blur="updateField('medecin.nom', $event)"
                                 @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'medecinNom')"
                                 @input="preventVueUpdate($event)" ref="medecinNomField">
-                                {{ ordonnanceData.medecin.nom }}
+                                Dr. {{ ordonnanceData.medecin.nom }}
                             </h1>
-                            <p class="text-sm font-medium text-gray-600 leading-tight editable-field"
+                            <!-- <p class="text-sm font-medium text-gray-600 leading-tight editable-field"
                                 contenteditable="true" @blur="updateField('medecin.titre', $event)"
                                 @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'medecinTitre')"
                                 @input="preventVueUpdate($event)" ref="medecinTitreField">
                                 {{ ordonnanceData.medecin.titre }}
-                            </p>
+                            </p> -->
                             <div class="text-[11px] text-gray-500 leading-snug mt-1">
                                 <p class="font-bold text-medical-blue inline mr-3 editable-field" contenteditable="true"
                                     @blur="updateField('medecin.centre', $event)" @keydown.enter="saveAndBlur($event)"
@@ -264,14 +264,14 @@
                                 contenteditable="true" @blur="updateField('medecin.nom', $event)"
                                 @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'medecinNom')"
                                 @input="preventVueUpdate($event)">
-                                {{ ordonnanceData.medecin.nom }}
+                                Dr. {{ ordonnanceData.medecin.nom }}
                             </h1>
-                            <p class="text-sm font-medium text-gray-600 leading-tight editable-field"
+                            <!-- <p class="text-sm font-medium text-gray-600 leading-tight editable-field"
                                 contenteditable="true" @blur="updateField('medecin.titre', $event)"
                                 @keydown.enter="saveAndBlur($event)" @focus="handleFocus($event, 'medecinTitre')"
                                 @input="preventVueUpdate($event)">
                                 {{ ordonnanceData.medecin.titre }}
-                            </p>
+                            </p> -->
                             <div class="text-[11px] text-gray-500 leading-snug mt-1">
                                 <p class="font-bold text-medical-blue inline mr-3 editable-field" contenteditable="true"
                                     @blur="updateField('medecin.centre', $event)" @keydown.enter="saveAndBlur($event)"
@@ -450,6 +450,7 @@ import { onMounted, ref, watch, nextTick, computed } from 'vue';
 import { useConsultationStore } from '../stores/index.js';
 import { useRoute, useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
+import { getInvoiceHeader } from '../services/invoiceHeader.js';
 
 export default {
     name: 'OrdonnanceA5',
@@ -487,10 +488,9 @@ export default {
                 ville: "Tsiroanomandidy",
             },
             medecin: {
-                nom: "Dr. RASOANAIJO Malalaniaina",
-                titre: "Médecin Généraliste",
+                nom: "RASOANAIJO Malalaniaina",
                 centre: "CENTRE MÉDICAL VONJY AINA",
-                adresse: "3TH3 Tsarahonena, Tsiroanomandidy",
+                adresse: "Tsarahonena, Tsiroanomandidy",
                 contact: "033 24 427 30 – 034 06 015 13",
                 immat: "NIF: 30024 555 38 / STAT: 65201 14 2016 0 00199"
             },
@@ -513,10 +513,9 @@ export default {
                 ville: "Tsiroanomandidy",
             },
             medecin: {
-                nom: "Dr. Jean Dupont",
-                titre: "Médecin Généraliste",
-                centre: "Centre Médical Santé Plus",
-                adresse: "12 Rue des Lilas, Tsiroanomandidy",
+                nom: "Jean RASOANAIJO",
+                centre: "CENTRE MÉDICAL VONJY AINA",
+                adresse: "Tsiroanomandidy",
                 contact: "032 12 345 67 – 034 98 765 43",
                 immat: "NIF: 12345 678 90 / STAT: 98765 43 2024 0 00001"
             },
@@ -536,12 +535,28 @@ export default {
         const hostname = window.location.hostname;
 
         const defaultOrdonnanceData =
-            hostname === "vonjyaina.platforme.site"
+            hostname === "centre-medical-vonjyaina.site"
                 ? realOrdonnanceData
                 : fakeOrdonnanceData;
 
         // Données réactives de l'ordonnance
         const ordonnanceData = ref(JSON.parse(JSON.stringify(defaultOrdonnanceData)));
+
+        const loadInvoiceHeader = async () => {
+            try {
+                const response = await getInvoiceHeader();
+                const header = response.data?.status ? response.data.data : null;
+
+                if (header) {
+                    ordonnanceData.value.medecin.adresse = header.adresse ?? ordonnanceData.value.medecin.adresse;
+                    ordonnanceData.value.medecin.contact = header.contact ?? ordonnanceData.value.medecin.contact;
+                    ordonnanceData.value.medecin.immat = header.immat ?? ordonnanceData.value.medecin.immat;
+                }
+            } catch (error) {
+                console.error("Impossible de charger les paramètres de l'en-tête:", error);
+                toast.error("Impossible de charger les coordonnées de l'en-tête.");
+            }
+        };
 
         // Computed pour la pagination des médicaments
         const totalMedicamentsPages = computed(() => {
@@ -629,6 +644,8 @@ export default {
                     ordonnanceData.value.patient.nom = consultationsStore.consultation.field_client?.title || "";
                     ordonnanceData.value.patient.dossier = consultationsStore.consultation.nid || "";
                     ordonnanceData.value.patient.age = consultationsStore.consultation.field_client?.field_age + ' ans' || "";
+                    ordonnanceData.value.medecin.nom =
+                        consultationsStore.consultation.field_docteur?.name || ordonnanceData.value.medecin.nom;
 
                     // Formater la date de création
                     if (consultationsStore.consultation.created) {
@@ -897,6 +914,8 @@ export default {
                     console.error("Erreur de parsing de la sauvegarde:", e);
                 }
             }
+
+            await loadInvoiceHeader();
 
             if (consultationId) {
                 await loadConsultation(consultationId);
