@@ -117,6 +117,7 @@ import { storeToRefs } from 'pinia';
 import { useAuthStore } from '../stores/auth';
 import { useMenuStore } from '../stores/menu/menu.js';
 import { buildMenuItems } from '../utils/menuFilter.js';
+import { getFrontendRoles } from '../utils/auth.js';
 
 export default {
   name: "MobileMenu",
@@ -163,7 +164,7 @@ export default {
     },
 
     roles() {
-      return this.authStore.user?.roles || window.APP_DATA?.roles || [];
+      return getFrontendRoles(this.authStore.user?.roles || window.APP_DATA?.roles || []);
     },
 
     canUseDropdown() {
