@@ -51,6 +51,13 @@
                         <option value="0">Non publiés</option>
                     </select>
                 </div>
+                <button type="button" @click="toggleLowStockFilter"
+                    class="px-4 py-2.5 rounded-lg border text-sm font-medium whitespace-nowrap transition-colors"
+                    :class="lowStockOnly
+                        ? 'bg-orange-100 border-orange-300 text-orange-800'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'">
+                    {{ lowStockOnly ? 'Voir tous les produits' : 'Afficher les stocks bas' }}
+                </button>
             </div>
             <p class="text-sm text-gray-500 mt-3">
                 {{ articleStore.articles.total }} produit{{ articleStore.articles.total > 1 ? 's' : '' }} au total
@@ -183,16 +190,19 @@ import { debounce } from 'lodash';
 import { toast } from 'vue-sonner';
 import { useArticleStore } from '../stores/index.js';
 import PageLoader from '../components/PageLoader.vue';
+import { useRoute } from 'vue-router';
 
 export default {
     name: 'Articles',
     components: { PageLoader },
     setup() {
+        const route = useRoute();
         const articleStore = useArticleStore();
         const loader = ref(false);
         const searchKeyword = ref('');
         const selectedCategory = ref('');
         const statusFilter = ref('1');
+        const lowStockOnly = ref(route.query.lowStock === '1');
         const currentPage = ref(1);
         const togglingId = ref(null);
         const perPage = 15;
@@ -210,7 +220,12 @@ export default {
                 'field_image',
             ],
             sort: { val: 'title', op: 'asc' },
-            filters: { status: { val: 1, op: '=' }},
+            filters: {
+                status: { val: 1, op: '=' },
+                ...(lowStockOnly.value
+                    ? { field_quantite_stock: { val: [1, 10], op: 'BETWEEN' } }
+                    : {}),
+            },
             values: {
                 field_categorie: ['tid', 'name', 'title'],
                 field_type_pack: ['tid', 'name', 'title'],
@@ -337,6 +352,20 @@ export default {
             await fetchArticles();
         };
 
+        const toggleLowStockFilter = async () => {
+            lowStockOnly.value = !lowStockOnly.value;
+            currentPage.value = 1;
+            queryOptions.value.pager = 0;
+
+            if (lowStockOnly.value) {
+                updateFilter('field_quantite_stock', [1, 10], 'BETWEEN');
+            } else {
+                delete queryOptions.value.filters.field_quantite_stock;
+            }
+
+            await fetchArticles();
+        };
+
         const goToPage = (page) => {
             if (page >= 1 && page <= totalPages.value) {
                 currentPage.value = page;
@@ -407,6 +436,7 @@ export default {
             searchKeyword,
             selectedCategory,
             statusFilter,
+            lowStockOnly,
             currentPage,
             totalPages,
             visiblePages,
@@ -414,6 +444,7 @@ export default {
             handleSearch,
             handleCategoryFilter,
             handleStatusFilter,
+            toggleLowStockFilter,
             goToPage,
             nextPage,
             previousPage,

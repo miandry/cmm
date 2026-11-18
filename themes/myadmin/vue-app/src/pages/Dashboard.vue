@@ -44,8 +44,8 @@
       </div>
 
       <!-- Sales -->
-      <div v-if="isEnabled('stat_sales')"
-        class="dashboard-card relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+      <button v-if="isEnabled('stat_sales')" type="button" @click="goToOrders"
+        class="dashboard-card w-full text-left relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700">
         <div class="flex items-center justify-between font-bold">
           <div>
             <p class="text-xs uppercase opacity-80">Ventes</p>
@@ -57,7 +57,7 @@
             <i class="ri-shopping-cart-line text-2xl text-white"></i>
           </div>
         </div>
-      </div>
+      </button>
 
       <!-- Patients -->
       <div v-if="isEnabled('stat_patients')"
@@ -76,8 +76,8 @@
       </div>
 
       <!-- Low Stock -->
-      <div v-if="isEnabled('stat_low_stock')"
-        class="dashboard-card relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-orange-500 to-red-500 text-white">
+      <button v-if="isEnabled('stat_low_stock')" type="button" @click="goToLowStockArticles"
+        class="dashboard-card w-full text-left relative overflow-hidden rounded-2xl p-5 shadow-lg bg-gradient-to-r from-orange-500 to-red-500 text-white cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700">
         <div class="flex items-center justify-between font-bold">
           <div>
             <p class="text-xs uppercase opacity-80">Stock Bas</p>
@@ -89,7 +89,7 @@
             <i class="ri-alert-line text-2xl text-white"></i>
           </div>
         </div>
-      </div>
+      </button>
 
     </div>
 
@@ -117,7 +117,13 @@
       <div v-if="isEnabled('table_low_stock')" class="dashboard-panel bg-white rounded-xl border border-gray-100 shadow-sm p-4 w-full min-w-0">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-gray-700">Stocks Critiques</h3>
-          <span class="text-xs text-red-600 font-medium">{{ lowStockItems.length }} articles</span>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-red-600 font-medium">{{ lowStockItems.length }} articles</span>
+            <button type="button" @click="goToLowStockArticles"
+              class="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline">
+              Voir tous
+            </button>
+          </div>
         </div>
         <div class="overflow-auto max-h-80">
           <div v-if="lowStockItems.length === 0" class="text-center py-8 text-gray-500 text-sm">
@@ -173,6 +179,7 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
 import { useDashboardStore } from '../stores/dashboard/dashboard.js';
 import {
   Chart as ChartJS,
@@ -195,10 +202,13 @@ export default {
     SalesChart
   },
   setup() {
+    const router = useRouter();
     const dashboardStore = useDashboardStore();
     const { disabledKeys } = storeToRefs(dashboardStore);
 
     const isEnabled = (key) => !disabledKeys.value.includes(key);
+    const goToLowStockArticles = () => router.push({ path: '/articles', query: { lowStock: '1' } });
+    const goToOrders = () => router.push('/commandes');
 
     const hasVisibleStats = computed(() =>
       ['stat_consultations', 'stat_sales', 'stat_patients', 'stat_low_stock'].some((key) => !disabledKeys.value.includes(key))
@@ -416,7 +426,9 @@ export default {
       chartOptions,
       formatCurrency,
       formatDate,
-      changePeriod
+      changePeriod,
+      goToLowStockArticles,
+      goToOrders
     };
   }
 }
