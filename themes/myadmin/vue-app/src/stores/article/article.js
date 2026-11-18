@@ -158,6 +158,31 @@ export const useArticleStore = defineStore("article", () => {
     }
   }
 
+  function setQuantity(item, quantity) {
+    const newQuantity = Number(quantity);
+    if (!Number.isInteger(newQuantity) || newQuantity < 1) {
+      toast.warning("La quantité doit être un nombre entier supérieur à zéro.");
+      return false;
+    }
+
+    const originalStock = originalStocks.value.has(item.nid)
+      ? originalStocks.value.get(item.nid)
+      : Number(item.field_quantite_stock);
+    if (
+      !Number.isFinite(Number(originalStock)) ||
+      newQuantity > Number(originalStock)
+    ) {
+      toast.warning(() =>
+        h("div", ["Rupture de stock !", h("br"), h("span", item.title)]),
+      );
+      return false;
+    }
+
+    item.quantity = newQuantity;
+    updateDisplayedStocks();
+    return true;
+  }
+
   function decrementQuantity(item) {
     if (item.quantity > 1) {
       item.quantity--;
@@ -281,6 +306,7 @@ export const useArticleStore = defineStore("article", () => {
     saveOrder,
     decrementQuantity,
     incrementQuantity,
+    setQuantity,
     fetchTypePack,
     packs,
   };

@@ -89,9 +89,31 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useClientStore } from '../../stores';
 import { debounce } from 'lodash';
+
+const formatDateInput = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const getCurrentWeekRange = () => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+
+    return {
+        start: formatDateInput(start),
+        end: formatDateInput(end),
+    };
+};
+
 export default {
     name: 'OrderFilter',
     emits: ['on-search', 'on-filter', 'on-date-filter', 'on-caisse-filter'],
@@ -103,8 +125,9 @@ export default {
         const clientStore = useClientStore();
         const clientId = ref('');
         const searchKeywordClient = ref('');
-        const dateStart = ref('');
-        const dateEnd = ref('');
+        const currentWeek = getCurrentWeekRange();
+        const dateStart = ref(currentWeek.start);
+        const dateEnd = ref(currentWeek.end);
         const showList = ref(false);
         const loading = ref(false)
         const queryOptions = ref({
@@ -181,6 +204,7 @@ export default {
         };
 
         watch([dateStart, dateEnd], applyDateFilter);
+        onMounted(applyDateFilter);
 
         const changeStatus = (value) => {
             status.value = value;

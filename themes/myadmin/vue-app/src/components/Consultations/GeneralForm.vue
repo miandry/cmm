@@ -21,7 +21,6 @@
                 <input type="text" v-model="form.tension"
                     class="w-full px-3 py-2 border border-gray-300 !rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="120/80">
-                <p v-if="errors.tension" class="text-red-500 text-xs">La tension est requise</p>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Poids (kg)</label>
@@ -80,7 +79,6 @@ export default {
         const errors = reactive({
             consultationMotif: false,
             temperature: false,
-            tension: false,
             poids: false,
             montant: false,
         });
@@ -104,18 +102,15 @@ export default {
                 errors.consultationMotif = false;
             }
 
-            if (!form.temperature || isNaN(form.temperature)) {
+            if (
+                form.temperature !== '' &&
+                form.temperature !== null &&
+                !Number.isFinite(Number(form.temperature))
+            ) {
                 errors.temperature = true;
                 isValid = false;
             } else {
                 errors.temperature = false;
-            }
-
-            if (!form.tension || form.tension.trim() === '') {
-                errors.tension = true;
-                isValid = false;
-            } else {
-                errors.tension = false;
             }
 
             // if (
@@ -159,7 +154,6 @@ export default {
             // reset erreurs (important en mode edit)
             errors.consultationMotif = false;
             errors.temperature = false;
-            errors.tension = false;
             errors.poids = false;
             errors.montant = false;
         }

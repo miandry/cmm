@@ -5,6 +5,16 @@
             <div class="max-w-7xl mx-auto">
                 <order-filter @onSearch="onSearch" @onFilter="onFilter" @onDateFilter="onDateFilter"
                     @onCaisseFilter="onCaisseFilter" />
+                <div class="mb-4 text-gray-700" aria-live="polite">
+                    Valeur totale des commandes filtrées :
+                    <strong class="text-xl" v-if="totalAmount !== null">
+                        {{ totalAmount.toLocaleString('fr-MG', { style: 'currency', currency: 'MGA' }) }}
+                    </strong>
+                    <span v-else-if="totalAmountError" class="text-red-600">
+                        Impossible de calculer le total.
+                    </span>
+                    <span v-else>Calcul...</span>
+                </div>
                 <div class="grid gap-4">
                     <order-card v-for="order in orderStore.orders.rows" :key="order.nid" :order="order"
                         class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 order-card"
@@ -30,7 +40,7 @@
 </template>
 
 <script>
-import { onMounted, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import EditStatusModal from '../components/orders/EditStatusModal.vue';
 import OrderCard from '../components/orders/OrderCard.vue';
 import OrderFilter from '../components/orders/OrderFilter.vue';
@@ -50,6 +60,9 @@ export default {
     setup() {
         const orderStore = useOrderStore();
         const orderId = ref(null);
+        const totalAmount = ref(null);
+        const totalAmountError = ref(false);
+        let totalAmountRequestId = 0;
         const queryOptions = ref({
             fields: [
                 'nid',
@@ -91,7 +104,26 @@ export default {
             },
         }
 
+        const fetchOrdersAmountTotal = async () => {
+            const requestId = ++totalAmountRequestId;
+            totalAmount.value = null;
+            totalAmountError.value = false;
+
+            try {
+                const total = await orderStore.fetchOrdersAmountTotal(queryOptions.value);
+                if (requestId === totalAmountRequestId) {
+                    totalAmount.value = total;
+                }
+            } catch (error) {
+                if (requestId === totalAmountRequestId) {
+                    totalAmountError.value = true;
+                    console.error('Erreur lors du calcul du total des commandes.', error);
+                }
+            }
+        };
+
         const fetchOrders = async (append = false) => {
+            if (!append) fetchOrdersAmountTotal();
             await orderStore.fetchOrders(queryOptions.value, append);
         }
 
@@ -183,11 +215,6 @@ export default {
             { deep: true, immediate: true }
         )
 
-        onMounted(() => {
-            fetchOrders(false);
-        })
-
-
         const showEditStatusModalIsVisible = ref(false);
         const showDetailsModalIsVisible = ref(false);
         // Edit status Modal handler
@@ -226,6 +253,8 @@ export default {
             onCaisseFilter,
             canLoadMore,
             loadMore,
+            totalAmount,
+            totalAmountError,
             updateListView
         }
     }

@@ -46,7 +46,7 @@
                         <input v-model="useInternalPrice" type="checkbox"
                             class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
                     </label>
-                    <div class="cursor-pointer" v-if="insurance && articleStore.cardItems.length"
+                    <div class="cursor-pointer" v-if="articleStore.cardItems.length"
                         @click="openEditPrice">
                         <span class="text-xs text-primary">Modifier les prix</span>
                     </div>
@@ -66,7 +66,10 @@
                                 class="w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-gray-200 !rounded-button">
                                 <i class="ri-subtract-line text-xs"></i>
                             </button>
-                            <span class="w-4 text-center font-medium text-xs">{{ item.quantity }}</span>
+                            <input type="number" min="1" step="1" :value="item.quantity"
+                                :aria-label="`Quantité pour ${item.title}`"
+                                @change="setQuantity(item, $event)"
+                                class="w-12 h-7 text-center text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary">
                             <button @click="incrementQuantity(item)"
                                 class="w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-gray-200 !rounded-button">
                                 <i class="ri-add-line text-xs"></i>
@@ -168,7 +171,7 @@
                             <input v-model="useInternalPrice" type="checkbox"
                                 class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
                         </label>
-                        <div class="cursor-pointer" v-if="insurance && articleStore.cardItems.length"
+                        <div class="cursor-pointer" v-if="articleStore.cardItems.length"
                             @click="openEditPrice">
                             <span class="text-xs text-primary">Modifier les prix</span>
                         </div>
@@ -188,7 +191,10 @@
                                     class="w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-gray-200 !rounded-button">
                                     <i class="ri-subtract-line text-xs"></i>
                                 </button>
-                                <span class="w-4 text-center font-medium text-xs">{{ item.quantity }}</span>
+                                <input type="number" min="1" step="1" :value="item.quantity"
+                                    :aria-label="`Quantité pour ${item.title}`"
+                                    @change="setQuantity(item, $event)"
+                                    class="w-12 h-7 text-center text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary">
                                 <button @click="incrementQuantity(item)"
                                     class="w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-gray-200 !rounded-button">
                                     <i class="ri-add-line text-xs"></i>
@@ -358,6 +364,12 @@ export default {
             articleStore.decrementQuantity(item);
         }
 
+        function setQuantity(item, event) {
+            if (!articleStore.setQuantity(item, event.target.value)) {
+                event.target.value = item.quantity;
+            }
+        }
+
         function removeItem(item) {
             articleStore.removeItem(item);
         }
@@ -525,6 +537,7 @@ export default {
             getItemPrice,
             incrementQuantity,
             decrementQuantity,
+            setQuantity,
             removeItem,
             saveCurrentOrder,
             handleFinalizeSale,

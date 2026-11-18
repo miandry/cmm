@@ -30,6 +30,27 @@ export const useOrderStore = defineStore("order", () => {
     }
   }
 
+  async function fetchOrdersAmountTotal(options) {
+    const query = buildQueryParams({
+      ...options,
+      fields: ["field_total_vente"],
+      pager: "all",
+      offset: undefined,
+      values: undefined,
+    });
+    const response = await getOrders(query);
+    const rows = response.data?.rows;
+
+    if (!Array.isArray(rows)) {
+      throw new Error("La réponse de l'API ne contient pas la liste des commandes.");
+    }
+
+    return rows.reduce(
+      (total, row) => total + Number(row.field_total_vente || 0),
+      0
+    );
+  }
+
   async function fetchOrder(id, options) {
     loading.value = true;
     try {
@@ -57,6 +78,7 @@ export const useOrderStore = defineStore("order", () => {
   return {
     saveOrderData,
     fetchOrders,
+    fetchOrdersAmountTotal,
     orders,
     fetchOrder,
     order,
