@@ -62,8 +62,13 @@ function stock_management_node_delete(\Drupal\node\Entity\Node $entity){
 
 function stock_management_node_insert(\Drupal\node\Entity\Node $entity) {
     if($entity->bundle() == 'commande'){
-        $service = \Drupal::service('stock_management.manager');
-        $service->addStockNumberOnInsertCommande($entity);
+        $is_consultation_order = $entity->hasField('field_type')
+            && $entity->get('field_type')->value === 'consultation';
+
+        if (!$is_consultation_order) {
+            $service = \Drupal::service('stock_management.manager');
+            $service->addStockNumberOnInsertCommande($entity);
+        }
     }
     if($entity->bundle() == 'defectueux'){
         $service = \Drupal::service('stock_management.manager');
@@ -98,16 +103,30 @@ function stock_management_node_update(\Drupal\node\Entity\Node $entity) {
          // Mise à jour du status des rapports liés.
          $service->updateRapportStockStatus($entity, $updated_field_value);
 
-         if ($updated_field_value == "cancel") {
-            $service->decreaseStockNumberOnCancelCommande($entity);
-         }
+         $is_consultation_order = $entity->hasField('field_type')
+            && $entity->get('field_type')->value === 'consultation';
 
-         if ($updated_field_value == "payed" && $original_field_value == "cancel") {
-            $service->increaseStockNumberOnFinishCommande($entity);
-         }
+         if ($is_consultation_order) {
+            if ($original_field_value === 'unpayed' && $updated_field_value === 'payed') {
+               $service->addStockNumberOnInsertCommande($entity);
+            } elseif (
+               $original_field_value === 'payed'
+               && in_array($updated_field_value, ['cancel', 'unpayed'], TRUE)
+            ) {
+               $service->decreaseStockNumberOnCancelCommande($entity);
+            }
+         } else {
+            if ($updated_field_value == "cancel") {
+               $service->decreaseStockNumberOnCancelCommande($entity);
+            }
 
-         if ($updated_field_value == "unpayed" && $original_field_value == "cancel") {
-            $service->increaseStockNumberOnFinishCommande($entity);
+            if ($updated_field_value == "payed" && $original_field_value == "cancel") {
+               $service->increaseStockNumberOnFinishCommande($entity);
+            }
+
+            if ($updated_field_value == "unpayed" && $original_field_value == "cancel") {
+               $service->increaseStockNumberOnFinishCommande($entity);
+            }
          }
       }
    }

@@ -322,7 +322,7 @@ export default {
                         field_examens_order: allExamens || [],
                         field_date: formatDateUS(),
                         status: 1,
-                        field_status: "cancel",
+                        field_status: "unpayed",
                         field_type: "consultation",
                     };
 

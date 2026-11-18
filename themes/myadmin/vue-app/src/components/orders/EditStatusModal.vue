@@ -77,6 +77,7 @@ export default {
             form.field_status = newStatus;
             await orderStore.saveOrderData(form);
             if (orderStore.error) {
+                console.error("Error updating order status:", orderStore.error);
                 toast.error("Une erreur est survenue lors de la modification.")
                 return
             }
